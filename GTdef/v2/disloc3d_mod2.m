@@ -234,12 +234,7 @@ function [UX,UY,UZ,UXX,UYX,UZX,UXY,UYY,UZY,UXZ,UYZ,UZZ,IRET] = ...
 %*****                         REVISED   Y.OKADA ... NOV 1991   *****    
 %*****                                                          *****    
 %********************************************************************    
-% FAULT COORDINATE
-% ORIGIN - CENTER OF ORECTANGULAR
-% X - STRIKE DIRECTION
-% Z - UPWARDS
-% Y - UPDIP DETERMINED BY RIGHT-HAND RULE
-%********************************************************************    
+% OKADA COORD: ORIGIN OF FAULT COORD IS RECTANGULAR CENTER
 %***** INPUT                                                             
 %*****   ALPHA : MEDIUM CONSTANT  (LAMBDA+MYU)/(LAMBDA+2*MYU)            
 %*****   X,Y,Z : COORDINATE OF OBSERVING POINT IN FAULT COORD

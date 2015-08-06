@@ -1,4 +1,4 @@
-function [lon,lat] = xy_to_latlon(xx,yy,lon0,lat0,rot)
+function [lon,lat] = xy_to_latlon(x,y,lon0,lat0)
 
 % From PCAIM
 %
@@ -8,6 +8,11 @@ function [lon,lat] = xy_to_latlon(xx,yy,lon0,lat0,rot)
 %xy is in km.  llh is [lon, lat, height] in decimal 
 %degrees. This is an iterative solution for the inverse of 
 %a polyconic projection.
+%
+% modified to be compatible with GTdef.m lfeng Thu Jun  7 12:41:44 SGT 2012
+% input x & y can be row or column vectors
+% output lat & lon would be row or column vectors accordingly
+% no need for unit conversion
 
 %-------------------------------------------------------------
 %   Record of revisions:
@@ -24,31 +29,14 @@ function [lon,lat] = xy_to_latlon(xx,yy,lon0,lat0,rot)
 %
 %-------------------------------------------------------------
 
-% modified to be compatible with GTdef.m lfeng Thu Jun  7 12:41:44 SGT 2012
-% input x & y can be row or column vectors
-% output lat & lon would be row or column vectors accordingly
-% no need for unit conversion
-
-% added rotation to be compatible with ckm2LLd.m Lujia Feng Tue Sep 10 14:31:45 SGT 2013
-% rot [deg] is the rotation angle from the old coord system (east is x+ ;north is y+) to the new one.
-% Counterclockwise rotation is positive; Clockwise rotation is negative
-% use rot for latlon_to_xy(); use -rot for xy_to_latlon()
-
-cos_rot = cosd(rot);        % cos_rot - cos of rotation angle
-sin_rot = sind(rot);        % sin_rot - sin of rotation angle
-% rotate the coordinate system by rot [degree]
-% back to the state of horizontal x-axis
-x_rot = xx*cos_rot + yy*sin_rot;
-y_rot =-xx*sin_rot + yy*cos_rot;
-
 origin = [lon0 lat0];
-[mm,nn] = size(x_rot);
+[mm,nn] = size(x);
 % column vectors
 if mm>=nn
-    xy = [x_rot y_rot]';
+    xy = [x y]';
 % row vectors (need to be converted to row vectors)
 else
-    xy = [x_rot;y_rot];
+    xy = [x;y];
 end
 
 %Set ellipsoid constants (WGS84)

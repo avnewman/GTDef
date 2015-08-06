@@ -18,7 +18,6 @@
 # 		geo   = geographic
 # 		geo_polyconic = geographic using polyconic projection
 #             	local = cartesian
-# origin   - origin of local coordinate [lon0 lat0]
 # smooth   - smoothing algorithm {2d}
 #         	1d2pc = 1st derivative using 2-point central finite-difference approximation
 #         	1d3pf = 1st derivative using 3-point forward finite-difference approximation   
@@ -37,19 +36,14 @@
 #  	      	1 = by individual values (k1 k2 k3...)
 #  	      	2 = by min,max, and number of kappas (k1 kn N)
 #   Note: the two methods can be used together
-# greensfns - flag if output green's functions {off}
-#               on  = output
-#               off = do not output
 #################################################################
 coord geo
-origin 99 2
 smooth 2d
 surface free
 beta 1  1 2 3 4 5 10				# k1 k2 k3 ......
 beta 2  0 20 5					# k1 kn N
 kappa 1  1 10 50 100 500 1000			# k1 k2 k3 ......
 kappa 2  0 1000 5				# k1 kn N
-greensfns on
 
 #################################################################
 # EARTH STRUCTURE
@@ -155,7 +149,7 @@ fault  2    gnrc-2      -120.2000 34.5000  -118.2000 38.0000 3e3 15e3 25.0    2.
 fault  2    gnrc-2a     -120.2000 34.5000  -118.2000 38.0000 3e3 15e3 25.0    2.5e-3 1.5  0    0    0        0    0     0    0     1   1  # forward solution only is determined for this fault
 fault  2    gnrc-2_1by2 -120.2000 34.5000  -118.2000 38.0000 3e3 15e3 25.0    2.5e-3 1.5  0    0    1.0      0    0     0    0     1   2  # fault like gnrc-2 but with two lateral subfaults; subfaults are undefined they will BOTH be inverted for 0-1 m of dextral slip
 
-#fault type name        lon       lat      z1  z2   len   str   dip     rake   rs   ts     rake0 rakeX  rs0  rsX   ts0  tsX    Nd  Ns
+#fault type name           lon       lat      z1  z2   len   str   dip     rake   rs   ts     rake0 rakeX  rs0  rsX   ts0  tsX    Nd  Ns
 fault  3    gnrc-3_2by3    -120.2000 38.0000  3e3 15e3 100e3 170.0 25.0    135    1.2  0      0     0      0    10    0    0      2   3   # rake is constrained at 135 (half reverse+half right-lateral)
      #subfault name          dnum snum  rake   rs   ts     rake0 rakeX    rs0  rsX      ts0  tsX                                          # name is the name of the main fault
      subfault  gnrc-3_2by3   2    2     90     0    0      0     0        0    0        0    0   
@@ -163,10 +157,10 @@ fault  3    gnrc-3_2by3    -120.2000 38.0000  3e3 15e3 100e3 170.0 25.0    135  
 #fault type name      lon1      lat1     lon2      lat2    z1  z2    dip    rake   rs    ts  rake0 rakeX  rs0  rsX   ts0  tsX   Nd  Ns
 fault  4    gnrc-4    -120.2000 34.5000  -118.2000 38.0000 3e3 15e3  25.0   -90    1.00  0   0     0      0    0     0    0     1   1     # normal fault
 
-#fault type name      greenfns_filename    ss   ds   ts     ss0  ssX   ds0  dsX   ts0  tsX   Nd  Ns
-fault  5    mentawai  MTW.grnfns           0    1     0     0     0    0    20    0    0     24  53
-     #subfault name      dnum snum   ss    ds   ts     ss0  ssX      ds0  dsX      ts0  tsX
-     subfault  mentawai   2    2     0     0    0      0     0        0    0        0    0   
+#fault type   name      ss   ds   ts     ss0  ssX      ds0  dsX      ts0  tsX    Nd    Ns     ddip      dlen 
+fault  5    cascadia    3e3  15e3 100e3  170.0 25.0    2.5e-3 1.2     0     0    21    39      5e3      1e15     # fault like cascadia with 21*39 subpatches that have local dip and strike direction
+#    specify the boundary  dnum snum upleft_lon upleft_lat upleft_z  lwleft_lon lwleft_lat upleft_z  lwright_lon lwright_lat lwright_z  upright_lon upright_lat upleft_z
+     boundary  cascadia   
 
 
 #################################################################
@@ -178,7 +172,7 @@ fault  5    mentawai  MTW.grnfns           0    1     0     0     0    0    20  
 # z2          - vertical locking depth for dip [m] >0
 # rows	      - number of rows using this dip
 #################################################################
-#dip fault_name  dip   z1    z2    rows
+#dip fault name  dip   z1    z2    rows
 dip  gnrc-3      30    30e3  50e3   5		# dip of 30 is specified between depth of 30km and 50km for 5 rows
 dip  gnrc-3	 50    10e3  20e3   4		# dip of 50 is specified betwwen depth of 10e3 and 20e3 for 4 rows
 

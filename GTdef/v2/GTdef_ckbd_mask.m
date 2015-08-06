@@ -23,14 +23,13 @@ function [ ] = GTdef_ckbd_mask(model_name,ckbdin_name,ckbdout_name,slip,percent,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[ coord,origin,smooth,surf,beta,grnflag,...
-  rigidity,poisson,...
+[ coord,smooth,surf,beta,rigidity,poisson,...
   earth,edgrn,layer,...
   flt1,flt2,flt3,flt4,flt5,...
   bndry,subflt,dip,...
   pnt,bsl,prf,grd ] = GTdef_open(model_name);
 
-fckbdin  = fopen(ckbdin_name,'r');
+fckbdin  =  fopen(ckbdin_name,'r');
 fckbdout = fopen(ckbdout_name,'r');
 
 % keep column 2 3 & 15 (dip-slip)
@@ -104,7 +103,8 @@ model = reshape(Bmodel,[],1);
 subflt.flt(:,colnum) = model;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% output %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[ ~,basename,~ ] = fileparts(model_name);
+cellname = regexp(model_name,'\.out','split');
+basename = char(cellname(1));
 fout_name = [ basename '_mask.out' ];
 
 pnt.num = 0; bsl.num = 0; prf.num = 0; grd.num = 0;

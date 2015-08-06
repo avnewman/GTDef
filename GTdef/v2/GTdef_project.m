@@ -1,4 +1,4 @@
-function [] = GTdef_project(finName)
+function [] = GTdef_project(fin_name)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                       	GTdef_project.m                                 % 
@@ -8,7 +8,7 @@ function [] = GTdef_project(finName)
 % (2) Project points onto fault coordiantes				        %
 %									        %
 % INPUT									        %
-%   finName - input file name                                                   %
+%   fin_name - input file name                                                  %
 % OUTPUT								        %
 % (1)  create an output file that contains			                %
 %  [ flt_name dnum snum xtop1 ytop1 xbot1 ybot1 xbot2 ybot2 xtop2 ytop2         %
@@ -27,7 +27,7 @@ function [] = GTdef_project(finName)
 %   [x1 y1] and [x2 y2] are surface vertical projection of fault endpoints      %
 % (2) another file that contains points info				        %
 %									        %
-% first created by Lujia Feng Fri Dec  4 19:51:19 EST 2009			%
+% first created by lfeng Fri Dec  4 19:51:19 EST 2009			        %
 % added flag 'dip' by lfeng Mon Dec  7 01:05:28 EST 2009		        %
 % added fault 5 by lfeng Sat Dec 12 00:10:15 EST 2009			        %
 % changed 'coord' to string flag lfeng Wed Feb 24 13:40:01 EST 2010	        %
@@ -41,48 +41,42 @@ function [] = GTdef_project(finName)
 % used structure lfeng Thu Feb 23 10:12:16 SGT 2012				%
 % merged fault1 & fault3 and fault2 & fault4 lfeng Sun May 13 23:41:32 SGT 2012 %
 % added polyconic projection lfeng Thu Jun  7 13:27:43 SGT 2012                 %
-% added origin lfeng Thu Dec  5 21:49:25 SGT 2013                               %
-% last modified by Lujia Feng Thu Dec  5 21:50:11 SGT 2013                      %
+% last modified by lfeng Wed Jun 13 16:00:57 SGT 2012                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'.......... reading the input file ...........\t');
 tic
-[ coord,origin,~,~,~,~,~,~,~,~,~,...
+[ coord,~,~,~,~,~,~,~,~,...
   flt1,flt2,flt3,flt4,flt5,...
-  subflt,dip,pnt,~,~,~,~,~,~ ] = GTdef_open(finName);
+  ~,subflt,dip,pnt,~,~,~,~,~,~ ] = GTdef_open(fin_name);
 toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% set origin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set the middle point of the region as origin for the local cartesian coordinate
 if strcmpi(coord,'geo') || strcmpi(coord,'geo_polyconic')
-   if isempty(origin)
-      lonlist = []; latlist = [];
-      if flt1.num~=0
-          lonlist = [ lonlist;flt1.flt(:,1) ]; latlist = [ latlist;flt1.flt(:,2) ];
-      end
-      if flt2.num~=0
-          lonlist = [ lonlist;flt2.flt(:,1) ]; latlist = [ latlist;flt2.flt(:,2) ];
-      end
-      if flt3.num~=0
-          lonlist = [ lonlist;flt3.flt(:,1) ]; latlist = [ latlist;flt3.flt(:,2) ];
-      end
-      if flt4.num~=0
-          lonlist = [ lonlist;flt4.flt(:,1) ]; latlist = [ latlist;flt4.flt(:,2) ];
-      end
-      lon0 = 0.5*(min(lonlist)+max(lonlist));
-      lat0 = 0.5*(min(latlist)+max(latlist));
-   else
-      lon0 = origin(1); lat0 = origin(2);
+   lonlist = []; latlist = [];
+   if flt1.num~=0
+       lonlist = [ lonlist;flt1.flt(:,1) ]; latlist = [ latlist;flt1.flt(:,2) ];
    end
+   if flt2.num~=0
+       lonlist = [ lonlist;flt2.flt(:,1) ]; latlist = [ latlist;flt2.flt(:,2) ];
+   end
+   if flt3.num~=0
+       lonlist = [ lonlist;flt3.flt(:,1) ]; latlist = [ latlist;flt3.flt(:,2) ];
+   end
+   if flt4.num~=0
+       lonlist = [ lonlist;flt4.flt(:,1) ]; latlist = [ latlist;flt4.flt(:,2) ];
+   end
+   lon0 = 0.5*(min(lonlist)+max(lonlist));
+   lat0 = 0.5*(min(latlist)+max(latlist));
 elseif strcmpi(coord,'local')~=1
     error('GTdef_project ERROR: Coordinate input is wrong!!!');
 end
 
-%basename = strtok(finName,'.');	% noly works for names without "."
-%cellname = regexp(finName,'\.(in|out)','split');
-%basename = char(cellname(1));
-[ ~,basename,~ ] = fileparts(finName);
+%basename = strtok(fin_name,'.');	% noly works for names without "."
+cellname = regexp(fin_name,'\.(in|out)','split');
+basename = char(cellname(1));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% point data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 pnt.crt = [];
@@ -94,7 +88,7 @@ tic
        [pxx,pyy] = LL2ckmd(pnt.loc(:,1),pnt.loc(:,2),lon0,lat0,0);
     end
     if strcmpi(coord,'geo_polyconic')
-       [pxx,pyy] = latlon_to_xy(pnt.loc(:,1),pnt.loc(:,2),lon0,lat0,0);
+       [pxx,pyy] = latlon_to_xy(pnt.loc(:,1),pnt.loc(:,2),lon0,lat0);
     end
     if strcmpi(coord,'local')
        pxx = pnt.loc(:,1); pyy = pnt.loc(:,2);
@@ -122,7 +116,7 @@ tic
        [x1,y1] = LL2ckmd(flt1.flt(:,1),flt1.flt(:,2),lon0,lat0,0);
     end
     if strcmpi(coord,'geo_polyconic')
-       [x1,y1] = latlon_to_xy(flt1.flt(:,1),flt1.flt(:,2),lon0,lat0,0);
+       [x1,y1] = latlon_to_xy(flt1.flt(:,1),flt1.flt(:,2),lon0,lat0);
     end
     if strcmpi(coord,'local')
        x1 = flt1.flt(:,1); y1 = flt1.flt(:,2);
@@ -161,8 +155,8 @@ tic
        [x2_2,y2_2] = LL2ckmd(flt2.flt(:,3),flt2.flt(:,4),lon0,lat0,0);
     end
     if strcmpi(coord,'geo_polyconic')
-       [x2_1,y2_1] = latlon_to_xy(flt2.flt(:,1),flt2.flt(:,2),lon0,lat0,0);
-       [x2_2,y2_2] = latlon_to_xy(flt2.flt(:,3),flt2.flt(:,4),lon0,lat0,0);
+       [x2_1,y2_1] = latlon_to_xy(flt2.flt(:,1),flt2.flt(:,2),lon0,lat0);
+       [x2_2,y2_2] = latlon_to_xy(flt2.flt(:,3),flt2.flt(:,4),lon0,lat0);
     end
     if strcmpi(coord,'local')
        x2_1 = flt2.flt(:,1); y2_1 = flt2.flt(:,2);
@@ -199,7 +193,7 @@ tic
        [x3,y3] = LL2ckmd(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0,0);
     end
     if strcmpi(coord,'geo_polyconic')
-       [x3,y3] = latlon_to_xy(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0,0);
+       [x3,y3] = latlon_to_xy(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0);
     end
     if strcmpi(coord,'local')
        x3 = flt3.flt(:,1); y3 = flt3.flt(:,2);
@@ -236,8 +230,8 @@ tic
        [x4_2,y4_2] = LL2ckmd(flt4.flt(:,3),flt4.flt(:,4),lon0,lat0,0);
     end
     if strcmpi(coord,'geo_polyconic')
-       [x4_1,y4_1] = latlon_to_xy(flt4.flt(:,1),flt4.flt(:,2),lon0,lat0,0);
-       [x4_2,y4_2] = latlon_to_xy(flt4.flt(:,3),flt4.flt(:,4),lon0,lat0,0);
+       [x4_1,y4_1] = latlon_to_xy(flt4.flt(:,1),flt4.flt(:,2),lon0,lat0);
+       [x4_2,y4_2] = latlon_to_xy(flt4.flt(:,3),flt4.flt(:,4),lon0,lat0);
     end
     if strcmpi(coord,'local')
        x4_1 = flt4.flt(:,1); y4_1 = flt4.flt(:,2);
@@ -283,7 +277,7 @@ if ~isempty(prjflt12)
         xx = prjflt12(:,[3 5 7 9 11]); yy = prjflt12(:,[4 6 8 10 12]);
         lon = zeros(size(xx));         lat = zeros(size(yy));
         for ii=1:5
-            [lon(:,ii),lat(:,ii)] = xy_to_latlon(xx(:,ii),yy(:,ii),lon0,lat0,0);
+            [lon(:,ii),lat(:,ii)] = xy_to_latlon(xx(:,ii),yy(:,ii),lon0,lat0);
         end        
         newprjflt12 = [ prjflt12(:,1:2) lon(:,1) lat(:,1) lon(:,2) lat(:,2) lon(:,3) lat(:,3) lon(:,4) lat(:,4) lon(:,5) lat(:,5) prjflt12(:,13:15) ];
     end
@@ -295,7 +289,7 @@ if ~isempty(prjflt12)
     for ii =1:row
         name = flt_name12{ii};
         flt  = newprjflt12(ii,:);
-        fprintf(fout,'%s %-3d %-3d %12.5f %11.5f %12.5f %11.5f %12.5f %11.5f %12.5f %11.5f %12.5f %11.5f %10.5f %10.5f %10.5f\n',name,flt);
+        fprintf(fout,'%s %-3d %-3d %-12.5f %-11.5f %-12.5f %-11.5f %-12.5f %-11.5f %-12.5f %-11.5f %-12.5f %-11.5f %-8.5f %-8.5f %-8.5f\n',name,flt);
     end
 end
 
@@ -311,7 +305,7 @@ if ~isempty(prjflt34)
         xx = prjflt34(:,[3 5 7 9 11]);  yy = prjflt34(:,[4 6 8 10 12]);
         lon = zeros(size(xx));         lat = zeros(size(yy));
         for ii=1:5
-            [lon(:,ii),lat(:,ii)] = xy_to_latlon(xx(:,ii),yy(:,ii),lon0,lat0,0);
+            [lon(:,ii),lat(:,ii)] = xy_to_latlon(xx(:,ii),yy(:,ii),lon0,lat0);
         end         
         newprjflt34 = [ prjflt34(:,1:2) lon(:,1) lat(:,1) lon(:,2) lat(:,2) lon(:,3) lat(:,3) lon(:,4) lat(:,4) lon(:,5) lat(:,5) prjflt34(:,13:15) ];
     end
@@ -323,7 +317,7 @@ if ~isempty(prjflt34)
     for ii =1:row
         name = flt_name34{ii};
         flt  = newprjflt34(ii,:);
-        fprintf(fout,'%s %-3d %-3d %12.5f %11.5f %12.5f %11.5f %12.5f %11.5f %12.5f %11.5f %12.5f %11.5f %10.5f %10.5f %10.5f\n',name,flt);
+        fprintf(fout,'%s %-3d %-3d %-12.5f %-11.5f %-12.5f %-11.5f %-12.5f %-11.5f %-12.5f %-11.5f %-12.5f %-11.5f %-8.2f %-8.5f %-8.5f\n',name,flt);
     end
 end
 fclose(fout);
@@ -338,6 +332,6 @@ row = size(xsect,1);
 for ii =1:row
     name = xsect_name{ii};
     sct = xsect(ii,:);
-    fprintf(fout,'%s  %-5d  %6.2f    %12.4e   %14.6e   %12.4e %14.6e    %14.6e  %d\n',name,sct);
+    fprintf(fout,'%s  %-5d  %6.2f    %12.4e   %-14.6e   %-12.4e %-14.6e    %-14.6e  %-d\n',name,sct);
 end
 fclose(fout);

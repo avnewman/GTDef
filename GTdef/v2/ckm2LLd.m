@@ -43,5 +43,5 @@ if size(xx)==size(yy)
    lat = lat0 + y_rot/mpd;
    lon = lon0 + x_rot/mpd./cosd(lat0);
 else
-   error('ckm2LLd ERROR: xx and yy are not consistent!');
+   error('xx and yy are not consistent!');
 end

@@ -2,7 +2,7 @@ function [] = GTdef_output(filename,...
 			   coord,smooth,surf,beta,rigidity,poisson,...
 		           earth,edgrn,layer,...
            		   flt1,flt2,flt3,flt4,flt5,...   
-			   subflt,dip,...
+			   bndry,subflt,dip,...
           		   pnt,bsl,prf,grd,nod,mod_info)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,7 +43,7 @@ function [] = GTdef_output(filename,...
 %      subflt.flt - [ dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]                 %
 % dip structure: dip.name dip.num & dip.dip					         %
 % dip.dip  - [ dip z1 z2 rows ]						                 %
-%                                                                                        %
+% bndry structure: bndry.name bndry.num & bndry.bd				         %
 % OUTPUT: flt1.out flt2.out subflt.out subflt.outname				         %
 %										         %
 % (4) Data:									         % 
@@ -86,8 +86,7 @@ function [] = GTdef_output(filename,...
 % test existence before output lfeng Thu Apr 14 12:58:16 EDT 2011		         %
 % used structure & added layered output lfeng Wed Feb 22 14:31:31 SGT 2012	         %
 % merged fault1 & fault3 and fault2 & fault4 lfeng Thu May 10 17:03:16 SGT 2012          %
-% modified fault5 lfeng Sat Dec  1 00:32:44 SGT 2012                                     %
-% last modified by Lujia Feng Sat Dec  1 22:52:48 SGT 2012                               %
+% last modified by Lujia Feng Sun May 13 13:07:21 SGT 2012                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fout = fopen(filename,'w');
                                                                                 
@@ -140,7 +139,7 @@ for ii =1:flt1.num
     num = sum(ind);
     subflt1 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %10.5f %10.5f %10.5f  %8.4f %8.4f  %8.4f %8.4f  %8.4f %8.4f\n',flt_name,subflt1(jj,:));
+        fprintf(fout,'     subfault %s  %5d %5d  %10.5f %-8.5f %-8.5f  %-5.4f %-5.4f  %-5.4f %-5.4f  %-5.4f %-5.4f\n',flt_name,subflt1(jj,:));
     end
 end
 
@@ -153,7 +152,7 @@ for ii =1:flt2.num
     num = sum(ind);
     subflt2 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %10.5f %10.5f %10.5f  %8.4f %8.4f  %8.4f %8.4f  %8.4f %8.4f\n',flt_name,subflt2(jj,:));
+        fprintf(fout,'     subfault %s  %5d %5d  %10.5f %-8.5f %-8.5f  %-5.4f %-5.4f  %-5.4f %-5.4f  %-5.4f %-5.4f\n',flt_name,subflt2(jj,:));
     end
 end
 
@@ -165,7 +164,7 @@ for ii =1:flt3.num
     num = sum(ind);
     subflt3 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %10.2f %12.5f %12.5f  %7.2f %7.2f  %8.4f %8.4f  %8.4f %8.4f\n',flt_name,subflt3(jj,:));
+        fprintf(fout,'     subfault %s  %5d %5d  %10.2f %-8.5f %-8.5f  %-7.2f %-7.2f  %-5.4f %-5.4f  %-5.4f %-5.4f\n',flt_name,subflt3(jj,:));
     end
 end
 
@@ -177,20 +176,26 @@ for ii =1:flt4.num
     num = sum(ind);
     subflt4 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %10.2f %12.5f %12.5f  %7.2f %7.2f  %8.4f %8.4f  %8.4f %8.4f\n',flt_name,subflt4(jj,:));
+        fprintf(fout,'     subfault %s  %5d %5d  %10.2f %-8.5f %-8.5f  %-7.2f %-7.2f  %-5.4f %-5.4f  %-5.4f %-5.4f\n',flt_name,subflt4(jj,:));
     end
 end
 
 %%%%%%%%%%  fault 5  %%%%%%%%%%
+% if flt5.num = 0, the following code won't execute!
 for ii =1:flt5.num
-    flt_name = flt5.name{ii};
-    grn_name = flt5.grname{ii};
-    fprintf(fout,'fault 5   %s   %s   %10.5f %10.5f %10.5f  %5.4f %5.4f  %5.4f %5.4f  %5.4f %5.4f    %d  %d \n',flt_name,grn_name,flt5.out(ii,:));
+    flt_name = flt5.name(ii,:);
+    fprintf(fout,'fault 5 %s  %10.5f %-8.5f %-8.5f  %-5.4f %-5.4f  %-5.4f %-5.4f  %-5.4f %-5.4f   %d  %d  %-5.2f  %-5.2f\n',flt_name,flt5.flt(ii,:));
     ind = strcmpi(flt_name,subflt.outname);
     num = sum(ind);
     subflt5 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %12.5f %12.5f %12.5f  %8.4f %8.4f  %8.4f %8.4f  %8.4f %8.4f\n',flt_name,subflt5(jj,:));
+        fprintf(fout,'     subfault %s  %-d %-d  %10.5f %-8.5f %-8.5f  %-5.4f %-5.4f  %-5.4f %-5.4f  %-5.4f %-5.4f\n',flt_name,subflt5(jj,:));
+    end
+    ind = strcmpi(flt_name,bndry.name);
+    num = sum(ind);
+    bndry5 = bndry.bd(ind,:);
+    for jj = 1:num
+        fprintf(fout,'     boundary %s  %-d %-d  %-14.8f %-12.8f %14.8f %-14.8f %-12.8f %14.8f %-14.8f %-12.8f %14.8f %-14.8f %-12.8f %14.8f\n',flt_name,bndry5(jj,:));
     end
 end
 
@@ -200,26 +205,13 @@ for ii =1:dip.num
 end
 
 %%%%%%%%%%  point  %%%%%%%%%%
-if strcmp(coord,'local')
-    for ii =1:pnt.num
-        fprintf(fout,'point 3 %s\t%14.5e %14.5e %14.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n', pnt.name{ii},pnt.out(ii,:));
-    end
-else
-    for ii =1:pnt.num
-        fprintf(fout,'point 3 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n', pnt.name{ii},pnt.out(ii,:));
-    end
+for ii =1:pnt.num
+    fprintf(fout,'point 3 %s\t%14.8f   %-12.8f %-6.4e  %10.5f %-8.5f %-8.5f  %8.5f %-8.5f %-8.5f  %-5.2f\n', pnt.name{ii},pnt.out(ii,:));
 end
 
 %%%%%%%%%%  baseline  %%%%%%%%%%
-if strcmp(coord,'local')
-    for ii =1:bsl.num
-        fprintf(fout,'baseline 3 %s\t%14.5e %14.5e %14.5e  %14.8f %12.8f %6.4e  %10.5f %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f %10.5f  %5.2f\n', bsl.name{ii},bsl.out(ii,:));
-    end
-else
-    for ii =1:bsl.num
-        fprintf(fout,'baseline 3 %s\t%14.8f %12.8f %12.5e  %14.8f %12.8f %6.4e  %10.5f %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f %10.5f  %5.2f\n', bsl.name{ii},bsl.out(ii,:));
-
-    end
+for ii =1:bsl.num
+    fprintf(fout,'baseline 3 %s\t%14.8f   %-12.8f %-6.4e  %14.8f %-12.8f %-6.4e  %10.5f %-8.5f %-8.5f %-8.5f  %8.5f %-8.5f %-8.5f %-8.5f  %5.2f\n', bsl.name{ii},bsl.out(ii,:));
 end
 
 %%%%%%%%%%  profile  %%%%%%%%%%
@@ -231,14 +223,8 @@ for ii =1:prf.num
     num = sum(ind); 
     cnod_name = nod.name(ind);
     cnod_out  = nod.out(ind,:);
-    if strcmp(coord,'local')
-        for jj = 1:num
-            fprintf(fout,'point 3 %s\t%14.5e %14.5e %14.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
-        end
-    else
-        for jj = 1:num
-            fprintf(fout,'point 3 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
-        end
+    for jj = 1:num
+    	fprintf(fout,'point 3 %s\t%14.8f   %-12.8f %-6.4e  %10.5f %-8.5f %-8.5f  %8.5f %-8.5f %-8.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
     end
 end
 
@@ -251,15 +237,8 @@ for ii =1:grd.num
     num = sum(ind); 
     cnod_name = nod.name(ind);
     cnod_out  = nod.out(ind,:);
-    if strcmp(coord,'local')
-        for jj = 1:num
-        	fprintf(fout,'point 3 %s\t%14.5e %14.5e %14.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
-        end
-    else
-        for jj = 1:num
-        	fprintf(fout,'point 3 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
-    
-        end
+    for jj = 1:num
+    	fprintf(fout,'point 3 %s\t%14.8f   %-12.8f %-6.4e  %10.5f %-8.5f %-8.5f  %8.5f %-8.5f %-8.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
     end
 end
 fclose(fout);

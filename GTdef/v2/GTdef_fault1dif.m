@@ -1,6 +1,6 @@
 function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0,Min0 ] ...
          = GTdef_fault1dif(flt,subflt,dipin,Xin,Bin,Nin,...
-           earth,mu,nu,edgrn,edgrnfcts,smooth,surf)
+						   earth,mu,nu,edgrn,edgrnfcts,smooth,surf)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                          GTdef_fault1dif				  %
@@ -74,8 +74,7 @@ function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0,Min0 ] ...
 % added layered earth structure lfeng Tue Feb 28 03:26:05 SGT 2012	  %
 % renamed from GTdef_fault3.m to GTdef_fault1dif.m lfeng May 8 SGT 2012   %
 % added output Min0 for stress calculation lfeng Thu May 17 SGT 2012      %
-% added sm = [] for subflt_num==1 lfeng Tue Oct 21 17:25:33 SGT 2014      %
-% last modified by Lujia Feng Tue Oct 21 17:33:23 SGT 2014                %
+% last modified by Lujia Feng Thu May 17 08:42:38 SGT 2012                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 18], error('GTdef_fault1dif ERROR: need a 1*18 fault vector as input!'); end
@@ -94,7 +93,6 @@ mx2 = mx1+mlen*sind(mstr);     my2 = my1+mlen*cosd(mstr);	% endpoint 2
 if subflt_num==1
     [ Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0,Min0 ] = GTdef_fault1uni([flt(:,1:end-2)],Xin,Bin,Nin,earth,mu,nu,edgrn,edgrnfcts);
     sm_abs = [];
-    sm     = [];
     return
 end
 
@@ -125,11 +123,9 @@ if ~isempty(subflt)
 	slips(jj,:) = subflt(ii,3:11);
     end
 end
-
-% patch order: along dip first, then along strike
 newflt = [ x1 y1 z1 z2 len str dip slips ];
 
-% treat subfault sequence as individual uniform-slip faults
+% treat subfault sequence as fault type 1
 [ Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0,Min0 ] = GTdef_fault1uni(newflt,Xin,Bin,Nin,earth,mu,nu,edgrn,edgrnfcts);
 
 % create smoothing matrices

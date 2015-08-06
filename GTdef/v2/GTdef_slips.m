@@ -1,4 +1,4 @@
-function [ flt1_out,flt2_out,flt3_out,flt4_out,flt5_out,subflt_out,subflt_name ]...
+function [ flt1_out,flt2_out,flt3_out,flt4_out,subflt_out,subflt_name ]...
           = GTdef_slips(lb,ub,xx,flt1,flt2,flt3,flt4,flt5,subflt_in)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -26,7 +26,7 @@ function [ flt1_out,flt2_out,flt3_out,flt4_out,flt5_out,subflt_out,subflt_name ]
 % flt4.flt - [lon1 lat1 lon2 lat2 z1 z2 dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]%
 %      subflt.flt - [ dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]                 %
 %----------------------------------------------------------------------------------------%
-% flt5.flt - [ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]                                    %
+% flt5.flt - [ ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns dlen slen ]		         %
 %									                 %
 % OUTPUT:                                                                                %
 % flt1_out - [lon lat z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]	         %
@@ -42,9 +42,7 @@ function [ flt1_out,flt2_out,flt3_out,flt4_out,flt5_out,subflt_out,subflt_name ]
 % used cell array of strings for names lfeng Wed Dec  1 17:50:08 EST 2010	         %
 % used structure lfeng Wed Feb 22 19:45:15 SGT 2012				         %
 % merged flt1 & flt3 and flt2 & flt4 lfeng Wed May  9 10:40:55 SGT 2012                  %
-% added flt5 lfeng Sat Dec  1 22:00:47 SGT 2012                                          %
-% corrected flt3 & flt4 lfeng Mon Mar 11 20:27:58 SGT 2013                               %
-% last modified by Lujia Feng Mon Mar 11 20:40:43 SGT 2013                               %
+% last modified by Lujia Feng Sun May 13 12:52:37 SGT 2012                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % reset lb/ub from -inf/inf to 0 for slips whose values are fixed
@@ -53,7 +51,7 @@ lb(fix_ind) = 0;
 ub(fix_ind) = 0;
 
 first = 0; last = 0;
-flt1_out = flt1.flt; flt2_out = flt2.flt; flt3_out = flt3.flt; flt4_out = flt4.flt; flt5_out = flt5.flt;
+flt1_out = []; flt2_out = []; flt3_out = []; flt4_out = []; 
 subflt_name = {}; subflt_out = []; subflt = [];
 %%%%%%%%%% fault 1 %%%%%%%%%%
 if flt1.num~=0
@@ -63,7 +61,7 @@ if flt1.num~=0
         first = last+1; last = last+fltNum*comp_num;
 	if fltNum==1
             slp1 = reshape(xx(first:last),[],comp_num);
-            flt1_out(ii,8:10) = slp1;
+            flt1_out = [ flt1.flt(ii,1:7) slp1 flt1.flt(ii,11:18) ];
 	else
             slp1 = reshape(xx(first:last),[],comp_num);
             lb1  = reshape(lb(first:last),[],comp_num);
@@ -89,7 +87,7 @@ if flt2.num~=0
         first = last+1; last = last+fltNum*comp_num;
 	if fltNum==1
             slp2 = reshape(xx(first:last),[],comp_num);
-            flt2_out(ii,8:10) = slp2;
+            flt2_out = [ flt2.flt(ii,1:7) slp2 flt2.flt(ii,11:18) ];
 	else
             slp2 = reshape(xx(first:last),[],comp_num);
             lb2  = reshape(lb(first:last),[],comp_num);
@@ -115,7 +113,7 @@ if flt3.num~=0
         first = last+1;   last = last+fltNum*comp_num;
         if fltNum==1
             slp3 = reshape(xx(first:last),[],comp_num);
-            flt3_out(ii,9:10) = slp3;
+            flt3_out = [ flt3.flt(ii,1:8) slp3 flt3.flt(ii,11:18) ];
         else
             slp3 = reshape(xx(first:last),[],comp_num);
             lb3  = reshape(lb(first:last),[],comp_num);
@@ -137,9 +135,9 @@ if flt3.num~=0
             subflt3  = subflt_in.flt(sub_ind,:);
             numT = size(subflt3,1);
             for ii=1:numT
-                dd = subflt3(ii,1); ss = subflt3(ii,2);
-                ind = subflt(:,1)==dd & subflt(:,2)==ss;
-                subflt(ind,[3 6 7])  = subflt3(ii,[3 6 7]);
+                dnumT = subflt3(ii,1); snumT = subflt3(ii,2);
+                ind = (snumT-1)*Nd+dnumT;
+                subflt(ind,[8 11 12])  = subflt3(ii,[8 11 12]);
             end
             subflt_out = [ subflt_out; subflt ];
         end
@@ -154,7 +152,7 @@ if flt4.num~=0
         first = last+1;   last = last+fltNum*comp_num;
 	if fltNum==1
             slp4 = reshape(xx(first:last),[],comp_num);
-            flt4_out(ii,9:10) = slp4;
+            flt4_out = [ flt4.flt(ii,1:8) slp4 flt4.flt(ii,11:18) ];
 	else
             slp4 = reshape(xx(first:last),[],comp_num);
             lb4  = reshape(lb(first:last),[],comp_num);
@@ -176,9 +174,9 @@ if flt4.num~=0
 	    subflt4  = subflt_in.flt(sub_ind,:);
 	    numT = size(subflt4,1);
 	    for ii=1:numT
-	        dd = subflt4(ii,1); ss = subflt4(ii,2);
-		ind = subflt(:,1)==dd & subflt(:,2)==ss;
-		subflt(ind,[3 6 7])  = subflt4(ii,[3 6 7]);
+	        dnumT = subflt4(ii,1); snumT = subflt4(ii,2);
+		ind = (snumT-1)*Nd+dnumT;
+		subflt(ind,[8 11 12])  = subflt4(ii,[8 11 12]);
 	    end
 	    subflt_out = [ subflt_out; subflt ];
 	end
@@ -187,26 +185,20 @@ end
 
 %%%%%%%%%% fault 5 %%%%%%%%%%
 if flt5.num~=0
-    comp_num = 3;
     for ii = 1:flt5.num
         Nd = flt5.flt(ii,10); Ns = flt5.flt(ii,11); fltNum = Nd*Ns;
-        first = last+1; last = last+fltNum*comp_num;
-	if fltNum==1
-            slp1 = reshape(xx(first:last),[],comp_num);
-            flt5_out(ii,1:3) = slp1;
-	else
-            slp5 = reshape(xx(first:last),[],comp_num);
-            lb5  = reshape(lb(first:last),[],comp_num);
-            ub5  = reshape(ub(first:last),[],comp_num);
-	    dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
-	    slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
-	    subflt     = [ dnum snum slp5 lb5(:,1) ub5(:,1) lb5(:,2) ub5(:,2) lb5(:,3) ub5(:,3) ];
-	    subflt_out = [ subflt_out; subflt ];
+        first = last+1;   last = last+fltNum*3;
+        slp5 = reshape(xx(first:last),[],3);
+        lb5 = reshape(lb(first:last),[],3);
+        ub5 = reshape(ub(first:last),[],3);
+	dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
+	slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
+	subflt = [ dnum snum slp5 lb5(:,1) ub5(:,1) lb5(:,2) ub5(:,2) lb5(:,3) ub5(:,3) ];
+	subflt_out = [ subflt_out; subflt ];
 
-	    flt_name = flt5.name{ii};
-            name     = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = flt_name; end
-	    subflt_name = [ subflt_name; name ];   
-	end
+	flt_name = flt5.name(ii,:);
+        name = cell(fltNum,1);
+        for ii = 1:fltNum, name{ii} = flt_name; end
+	subflt_name = [ subflt_name; name ];   
     end
 end
