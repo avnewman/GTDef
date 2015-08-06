@@ -130,7 +130,7 @@ if ~isempty(Xin)
                 [ U,~,~,~,~,~ ] = disloc3d_mod2(Min(:,ii),Xin,mu,nu);	
             else
                 % pntsrc = [ pxs pys pzs pmoment ]
-                [ pntsrc ] = GTdef_edcmp_discretize(Min(:,ii),edgrn);
+                [ pntsrc ]  = GTdef_edcmp_discretize(Min(:,ii),edgrn);
                 [ U,~,~,~ ] = GTdef_edcmp(edgrn,[],edgrnfcts,pntsrc,Xin);
 	    end
     	    Xgrn(:,ii) = reshape(U',[],1);
@@ -152,7 +152,7 @@ if ~isempty(Bin)
                 [ U1,~,~,~,~,~ ] = disloc3d_mod2(Min(:,ii),Bin1,mu,nu);	
                 [ U2,~,~,~,~,~ ] = disloc3d_mod2(Min(:,ii),Bin2,mu,nu);	
 	    else
-   		[ pntsrc ] = GTdef_edcmp_discretize(Min(:,ii),edgrn);
+   		[ pntsrc ]   = GTdef_edcmp_discretize(Min(:,ii),edgrn);
 		[ U1,~,~,~ ] = GTdef_edcmp(edgrn,[],edgrnfcts,pntsrc,Bin1);
 		[ U2,~,~,~ ] = GTdef_edcmp(edgrn,[],edgrnfcts,pntsrc,Bin2);
 	    end
@@ -172,7 +172,7 @@ if ~isempty(Nin)
 	    if strcmpi(earth,'homogeneous')
                 [ U,~,~,~,~,~ ] = disloc3d_mod2(Min(:,ii),Nin,mu,nu);
 	    else
-   		[ pntsrc ] = GTdef_edcmp_discretize(Min(:,ii),edgrn);
+   		[ pntsrc ]  = GTdef_edcmp_discretize(Min(:,ii),edgrn);
 		[ U,~,~,~ ] = GTdef_edcmp(edgrn,[],edgrnfcts,pntsrc,Nin);
 	    end
     	    Ngrn(:,ii) = reshape(U',[],1);

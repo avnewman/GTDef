@@ -3,10 +3,10 @@ function [ mod_info,pnt_out,bsl_out,nod_out ] ...
             		 pnt,bsl,nod,smooth)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                            GTdef_forward				  %
+%                            GTdef_forward                                %
 % Knowing the slip values, calculate the displacements predicted by 	  %
 % the model and report the misfit values too				  %
-%									  %
+%                                                                         %
 % INPUT:					  		  	  %
 %-------------------------------------------------------------------------%
 % fault1 & fault2 have three (strike, dip, and tensile) components, so    %
@@ -33,13 +33,13 @@ function [ mod_info,pnt_out,bsl_out,nod_out ] ...
 %  sm  - condensed smoothing matrix with rows of all zeros removed	  %
 %  smooth - smoothing method						  %
 % Point:    pnt.loc     - [lon lat z]			(nn*3)	  	  % 
-%	    pnt.obs     - [east;north;vert]		(3nn*1)		  %
+%           pnt.obs     - [east;north;vert]		(3nn*1)		  %
 %   	    pnt.obs_err - [east;north;vert]		(3nn*1)    	  %
 %   	    pnt.wgt     - [weight]			(nn*1)      	  % 
 %    	    pnt.obs_wgt - [pnt.wgt;pnt.wgt;pnt.wgt]     (3nn*1)		  %
 % 	 		  [east;north;vertical]				  %
 % Baseline: bsl.loc     - [lon1 lat1 z1 lon2 lat2 z2]	(nn*6)    	  %
-%   	    bsl.obs     - [east;north;vert;length]      (4nn*1)    	  %
+%           bsl.obs     - [east;north;vert;length]      (4nn*1)    	  %
 %   	    bsl.obs_err - [east;north;vert;length]      (4nn*1)    	  %
 %   	    bsl.wgt     - [weight]                      (nn*1)      	  %
 %    	    bsl.obs_wgt - [bsl.wgt;bsl.wgt;bsl.wgt;bsl.wgt] 		  %
@@ -78,7 +78,8 @@ function [ mod_info,pnt_out,bsl_out,nod_out ] ...
 % added 1st derivative roughness lfeng Thu Dec  3 20:29:31 EST 2009	  %
 % corrected roughness unit from [cm^2/km^2] to [cm/km^2]		  %
 % used structure lfeng Wed Feb 22 13:37:09 SGT 2012			  %
-% last modified by Lujia Feng Wed Feb 22 13:46:32 SGT 2012		  %
+% added size check for sm/sm_abs with xx lfeng Oct 21 17:30:35 SGT 2014   %
+% last modified by Lujia Feng Tue Oct 21 17:30:54 SGT 2014                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % find slips that are included in the model
@@ -133,7 +134,7 @@ if ~isempty(Ngrn)
     nod_out = [ nod.loc nod_mod nod_mod_err nod_wgt ]; 		% reuse nod.loc
 end
 
-if ~isempty(sm)
+if ~isempty(sm) && size(sm,2) == size(xx,1)
     sm_all = sum(abs(sm*xx)); 
     sm_num = size(sm,1);
     if strcmp(smooth,'2d')
@@ -146,10 +147,11 @@ if ~isempty(sm)
 else % lfeng Sat Jun 19 04:55:22 EDT 2010
     r_1d = nan; r_2d = nan;
 end
-if ~isempty(sm_abs)
+
+if ~isempty(sm_abs) && size(sm_abs,2) == size(xx,1)
     sm_all = sum(abs(sm_abs*xx)); 
     sm_num = size(sm_abs,1);
-    	strain = 1e5*sm_all/sm_num;				% NOTE: strain [cm/km]; 0.5 accounts for both ds and ss
+    strain = 1e5*sm_all/sm_num;                                 % NOTE: strain [cm/km]; 0.5 accounts for both ds and ss
 else
     strain = nan;
 end

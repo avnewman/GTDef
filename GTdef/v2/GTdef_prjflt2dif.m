@@ -30,9 +30,8 @@ function [ newflt,prjflt,xyzctr,xyztop1 ] = GTdef_prjflt2dif(flt,subflt,dipin)
 % OUTPUT:                                                                 %
 % prjflt = [ dnum snum xtop1 ytop1 xbot1 ybot1 xbot2 ybot2 xtop2 ytop2    %
 %            xctr  yctr ss ds ts ]  					  %
-%   [xtop1 ytop1], [xbot1 ybot1], [xbot2 ybot2], and [xtop2 ytop2]	  %
-%   are the surface projection of four points that confine 		  %
-%   the fault interface 						  %
+%   [xtop1 ytop1],[xbot1 ybot1],[xbot2 ybot2],and [xtop2 ytop2]	are the   %
+%   surface projections of four points confining the fault interface      %
 %   They are in a counterclockwise sense looking from the RHS of endpoint %
 %   [xtop1 ytop1] and [xbot1 ybot1] correspond [xx yy] at z1 and z2	  %
 %   [xx yy] is surface projection of one fault endpoint 	  	  %

@@ -69,7 +69,7 @@ C = [ C;sm ]; d = [ d;d_sm ];
 ind = find(isinf(lb));
 Aeq_red = Aeq(ind,:); beq_red = beq(ind);
 
-options = optimset('MaxIter',1000,'TolFun',1e-30);
+options = optimset('MaxIter',2000,'TolFun',1e-30);
 [xx,resnorm] = lsqlin(C,d,[],[],Aeq_red,beq_red,lb,ub,x0,options);
 %[xx,resnorm,res,exitflag,output] = lsqlin(C,d,[],[],Aeq_red,beq_red,lb,ub,x0);
 fprintf(1,'resnorm = %-12.5e\n',resnorm);

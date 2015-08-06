@@ -43,5 +43,5 @@ if size(lon)==size(lat)
    x_rot = xx*cos_rot + yy*sin_rot;
    y_rot =-xx*sin_rot + yy*cos_rot;
 else
-   error('lon and lat are not consistent!'); 
+   error('LL2ckmd ERROR: lon and lat are not consistent!'); 
 end

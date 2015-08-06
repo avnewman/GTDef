@@ -51,6 +51,7 @@ function [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_fixed_3slips(dd,ds,Nd,Ns)
 [ sm_3f_2 ] = GTdef_add_diagonal(sm_3f_2,sm0_3f_2);
 sm_1d3pf = [ sm_3f_1;sm_3f_2 ];
 
+
 %%%%%% 3-point backward %%%%%%
 [ sm0_3b_1 ] = GTdef_sm1d_3pbwd_uprt(dd,ds,Nd,Ns);  
 [ sm0_3b_2 ] = GTdef_sm1d_3pbwd_rtdw(dd,ds,Nd,Ns);  

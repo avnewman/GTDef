@@ -69,7 +69,8 @@ function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0,Min0 ] = GTdef_fault3dif(fl
 %                                                                                %
 % first created by Lujia Feng Thu May 10 11:38:08 SGT 2012                       %
 % added output Min0 for stress calculation lfeng Thu May 17 SGT 2012             %
-% last modified by Lujia Feng Thu May 17 08:56:16 SGT 2012                       %
+% added sm = [] for subflt_num==1 lfeng Tue Oct 21 17:25:33 SGT 2014             %
+% last modified by Lujia Feng Tue Oct 21 17:34:27 SGT 2014                       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 18], error('GTdef_fault3dif ERROR: need a 1*18 fault vector as input!'); end
@@ -88,6 +89,7 @@ mx2 = mx1+mlen*sind(mstr);     my2 = my1+mlen*cosd(mstr);	% endpoint 2
 if subflt_num==1
     [ Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0,Min0 ] = GTdef_fault3uni([flt(:,1:end-2)],Xin,Bin,Nin,earth,mu,nu,edgrn,edgrnfcts);
     sm_abs = [];
+    sm     = [];
     return
 end
 

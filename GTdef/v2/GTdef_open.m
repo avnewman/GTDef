@@ -1,7 +1,8 @@
-function [ coord,smooth,surf,beta,rigidity,poisson,...
+function [ coord,origin,smooth,surf,beta,grnflag,...
+           rigidity,poisson,...
 	   earth,edgrn,layer,...
            flt1,flt2,flt3,flt4,flt5,...
-	   bndry,subflt,dip,...
+	   subflt,dip,...
            pnt,bsl,prf,grd,...
 	   sspnt,ssflt1,ssflt2 ] = GTdef_open(filename)
 
@@ -17,6 +18,7 @@ function [ coord,smooth,surf,beta,rigidity,poisson,...
 %                  geo   - geographic coordiante				         %
 % 		   geo_polyconic - geographic using polyconic projection                 %
 % 		   local - cartesian coordinate				                 %
+%               origin   = [ lon0 lat0 ]  (1x2)                                          %
 %               smooth	string		        {2d}				         %
 %         	   1d2pc - 1st derivative 2-point central			         %
 %         	   1d3pf - 1st derivative 3-point forward                                %
@@ -30,6 +32,7 @@ function [ coord,smooth,surf,beta,rigidity,poisson,...
 % Note: beta is used to weight smoothing, usually for 1st derivative		         %
 %       kappa is used to weight smoothing, usually for 2nd derivative		         %
 %   If not provided by the input file, default values in {} will be used.                %
+%               greensfns - output green's functions {off}                               %
 %										         %
 % (2) Earth Structure:								         %
 % Either of the two types of earth structure can be used.			         %
@@ -58,12 +61,12 @@ function [ coord,smooth,surf,beta,rigidity,poisson,...
 % flt3.flt - [lon1 lat1 z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]  %
 % flt4.flt - [lon1 lat1 lon2 lat2 z1 z2 dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]%
 %      subflt.flt - [ dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]                 %
+% flt5.flt - [ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]                                    %
 % dip structure: dip.name dip.num & dip.dip					         %
 % dip.dip  - [ dip z1 z2 rows ]	need to be used with dip.name			         %
-% bndry structure: bndry.name bndry.num & bndry.bd				         %
 %										         %
 % (4) Data:									         % 
-% Point: 									         %
+% Point:                                                                                 %
 %		pnt.num  - number of point data			(scalar)	         %
 % 		pnt.name - names of point data			(cell array)	         %
 %		pnt.loc  - [lon lat z]				(nn*3)		         % 
@@ -125,7 +128,10 @@ function [ coord,smooth,surf,beta,rigidity,poisson,...
 % created new fault3 & fault4 for rake lfeng Tue May  8 18:35:44 SGT 2012                %
 % added stress lfeng Thu May 17 07:41:29 SGT 2012                                        %
 % added polyconic projection lfeng Thu Jun  7 13:43:28 SGT 2012                          %
-% last modified by Lujia FENG Mon Jun 11 12:30:00 SGT 2012                               %
+% changed flt5 to greensfns lfeng Fri Nov 30 14:37:49 SGT 2012                           %
+% added saving greensfns lfeng Mon Aug  5 15:51:38 SGT 2013                              %
+% added origin lfeng Thu Dec  5 21:40:47 SGT 2013                                        %
+% last modified by Lujia FENG Thu Dec  5 21:43:20 SGT 2013                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -133,14 +139,16 @@ if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filenam
 fin = fopen(filename,'r');
 
 %%%%%%%%%% set default values %%%%%%%%%%
-coord = 'geo';
-smooth = '2d';
-surf = 'free';
+coord    = 'geo';
+origin   = [];
+smooth   = '2d';
+surf     = 'free';
+grnflag  = 'off';
 rigidity = 30e9;
-poisson = 0.25;
-earth = 'homogeneous';
-edgrn = [];
-layer = [];
+poisson  = 0.25;
+earth    = 'homogeneous';
+edgrn    = [];
+layer    = [];
 
 %%%%%%%%%% initialize parameters %%%%%%%%%%
 % use CELL ARRAY OF STRINGS for names
@@ -148,8 +156,7 @@ flt1.num = 0;  	 flt1.name = {};    flt1.flt = [];
 flt2.num = 0;    flt2.name = {};    flt2.flt = []; 
 flt3.num = 0;    flt3.name = {};    flt3.flt = []; 
 flt4.num = 0;    flt4.name = {};    flt4.flt = []; 
-flt5.num = 0;    flt5.name = {};    flt5.flt = []; 
-bndry.num  = 0;  bndry.name  = {};  bndry.bd   = [];
+flt5.num = 0;    flt5.name = {};    flt5.flt = [];   flt5.grname = {};
 subflt.num = 0;  subflt.name = {};  subflt.flt = []; 
 dip.num = 0;     dip.name = {};     dip.dip = [];
 pnt.num = 0;     pnt.name = {};     pnt.loc = [];   pnt.disp = [];  pnt.err = [];   pnt.wgt = []; 
@@ -177,27 +184,34 @@ while(1)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Controlling Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%% coordinate %%%%%
     if strcmpi(flag,'coord')
-	[coord,remain] = strtok(remain);
-	if ~strcmpi(coord,'geo') && ~strcmpi(coord,'geo_polyconic') && ~strcmpi(coord,'local')
+        [coord,remain] = strtok(remain);
+        if ~strcmpi(coord,'geo') && ~strcmpi(coord,'geo_polyconic') && ~strcmpi(coord,'local')
             error('GTdef_open ERROR: coordinate system should be either geo, geo_polyconic or local!');
-	end
-	continue
+        end
+        continue
+    end
+    %%%%% origin %%%%%
+    if strcmpi(flag,'origin')
+ 	[ lon0,remain ] = GTdef_read1double(remain);
+ 	[ lat0,remain ] = GTdef_read1double(remain);
+	origin = [ lon0 lat0 ];
+        continue
     end
     %%%%% smoothing algorithm %%%%%
     if strcmpi(flag,'smooth')
-	[smooth,remain] = strtok(remain);
-	if ~strcmpi(smooth,'none') && ~strcmpi(smooth,'2d') && ~strcmpi(smooth,'1d2pc') && ~strcmpi(smooth,'1d3pf') && ~strcmpi(smooth,'1d3pb')
+        [smooth,remain] = strtok(remain);
+        if ~strcmpi(smooth,'none') && ~strcmpi(smooth,'2d') && ~strcmpi(smooth,'1d2pc') && ~strcmpi(smooth,'1d3pf') && ~strcmpi(smooth,'1d3pb')
             error('GTdef_open ERROR: smooth algorithm should be 2d, 1d2pc, 1d3pf or 1d3pb!');
-	end
-	continue
+        end
+        continue
     end
     %%%%% surface flag %%%%%
     if strcmpi(flag,'surface')
-	[surf,remain] = strtok(remain);
-	if ~strcmpi(surf,'none') && ~strcmpi(surf,'free') && ~strcmpi(surf,'fixed')
+        [surf,remain] = strtok(remain);
+        if ~strcmpi(surf,'none') && ~strcmpi(surf,'free') && ~strcmpi(surf,'fixed')
             error('GTdef_open ERROR: surfce should be either free or fixed!');
-	end
-	continue
+        end
+        continue
     end
     %%%%% kappa %%%%%
     if strcmpi(flag,'kappa')
@@ -250,6 +264,14 @@ while(1)
 	        beta(ii) = k1+delta_k*(ii-n0);
 	    end
 	    continue
+	end
+	continue
+    end
+    %%%%% green's functions %%%%%
+    if strcmpi(flag,'greensfns')
+	[grnflag,remain] = strtok(remain);
+	if ~strcmpi(grnflag,'on') && ~strcmpi(grnflag,'off')
+            error('GTdef_open ERROR: greensfns should be either on or off!');
 	end
 	continue
     end
@@ -330,14 +352,16 @@ while(1)
 	    continue
 	end
 	%%% fault 5 %%
-	%if strcmp(method,'5')
-        %[name,remain] = strtok(remain);
-	%    flt5.num = flt5.num+1; flt5.name = [ flt5.name; name ];
-	%    for ii = 1:13
- 	%	[ flt5.flt(flt5.num,ii),remain ] = GTdef_read1double(remain);
-	%    end
-	%    continue
-	%end
+	if strcmp(method,'5')
+            [name,remain] = strtok(remain);
+	    flt5.num = flt5.num+1; flt5.name = [ flt5.name; name ];
+            [grname,remain] = strtok(remain);
+            flt5.grname = [ flt5.grname; grname ];
+	    for ii = 1:11
+ 		[ flt5.flt(flt5.num,ii),remain ] = GTdef_read1double(remain);
+	    end
+	    continue
+	end
 	continue
     end
     %%%%% subfault %%%%%
@@ -349,15 +373,6 @@ while(1)
 	end
 	continue
     end
-    %%%%%% boundary for fault 5 patches %%%%%
-    %if strcmpi(flag,'boundary')
-    %    [name,remain] = strtok(remain);
-    %    bndry.num = bndry.num+1; bndry.name = [ bndry.name; name ];
-    %    for ii = 1:14
-    %        [ bndry.bd(bndry.num,ii),remain ] = GTdef_read1double(remain);
-    %    end
-    %    continue
-    %end
     %%%%% dip %%%%%
     if strcmpi(flag,'dip')
         [name,remain] = strtok(remain);

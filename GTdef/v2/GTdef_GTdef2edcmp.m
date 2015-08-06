@@ -1,7 +1,7 @@
-function [ ] = GTdef_GTdef2edcmp(finname)
+function [ ] = GTdef_GTdef2edcmp(finName)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                              GTdef_GTdef2edcmp                          %
+%                          GTdef_GTdef2edcmp                              %
 %                                                                         %
 % Convert GTdef format to edcmp format                                    %
 % output is in local cartesian coordinates                                %
@@ -11,49 +11,53 @@ function [ ] = GTdef_GTdef2edcmp(finname)
 % finally it works!                                                       %
 %                                                                         %
 % INPUT:                                                                  %
-% finname - GTdef input/output file                                       %
+% finName - GTdef input/output file                                       %
 %                                                                         %
 % OUTPUT:                                                                 %
 % edcmp.inp file                                                          %
 %                                                                         %
-% first created by lfeng Tue Jun 12 15:54:16 SGT 2012                     %
-% last modified by lfeng Wed Jun 13 18:16:36 SGT 2012                     %
+% first created by Lujia Feng Tue Jun 12 15:54:16 SGT 2012                %
+% added origin lfeng Thu Dec  5 21:51:14 SGT 2013                         %
+% last modified by Lujia Feng Thu Dec  5 21:53:00 SGT 2013                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'.......... reading the input file ...........\t');
 tic
-[ coord,~,~,~,~,~,~,~,~,...
+[ coord,origin,~,~,~,~,~,~,~,~,~,...
   flt1,flt2,flt3,flt4,~,...
-  ~,subflt,dip,pnt,~,~,~,~,~,~ ] = GTdef_open(finname);
+  ~,subflt,dip,pnt,~,~,~,~,~,~ ] = GTdef_open(finName);
 toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% set origin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set the middle point of the region as origin for the local cartesian coordinate
 if strcmpi(coord,'geo') || strcmpi(coord,'geo_polyconic')
-    lonlist = []; latlist = [];
-    if flt1.num~=0
-        lonlist = [ lonlist;flt1.flt(:,1) ]; latlist = [ latlist;flt1.flt(:,2) ];
+    if isempty(origin)
+        lonlist = []; latlist = [];
+        if flt1.num~=0
+            lonlist = [ lonlist;flt1.flt(:,1) ]; latlist = [ latlist;flt1.flt(:,2) ];
+        end
+        if flt2.num~=0
+            lonlist = [ lonlist;flt2.flt(:,1) ]; latlist = [ latlist;flt2.flt(:,2) ];
+        end
+        if flt3.num~=0
+            lonlist = [ lonlist;flt3.flt(:,1) ]; latlist = [ latlist;flt3.flt(:,2) ];
+        end
+        if flt4.num~=0
+            lonlist = [ lonlist;flt4.flt(:,1) ]; latlist = [ latlist;flt4.flt(:,2) ];
+        end
+        lon0 = 0.5*(min(lonlist)+max(lonlist));
+        lat0 = 0.5*(min(latlist)+max(latlist));
+    else
+        lon0 = origin(1); lat0 = origin(2);
     end
-    if flt2.num~=0
-        lonlist = [ lonlist;flt2.flt(:,1) ]; latlist = [ latlist;flt2.flt(:,2) ];
-    end
-    if flt3.num~=0
-        lonlist = [ lonlist;flt3.flt(:,1) ]; latlist = [ latlist;flt3.flt(:,2) ];
-    end
-    if flt4.num~=0
-        lonlist = [ lonlist;flt4.flt(:,1) ]; latlist = [ latlist;flt4.flt(:,2) ];
-    end
-    lon0 = 0.5*(min(lonlist)+max(lonlist));
-    lat0 = 0.5*(min(latlist)+max(latlist));
 elseif strcmpi(coord,'local')~=1
     error('GTdef_GTdef2edcmp ERROR: Coordinate input is wrong!!!');
 end
 
-cellname = regexp(finname,'\.(in|out)','split');
-basename = char(cellname(1));
-foutname = [ basename '_edcmp.inp' ];
-fout = fopen(foutname,'w');
+[ ~,basename,~ ] = fileparts(finName);
+foutName = [ basename '_edcmp.inp' ];
+fout = fopen(foutName,'w');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% point data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'\n......... processing the point data .........\t');
@@ -64,7 +68,7 @@ if pnt.num~=0
        [pxx,pyy] = LL2ckmd(pnt.loc(:,1),pnt.loc(:,2),lon0,lat0,0);
     end
     if strcmp(coord,'geo_polyconic')
-       [pxx,pyy] = latlon_to_xy(pnt.loc(:,1),pnt.loc(:,2),lon0,lat0);
+       [pxx,pyy] = latlon_to_xy(pnt.loc(:,1),pnt.loc(:,2),lon0,lat0,0);
     end
     if strcmp(coord,'local')
        pxx = pnt.loc(:,1); pyy = pnt.loc(:,2);
@@ -108,7 +112,7 @@ tic
        [x3,y3] = LL2ckmd(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0,0);
     end
     if strcmpi(coord,'geo_polyconic')
-       [x3,y3] = latlon_to_xy(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0);
+       [x3,y3] = latlon_to_xy(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0,0);
     end
     if strcmpi(coord,'local')
        x3 = flt3.flt(:,1); y3 = flt3.flt(:,2);

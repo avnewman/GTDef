@@ -30,7 +30,8 @@ function [ ] = GTdef_run_edgrn(finName)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'.......... reading the input file ...........\t');
 tic
-[ coord,smooth,surf,beta,rigidity,poisson,...
+[ coord,origin,smooth,surf,beta,grnflag,...
+  rigidity,poisson,...
   earth,edgrn,layer,...
   flt1,flt2,flt3,flt4,flt5,...
   bndry,subflt,dip,...
@@ -38,9 +39,7 @@ tic
   sspnt,ssflt1,ssflt2 ] = GTdef_open(finName);
 toc
 
-%basename = strtok(finName,'.');	% noly works for names without "."
-cellname = regexp(finName,'\.in','split');
-basename = char(cellname(1));
+[ ~,basename,~ ] = fileparts(finName);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% layered earth %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % if layered model is used, green function library is built up here

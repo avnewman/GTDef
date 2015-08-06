@@ -39,7 +39,8 @@ function [ sm ] = GTdef_sm1d_3pfwd_uprt(dd,ds,Nd,Ns)
 % (right is x+; up is y+)					  	  %
 %								 	  %
 % first created by Lujia Feng Wed Dec  9 19:39:04 EST 2009		  %
-% last modified by Lujia Feng Wed Dec  9 19:39:10 EST 2009		  %
+% added missing ; lfeng Thu Jun 27 08:56:33 SGT 2013                      %
+% last modified by Lujia Feng Thu Jun 27 08:56:41 SGT 2013                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nn = Ns*Nd;			% total patch/slip number
@@ -65,7 +66,7 @@ end
 % only one vertical layer
 if Ns==1			
     d0 = (mx0+my0)*ones(nn,1);	% diagonals = 0
-    d1 = my1*ones(nn,1)	% diagonal - 1
+    d1 = my1*ones(nn,1);	% diagonal - 1
     d2 = my2*ones(nn,1);	% diagonal - 2
     B = [ d2 d1 d0 ];		% diagonal columns
     ind = [ -2 -1 0 ];		% index for diagonal columns

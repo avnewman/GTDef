@@ -1,56 +1,60 @@
-function [ ] = GTdef_GTdef2edcmp(finname)
+function [ ] = GTdef_GTdef2edcmp_lonlat(finName)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                              GTdef_GTdef2edcmp                               %
-%                                                                              %
-% Convert GTdef format to edcmp format                                         %
-% used to verify layered GTdef code                                            %
-% only works for fault type-3                                                  %
-%                                                                              %
-% INPUT:                                                                       %
-% finname - GTdef input/output file                                            %
-%                                                                              %
-% OUTPUT:                                                                      %
-% edcmp.inp file                                                               %
-%                                                                              %
-% first created by lfeng Tue Jun 12 15:54:16 SGT 2012                          %
-% last modified by lfeng Wed Jun 13 17:33:01 SGT 2012                          %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                         GTdef_GTdef2edcmp_lonlat                        %
+%                                                                         %
+% Convert GTdef format to edcmp format                                    %
+% used to verify layered GTdef code                                       %
+% only works for fault type-3                                             %
+%                                                                         %
+% INPUT:                                                                  %
+% finName - GTdef input/output file                                       %
+%                                                                         %
+% OUTPUT:                                                                 %
+% edcmp.inp file                                                          %
+%                                                                         %
+% first created by Lujia Feng Tue Jun 12 15:54:16 SGT 2012                %
+% added origin lfeng Thu Dec  5 21:51:14 SGT 2013                         %
+% last modified by Lujia Feng Thu Dec  5 21:55:06 SGT 2013                %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'.......... reading the input file ...........\t');
 tic
-[ coord,~,~,~,~,~,~,~,~,...
+[ coord,origin,~,~,~,~,~,~,~,~,~,...
   flt1,flt2,flt3,flt4,~,...
-  ~,subflt,dip,pnt,~,~,~,~,~,~ ] = GTdef_open(finname);
+  ~,subflt,dip,pnt,~,~,~,~,~,~ ] = GTdef_open(finName);
 toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% set origin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set the middle point of the region as origin for the local cartesian coordinate
 if strcmpi(coord,'geo') || strcmpi(coord,'geo_polyconic')
-    lonlist = []; latlist = [];
-    if flt1.num~=0
-        lonlist = [ lonlist;flt1.flt(:,1) ]; latlist = [ latlist;flt1.flt(:,2) ];
+    if isempty(origin)
+        lonlist = []; latlist = [];
+        if flt1.num~=0
+            lonlist = [ lonlist;flt1.flt(:,1) ]; latlist = [ latlist;flt1.flt(:,2) ];
+        end
+        if flt2.num~=0
+            lonlist = [ lonlist;flt2.flt(:,1) ]; latlist = [ latlist;flt2.flt(:,2) ];
+        end
+        if flt3.num~=0
+            lonlist = [ lonlist;flt3.flt(:,1) ]; latlist = [ latlist;flt3.flt(:,2) ];
+        end
+        if flt4.num~=0
+            lonlist = [ lonlist;flt4.flt(:,1) ]; latlist = [ latlist;flt4.flt(:,2) ];
+        end
+        lon0 = 0.5*(min(lonlist)+max(lonlist));
+        lat0 = 0.5*(min(latlist)+max(latlist));
+    else
+        lon0 = origin(1); lat0 = origin(2);
     end
-    if flt2.num~=0
-        lonlist = [ lonlist;flt2.flt(:,1) ]; latlist = [ latlist;flt2.flt(:,2) ];
-    end
-    if flt3.num~=0
-        lonlist = [ lonlist;flt3.flt(:,1) ]; latlist = [ latlist;flt3.flt(:,2) ];
-    end
-    if flt4.num~=0
-        lonlist = [ lonlist;flt4.flt(:,1) ]; latlist = [ latlist;flt4.flt(:,2) ];
-    end
-    lon0 = 0.5*(min(lonlist)+max(lonlist));
-    lat0 = 0.5*(min(latlist)+max(latlist));
 elseif strcmpi(coord,'local')~=1
-    error('GTdef_GTdef2edcmp ERROR: Coordinate input is wrong!!!');
+    error('GTdef_GTdef2edcmp_lonlat ERROR: Coordinate input is wrong!!!');
 end
 
-cellname = regexp(finname,'\.(in|out)','split');
-basename = char(cellname(1));
-foutname = [ basename '_edcmp.inp' ];
-fout = fopen(foutname,'w');
+[ ~,basename,~ ] = fileparts(finName);
+foutName = [ basename '_edcmp.inp' ];
+fout = fopen(foutName,'w');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% point data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'\n......... processing the point data .........\t');
@@ -94,7 +98,7 @@ tic
        [x3,y3] = LL2ckmd(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0,0);
     end
     if strcmpi(coord,'geo_polyconic')
-       [x3,y3] = latlon_to_xy(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0);
+       [x3,y3] = latlon_to_xy(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0,0);
     end
     if strcmpi(coord,'local')
        x3 = flt3.flt(:,1); y3 = flt3.flt(:,2);
@@ -125,7 +129,7 @@ if ~isempty(newflt34)
         [lon,lat] = ckm2LLd(xx,yy,lon0,lat0,0);
     end
     if strcmpi(coord,'geo_polyconic')
-        [lon,lat] = xy_to_latlon(xx,yy,lon0,lat0);
+        [lon,lat] = xy_to_latlon(xx,yy,lon0,lat0,0);
     end
     % switch xx & yy; top side down
     xyztop34 = [ lat lon zz ];

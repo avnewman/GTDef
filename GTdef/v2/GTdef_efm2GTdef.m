@@ -19,7 +19,7 @@ function [ ] = GTdef_efm2GTdef(filename,fltname,flttype)
 % (3) flttype - fault type [ 1 or 3 ]                                          %
 %                                                                              %
 % OUTPUT:                                                                      %
-% GTdef fault type-1                                                           %
+% GTdef fault type-1 or fault type-3                                           %
 %									       %
 % first created by lfeng Tue May 22 14:28:50 SGT 2012                          %
 % last modified by lfeng Wed May 23 00:01:34 SGT 2012                          %
@@ -68,8 +68,7 @@ slipM = reshape(slip,Ns,Nd);
 rakeM = reshape(rake,Ns,Nd);
 
 % write out
-cellname = regexp(filename,'\.','split');
-basename = char(cellname(1));
+[ ~,basename,~ ] = fileparts(filename);
 % fault type 1
 if flttype==1
     foutname = [ basename '_flt1.in' ];

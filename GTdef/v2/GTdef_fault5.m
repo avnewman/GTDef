@@ -1,17 +1,16 @@
-function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault5(flt,subflt,bndry,Xin,Bin,Nin,mu,nu,smooth,surf)
+function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault5(flt,subflt,vertices,grnfns,smooth,surf)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            GTdef_fault5				  %
-% Fault type 5 is discretized into small patches with different local     %
-% strike and dip from its master faul ,but they are still touching	  %
-% Process one type-5 fault, combine its existing irregular subpatches	  %
-% to prepare for the inputs to Matlab function 				  %
+% Fault type 5 is irregular surface discretized into small patches        %
+% with different local strike and dip                                     %
+% Greens functions are calculated by FEM tools e.g. PyLith                %
 % x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)					  %
 % Here we have no inequalities, so set A=[];b=[]			  %
 % Additionally, determine the smoothing matrix for the subfaults	  %
 %									  %
 % INPUT:					  		  	  %
-%  flt = [ ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns dlen slen ]		  %
+%  flt = [ ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns ]		          %
 %    ss  - master-fault strike-slip (left-lateral +)                      %
 %    ds  - master-fault dip-slip (thrust +)                               %
 %    ts  - master-fault tensile-slip (opening +)                          %
@@ -26,14 +25,11 @@ function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault5(flt,subflt
 %    snum - column number for subfaults				  	  %
 %    ss,ds,ts - subfault slips						  %
 %    ss0,ds0,ts0,ssX,dsX,tsX - subfault slip bounds			  %
-%  Xin - point site locations in the local cartesian system 	  	  %
-%        [3*n] [ xx;yy;zz ]						  %
-%  Bin - baseline site locations in the local cartesian system 	  	  %
-%        [6*n] [ x1;y1;z1;x2;y2;z2 ]					  %
-%  Nin - grid and profile node locations in the local cartesian system    %
-%        [3*n] [ xx;yy;zz ]						  %
-%  mu  - shear modulus							  %
-%  nu  - poisson's ratio                                                  %
+%vertices - subfault/vertices location                                    %
+%         = [ id dnum snum xx yy zz ]                                     %
+% grnfns  - array of size                        (vertexNum*pntNum*9)     %
+%         for each patch-site pair                                        % 
+%         = [ ss_dx ss_dy ss_dz ds_dx ds_dy ds_dz ts_dx ts_dy ts_dz ]     %
 %  smooth - smoothing method						  %
 %  surf   - surface smoothing setting					  %
 %                                                                         %
@@ -43,12 +39,6 @@ function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault5(flt,subflt
 %  Xgrn - displacements [east;north;vertical] for different sites   	  %
 %         from unit slips [(3*nn)*slip_num] 				  %
 %         (nn is the  number of sites)  				  %
-%  Bgrn - length changes [east;north;vertical;length] for 	  	  %
-%         different baselines from unit slips [(4*nn)*slip_num] 	  %
-%         (nn is the  number of baselines)  				  %
-%  Ngrn - displacements [east;north;vertical] for different nodes   	  %
-%         from unit slips [(3*nn)*slip_num] 				  %
-%         (nn is the  number of nodes)  				  %
 %  Aeq - left-hand side matrix for linear equalities  [slip_num*slip_num] %
 %  beq - right-hand side vector for linear equalities [slip_num*1]        %
 %  x0  - initial values for ss,ds,ts 	[slip_num*1]                      %
@@ -58,23 +48,22 @@ function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault5(flt,subflt
 %  sm_abs - matrix for calculating the absolute 1st derivative		  %
 %                                                                         %
 % first created by Lujia Feng Fri Dec 11 11:47:47 EST 2009		  %
-% changed 'freesurface' to 'surface' lfeng Wed Feb 24 12:50:51 EST 2010	  %
-% last modified by Lujia Feng Wed Dec  1 18:58:31 EST 2010		  %
+% last modified by Lujia Feng Sat Dec  1 02:51:13 SGT 2012                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if size(flt)~=[1 13], error('GTdef_fault5 ERROR: need a 1*13 fault vector as input!'); end
+if size(flt)~=[1 11], error('GTdef_fault5 ERROR: need a 1*11 fault vector as input!'); end
 
 % initialization
+Xgrn = []; Bgrn = []; Ngrn = [];
+
 % Note: flt is a 1-row vector for the master fault
 mslips = flt(1:9);				% slip block
 Nd = round(flt(10)); Ns = round(flt(11));	% number of rows and columns
 subflt_num = Nd*Ns;				% subfault num
-ddip = flt(1:12); dlen = flt(1:13);
 unit = ones(subflt_num,1);
 slips = mslips(unit,:);				% duplicate slips of master-fault
 
 % form subfaults
-slips = mslips(unit,:);				% duplicate slips of master-fault
 if ~isempty(subflt)
     num = size(subflt,1); mat = [Nd Ns];
     for ii = 1:num
@@ -84,44 +73,59 @@ if ~isempty(subflt)
     end
 end
 
-if ~isempty(bndry)
-    num = size(bndry,1); mat = [Nd Ns];
-    for ii = 1:num
-        dd = round(bndry(ii,1)); ss = round(bndry(ii,2));
-        jj = sub2ind(mat,dd,ss);
-	x1(jj,1) = bndry(ii,3);  y1(jj,1) = bndry(ii,4);
-	x2(jj,1) = bndry(ii,12); y2(jj,1) = bndry(ii,13);
-	z1(jj,1) = bndry(ii,5);  z2(jj,1) = bndry(ii,8);
-	% center points for dip calculation
-	xtopc(jj,1) = 0.5*(x1(jj,1)+x2(jj,1)); 
-	ytopc(jj,1) = 0.5*(y1(jj,1)+y2(jj,1));
-	xbotc(jj,1) = 0.5*(bndry(ii,6)+bndry(ii,9)); 
-	ybotc(jj,1) = 0.5*(bndry(ii,7)+bndry(ii,10));
+% check if GTdef input Nd & Ns == Greens functions Nd & Ns
+vertNd = max(vertices(:,2));
+vertNs = max(vertices(:,3));
+if vertNd ~= Nd
+    error('GTdef_fault5 ERROR: GTdef input Nd is inconsistent with greens function database Nd!');
+end
+if vertNs ~= Ns
+    error('GTdef_fault5 ERROR: GTdef input Ns is inconsistent with greens function database Ns!');
+end
+
+% initialization
+x0 = [ slips(:,1); slips(:,2); slips(:,3) ];	% [ss;ds;ts]
+lb = [ slips(:,4); slips(:,6); slips(:,8) ];	% [ss0;ds0;ts0]
+ub = [ slips(:,5); slips(:,7); slips(:,9) ];	% [ssX;dsX;tsX]
+
+comp_num = 3;                                   % component number = 3 (strike, dip, tensile)
+slip_num = subflt_num*comp_num;			% slip num
+Aeq = zeros(slip_num,slip_num); beq = zeros(slip_num,1);
+
+% fix slips that are not free
+for ii = 1:slip_num
+    if lb(ii)==ub(ii)			        % lb==ub means the slip is fixed
+    	lb(ii) = -Inf; ub(ii) = Inf;	        % relax lb==ub; lsqlin() has a probl with lb==ub
+	Aeq(ii,ii) = 1; 		        % use equalities instead of lb==ub
+	beq(ii) = x0(ii);
     end
 end
 
-dist3d = sqrt((xtopc-xbotc).^2+(ytopc-ybotc).^2+(z1-z2).^2);
-heigh = z2-z1;
-dip = asind(heigh./dist3d);
-
-num = size(dip,1);
-for ii = 1:num
-     if isnan(dip(ii))
-         x1(ii)=0; y1(ii)=0; x2(ii)=0; y2(ii)=0; dip(ii)=0; slips(ii,:)=0;
-     end
+% form Xgrn
+if ~isempty(grnfns)
+    % strike-slip
+    cgrn = grnfns(:,:,1:3);
+    cgrn = permute(cgrn,[2 3 1]);
+    cgrn = reshape(cgrn,[],subflt_num);
+    Xgrn = [ Xgrn cgrn ];
+    % dip-slip
+    cgrn = grnfns(:,:,4:6);
+    cgrn = permute(cgrn,[2 3 1]);
+    cgrn = reshape(cgrn,[],subflt_num);
+    Xgrn = [ Xgrn cgrn ];
+    % opening
+    cgrn = grnfns(:,:,7:9);
+    cgrn = permute(cgrn,[2 3 1]);
+    cgrn = reshape(cgrn,[],subflt_num);
+    Xgrn = [ Xgrn cgrn ];
 end
 
-newflt = [ x1 y1 x2 y2 z1 z2 dip slips];
-
-% treat subfault sequence as fault type 2
-[ Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault2(newflt,Xin,Bin,Nin,mu,nu);
-
-
 % create smoothing matrices
+[ ddip,dlen ] = PyLith_dist_greensfns(vertices);
 if strcmp(surf,'free')
-    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_free(ddip,dlen,Nd,Ns);
+    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_free_3slips(ddip,dlen,Nd,Ns);
 elseif strcmp(surf,'fixed')
-    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_fixed(ddip,dlen,Nd,Ns);
+    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_fixed_3slips(ddip,dlen,Nd,Ns);
 else
     error('GTdef_fault5 ERROR: Surface smoothing is wrong!!!');
 end

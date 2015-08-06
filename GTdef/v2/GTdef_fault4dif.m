@@ -68,7 +68,8 @@ function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0,Min0 ] = GTdef_fault4dif(fl
 %                                                                              %
 % first created by Lujia Feng Thu May 10 15:04:55 SGT 2012                     %
 % added output Min0 for stress calculation lfeng Thu May 17 SGT 2012           %
-% last modified by Lujia Feng Thu May 17 09:01:13 SGT 2012                     %
+% added sm = [] for subflt_num==1 lfeng Tue Oct 21 17:25:33 SGT 2014           %
+% last modified by Lujia Feng Tue Oct 21 17:34:57 SGT 2014                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 18], error('GTdef_fault4dif ERROR: need a 1*18 fault vector as input!'); end
@@ -87,6 +88,7 @@ unit = ones(subflt_num,1);
 if subflt_num==1
     [ Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0,Min0 ] = GTdef_fault4uni([flt(:,1:end-2)],Xin,Bin,Nin,earth,mu,nu,edgrn,edgrnfcts);
     sm_abs = [];
+    sm     = [];
     return
 end
 

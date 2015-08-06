@@ -23,7 +23,8 @@ function [ xsect_name,xsect ] = GTdef_xsection(flt_type,flt_name,flt,dipin)
 %  rows     - num of patches on each segment                                    %
 %                                                                               %
 % first created by Lujia Feng Thu Dec  2 02:22:28 EST 2010		        %
-% last modified by Lujia Feng Mon May 14 01:54:46 SGT 2012                      %
+% corrected a bug when dip is not specified lfeng Tue Jul  2 20:07:37 SGT 2013  %
+% last modified by Lujia Feng Tue Jul  2 20:10:52 SGT 2013                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 datanum = size(flt,2);
@@ -44,7 +45,7 @@ if isempty(dipin)
    x1 = zeros(size(dip)); num = ones(size(dip));
    width = bsxfun(@rdivide,z2-z1,tand(dip));
    x2 = width;
-   xsect = [ dip x1 z1 x2 z2 width num ];
+   xsect = [ 1 dip x1 z1 x2 z2 width num ];
 else
    dipnum = size(dipin,1);
    xsect_name = cell(dipnum,1);
