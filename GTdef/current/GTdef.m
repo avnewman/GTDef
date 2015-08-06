@@ -1,357 +1,571 @@
-function [] = GTdef(fin_name,wnum)
+function [] = GTdef(finName,wnum)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                              GTdef.m                                    	%
-% 	       Georgia Tech Matlab program for deformation	  	  	%
-%		 Lujia Feng; Andrew V. Newman; Ting Chen   		  	%
-%									  	%
-% INPUT:									%
-% fin_name - input file name                                            	%
-% wnum     - num of matlab parallel workers to be used				%
-%   0: do not use parallel computing						%
-%   8: up to 8 workers that can be specified                                    %
-%  -1: use parallel computing                                                   %
-%      but number of workers will be determined by the system                   %
-%									  	%
-% v1:									  	%
-%  first created by Lujia Feng Mon Apr 20 14:15:52 EDT 2009		  	%
-%  last modified by Lujia Feng Tue May 19 01:14:49 EDT 2009		  	%
-% v1.1:									  	%
-%  added coordiante type flag 'coord' lfeng Thu Nov 5 17:12:59 EST 2009   	%
-% v1.2:									  	%
-% added first derivative modes lfeng Tue Dec  1 14:31:10 EST 2009	  	%
-% modified beta (added beta) and roughness for 1st derivatives 	  	  	%
-% added 'dip' flag for bended faults lfeng Mon Dec  7 01:04:06 EST 2009	  	%
-% added 'freesurface' flag lfeng Wed Dec  9 17:00:58 EST 2009		  	%
-% added fault type 5 lfeng Fri Dec 11 10:57:18 EST 2009			  	%
-% changed 'freesurface' to 'surface' flag lfeng Wed Feb 24 12:46:01 EST 2010	%
-% changed 'coord' to string flag lfeng Wed Feb 24 13:40:01 EST 2010		%
-% allows input file name include multiple "." besides ".in" lfeng Oct 4 2010	%
-% added matlabpool lfeng Wed Dec  1 12:12:00 EST 2010				%
-% edited the origin definition lfeng Thu Apr  7 18:45:35 EDT 2011		%
-% last modified lfeng Thu Apr  7 18:45:48 EDT 2011				%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                              	     GTdef.m                                           %
+%                  Georgia Tech Matlab program for deformation                         %
+%                    Lujia Feng; Andrew V. Newman; Ting Chen                           %
+%                                                                                      %
+% INPUT:                                                                               %
+% finName - input file name                                                            %
+% wnum    - num of matlab parallel workers to be used                                  %
+%   0: do not use parallel computing                                                   %
+%   8: up to 8 workers that can be specified                                           %
+%  -1: use parallel computing                                                          %
+%      but number of workers will be determined by the system                          %
+%                                                                                      %
+% v1:                                                                                  %
+% first created by Lujia Feng Mon Apr 20 14:15:52 EDT 2009                             %
+% added coordiante type flag 'coord' lfeng Thu Nov 5 17:12:59 EST 2009                 %
+% added first derivative modes lfeng Tue Dec  1 14:31:10 EST 2009                      %
+% modified beta (added beta) and roughness for 1st derivatives                         %
+% added 'dip' flag for bended faults lfeng Mon Dec  7 01:04:06 EST 2009                %
+% added 'freesurface' flag lfeng Wed Dec  9 17:00:58 EST 2009                          %
+% added fault type 5 lfeng Fri Dec 11 10:57:18 EST 2009                                %
+% changed 'freesurface' to 'surface' flag lfeng Wed Feb 24 12:46:01 EST 2010	       %
+% changed 'coord' to string flag lfeng Wed Feb 24 13:40:01 EST 2010                    %
+% allows input file name include multiple "." besides ".in" lfeng Oct 4 2010	       %
+% added matlabpool lfeng Wed Dec  1 12:12:00 EST 2010                                  %
+% edited the origin definition lfeng Thu Apr  7 18:45:35 EDT 2011                      %
+% v2:                                                                                  %
+% used strucutres for passing parameters lfeng Wed Feb 22 03:39:11 SGT 2012            %
+% added layered earth model lfeng Tue Feb 28 03:44:29 SGT 2012                         %
+% new definition used for fault1, fault2, fault3 & fault4 lfeng May 8 2012             %
+% added polyconic projection lfeng Thu Jun  7 12:23:26 SGT 2012                        %
+% added fault5 lfeng Fri Nov 30 14:52:01 SGT 2012                                      %
+% added saving greensfns lfeng Mon Aug  5 14:17:44 SGT 2013                            %
+% added 'strike' flag for curved faults lfeng Fri Oct 24 14:47:22 SGT 2014             %
+% added addon to combine 'dip' & 'strike' lfeng Fri Oct 24 15:06:09 SGT 2014           %
+% added sweepAngle lfeng Wed Nov  5 19:34:02 SGT 2014                                  %
+% modified greensfns output lfeng Fri Nov 14 16:16:28 SGT 2014                         %
+% corrected addon.crt error with Paul Morgan lfeng Fri Dec 12 16:55:38 SGT 2014        %
+% v3:                                                                                  %
+% added modspace (model space) structure for lsqlin lfeng Thu Mar 19 17:32:29 SGT 2015 %
+% added Min and xyzctr to fault structures lfeng Thu Mar 19 20:18:30 SGT 2015          %
+% added earth structure lfeng Fri Mar 20 20:37:32 SGT 2015                             %
+% added xyzflt lfeng Tue Mar 24 11:21:45 SGT 2015                                      %
+% added Min, SSgrn, DSgrn, and TSgrn to xyzflt lfeng Thu Mar 26 15:54:56 SGT 2015      %
+% added modspace.sdropflag lfeng Thu Mar 26 17:31:07 SGT 2015                          %
+% added output individual Xgrn lfeng Fri Jun 12 12:21:25 SGT 2015                      %
+% added fault5 lfeng with Paul Morgan Wed Jun 17 17:36:52 SGT 2015                     %
+% fixed fault4 bug lfeng with Paul Morgan Wed Jun 24 12:31:10 SGT 2015                 %
+% fixed profile & grid lfeng Mon Jul 27 16:14:16 SGT 2015                              %
+% 3D geometry for Okada models can be imported using fault5 lfeng Tue Aug  4 SGT 2015  %
+% fixed greensfns for fault5 lfeng Wed Aug  5 15:57:54 SGT 2015                        %
+% last modified Lujia Feng Wed Aug  5 15:58:24 SGT 2015                                %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
 if wnum==0		% do not use parallel computing
-   if matlabpool('size')>0
-      matlabpool close
-   end
+    if matlabpool('size')>0
+       matlabpool close
+    end
 elseif wnum<0		% use parallel computing, but do not specify num of workers
-   if matlabpool('size')==0
-      matlabpool
-   end
+    if matlabpool('size')==0
+       matlabpool
+    end
 elseif wnum<=8
-   if matlabpool('size')==0
-      matlabpool('open',int32(wnum));
-   end
+    if matlabpool('size')==0
+       matlabpool('open',int32(wnum));
+    end
 else
-   error('Matlabpool input is wrong!!!');
+    error('GTdef ERROR: matlabpool input is wrong!!!');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fprintf(1,'.......... reading the input file ...........\t');
+fprintf(1,'\n.......... reading the input file ...........\t');
 tic
- [ coord,smooth,surf,beta,rigidity,poisson,... 
-   flt1_name,flt1_num,flt1, flt2_name,flt2_num,flt2,...
-   flt3_name,flt3_num,flt3, flt4_name,flt4_num,flt4,...
-   ~,~,~,~,~,...
-   subflt_name,subflt,dip_name,dip,...
-   pnt_name,pnt_num,pnt_loc,pnt_disp,pnt_err,pnt_wgt,... 
-   bsl_name,bsl_num,bsl_loc,bsl_disp,bsl_err,bsl_wgt,...
-   prf_name,prf_num,prf,grd_name,grd_num,grd ] = GTdef_open(fin_name);
+[ modspace,earth,...
+  flt1,flt2,flt3,flt4,flt5,flt6,...
+  subflt,addon,...
+  pnt,bsl,prf,grd,...
+  sspnt,ssflt1,ssflt2 ] = GTdef_open(finName);
 toc
 
-
+%basename = strtok(finName,'.');	% noly works for names without "."
+%cellname = regexp(finname,'\.(in|out)','split');
+%basename = char(cellname(1));
+[ ~,basename,~ ] = fileparts(finName);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% set origin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set the middle point of the region as origin for the local cartesian coordinate
-if strcmp(coord,'geo')
-   lonlist = []; latlist = [];
-   if flt1_num~=0
-       lonlist = [ lonlist;flt1(:,1) ]; latlist = [ latlist;flt1(:,2) ];
-   end
-   if flt2_num~=0
-       lonlist = [ lonlist;flt2(:,1) ]; latlist = [ latlist;flt2(:,2) ];
-   end
-   if flt3_num~=0
-       lonlist = [ lonlist;flt3(:,1) ]; latlist = [ latlist;flt3(:,2) ];
-   end
-   if flt4_num~=0
-       lonlist = [ lonlist;flt4(:,1) ]; latlist = [ latlist;flt4(:,2) ];
-   end
-   lon0 = 0.5*(min(lonlist)+max(lonlist));
-   lat0 = 0.5*(min(latlist)+max(latlist));
-elseif strcmp(coord,'local')~=1
-    error('Coordinate input is wrong!!!');
+if strcmp(modspace.coord,'geo') || strcmp(modspace.coord,'geo_polyconic')
+    if isempty(modspace.origin)
+        lonlist = []; latlist = [];
+        if flt1.num~=0
+            lonlist = [ lonlist;flt1.flt(:,1) ]; latlist = [ latlist;flt1.flt(:,2) ];
+        end
+        if flt2.num~=0
+            lonlist = [ lonlist;flt2.flt(:,1) ]; latlist = [ latlist;flt2.flt(:,2) ];
+        end
+        if flt3.num~=0
+            lonlist = [ lonlist;flt3.flt(:,1) ]; latlist = [ latlist;flt3.flt(:,2) ];
+        end
+        if flt4.num~=0
+            lonlist = [ lonlist;flt4.flt(:,1) ]; latlist = [ latlist;flt4.flt(:,2) ];
+        end
+        lon0 = 0.5*(min(lonlist)+max(lonlist));
+        lat0 = 0.5*(min(latlist)+max(latlist));
+    else
+        lon0 = modspace.origin(1); lat0 = modspace.origin(2);
+    end
+elseif strcmpi(modspace.coord,'local')~=1
+    error('GTdef ERROR: coordinate input is wrong!!!');
 end
 
-pnt_crt = []; pnt_obs = []; pnt_obs_err = []; pnt_obs_wgt = []; pnt_coef = [];
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% layered earth %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if strcmp(earth.type,'layered')
+fprintf(1,'\n..... calculating point source library ......\t');
+tic
+    %---------- only need to create green functions once ----------
+    %fedgrnName = [ basename '_edgrn.inp' ];
+    %GTdef_write_edgrn_input(fedgrnName,edgrn,layer);
+    %folderName = 'edgrnfcts';
+    %% create green function folder if it does not exist
+    %if ~exist(folderName,'dir'), mkdir(folderName); end
+    %system(['echo ' fedgrnName ' | /Users/lfeng/matlab/edgrn2.0']);
+    %%system(['echo ' fedgrnName ' | ./edgrn2.0']);
+    %--------------------------------------------------------------
+
+    % read in point source green functions
+    [ earth.edgrn,earth.edgrnfcts ] = GTdef_read_edgrn_output(earth.edgrn);
+toc
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% point data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fprintf(1,'\n......... processing the point data .........\t');
+if pnt.num~=0
+fprintf(1,'\n........... processing point data ...........\t');
 tic
-if pnt_num~=0
     % convert point data from geographic to local cartesian coordinate
-    if strcmp(coord,'geo')
-       [pxx,pyy] = LL2ckmd(pnt_loc(:,1),pnt_loc(:,2),lon0,lat0,0);
+    switch modspace.coord
+       case 'geo'
+          [pxx,pyy] = LL2ckmd(pnt.loc(:,1),pnt.loc(:,2),lon0,lat0,0);
+       case 'geo_polyconic'
+          [pxx,pyy] = latlon_to_xy(pnt.loc(:,1),pnt.loc(:,2),lon0,lat0,0);
+       case 'local'
+          pxx = pnt.loc(:,1); pyy = pnt.loc(:,2);
     end
-    if strcmp(coord,'local')
-       pxx = pnt_loc(:,1); pyy = pnt_loc(:,2);
-    end
-    pzz = zeros(1,length(pxx));
-    pnt_crt = [pxx'; pyy'; pzz];                   	% cartesian - 3*n matrix [xx;yy;zz]; it is just Xin
+    pzz = pnt.loc(:,3);
+    zz_ind = pzz>0; pzz(zz_ind) = 0;                % positive depths are all set to be zero   
+    pnt.crt = [pxx pyy pzz];                        % cartesian - n*3 matrix [xx yy zz]; it is just Xin'
     % prepare the point observation data
-    pnt_obs = reshape(pnt_disp,[],1);			% (3*n)*1 observation vector [east;north;vertical]
-    pnt_obs_err = reshape(pnt_err,[],1);		% (3*n)*1 error vector [east;north;vertical]
-    pnt_obs_wgt = [pnt_wgt;pnt_wgt;pnt_wgt]; 		% (3*n)*1 weight vector [east;north;vertical]
-    pnt_coef = sqrt(pnt_obs_wgt)./pnt_obs_err;
-end
+    pnt.obs = reshape(pnt.disp,[],1);               % (3*n)*1 observation vector [east;north;vertical]
+    pnt.obs_err = reshape(pnt.err,[],1);            % (3*n)*1 error vector [east;north;vertical]
+    pnt.obs_wgt = [pnt.wgt;pnt.wgt;pnt.wgt];        % (3*n)*1 weight vector [east;north;vertical]
+    pnt.coef = sqrt(pnt.obs_wgt)./pnt.obs_err;      % (3*n)*1 coefficient vector
 toc
+end
 
-bsl_crt = []; bsl_obs = []; bsl_obs_err = []; bsl_obs_wgt = []; bsl_coef = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% baseline data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fprintf(1,'\n........ processing the baseline data .......\t');
+if bsl.num~=0
+fprintf(1,'\n.......... processing baseline data .........\t');
 tic
-if bsl_num~=0
     % convert from geographic to local cartesian coordinate
-    if strcmp(coord,'geo')
-       [bx1,by1] = LL2ckmd(bsl_loc(:,1),bsl_loc(:,2),lon0,lat0,0);
-       [bx2,by2] = LL2ckmd(bsl_loc(:,4),bsl_loc(:,5),lon0,lat0,0);
+    switch modspace.coord
+       case 'geo'
+          [bx1,by1] = LL2ckmd(bsl.loc(:,1),bsl.loc(:,2),lon0,lat0,0);
+          [bx2,by2] = LL2ckmd(bsl.loc(:,4),bsl.loc(:,5),lon0,lat0,0);
+       case 'geo_polyconic'
+          [bx1,by1] = latlon_to_xy(bsl.loc(:,1),bsl.loc(:,2),lon0,lat0,0);
+          [bx2,by2] = latlon_to_xy(bsl.loc(:,4),bsl.loc(:,5),lon0,lat0,0);
+       case 'local'
+          bx1 = bsl.loc(:,1); by1 = bsl.loc(:,2);
+          bx2 = bsl.loc(:,4); by2 = bsl.loc(:,5);
     end
-    if strcmp(coord,'local')
-       bx1 = bsl_loc(:,1); by1  = bsl_loc(:,2);
-       bx2 = bsl_loc(:,4); by2  = bsl_loc(:,5);
-    end
-    bz1 = bsl_loc(:,3);	 bz2 = bsl_loc(:,6);
-    bsl_crt = [bx1'; by1'; bz1';bx2'; by2'; bz2'];      % cartesian - 6*n matrix [bx1;by1;bz1;bx2;by2;bz2]; it is just Bin
+    bz1 = bsl.loc(:,3);	 bz2 = bsl.loc(:,6);
+    bsl.crt = [bx1 by1 bz1 bx2 by2 bz2];                % cartesian - n*6 matrix [bx1 by1 bz1 bx2 by2 bz2]; it is just Bin'
     % prepare the baseline observation data
-    bsl_obs = reshape(bsl_disp,[],1);			% (4*n)*1 observation vector [east;north;vertical:length]
-    bsl_obs_err = reshape(bsl_err,[],1);		% (4*n)*1 error vector [east;north;vertical:length]
-    bsl_obs_wgt = [bsl_wgt;bsl_wgt;bsl_wgt;bsl_wgt];	% (4*n)*1 weight vector [east;north;vertical:length]
-    bsl_coef = sqrt(bsl_obs_wgt)./bsl_obs_err;
-end
+    bsl.obs = reshape(bsl.disp,[],1);                   % (4*n)*1 observation vector [east;north;vertical:length]
+    bsl.obs_err = reshape(bsl.err,[],1);                % (4*n)*1 error vector [east;north;vertical:length]
+    bsl.obs_wgt = [bsl.wgt;bsl.wgt;bsl.wgt;bsl.wgt];	% (4*n)*1 weight vector [east;north;vertical:length]
+    bsl.coef = sqrt(bsl.obs_wgt)./bsl.obs_err;          % (4*n)*1 coefficient vector
 toc
+end
 
-
-nod_loc = []; nod_crt = []; nod_lon = []; nod_lat = []; nod_name = {};
+nod.loc = []; nod.crt = []; nod.name = {};
+nod_lon = []; nod_lat = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% profile & grid data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fprintf(1,'\n..... processing the profile & grid data ....\t');
+if prf.num~=0||grd.num~=0
+fprintf(1,'\n....... processing profile & grid data ......\t');
 tic
-if prf_num~=0
-    for ii = 1:prf_num
-        plon = []; plat = []; pname = {};
-	[ plon,plat,pname ] = GTdef_profile(prf(ii,:),prf_name{ii});
-	nod_lon = [ nod_lon plon ]; nod_lat = [ nod_lat plat ];
-    	nod_name = [ nod_name; pname ];   
+    if prf.num~=0
+        for ii = 1:prf.num
+            [ plon,plat,pname ] = GTdef_profile(prf.prf(ii,:),prf.name{ii});
+            nod_lon  = [ nod_lon; plon ]; 
+            nod_lat  = [ nod_lat; plat ];
+            nod.name = [ nod.name; pname ];   
+        end
     end
-end
-if grd_num~=0
-    for ii = 1:grd_num
-        glon = []; glat = []; gname = {};
-	[ glon,glat,gname ] = GTdef_grid(grd(ii,:),grd_name{ii});
-	nod_lon = [ nod_lon glon ]; nod_lat = [ nod_lat glat ];
-    	nod_name = [ nod_name; gname ];   
+    if grd.num~=0
+        for ii = 1:grd.num
+    	    [ glon,glat,gname ] = GTdef_grid(grd.grd(ii,:),grd.name{ii});
+    	    nod_lon  = [ nod_lon; glon ]; 
+	    nod_lat  = [ nod_lat; glat ];
+            nod.name = [ nod.name; gname ];   
+        end
     end
-end
-if prf_num~=0||grd_num~=0
-    nod_zz = nan(length(nod_lon),1);
-    nod_loc = [ nod_lon' nod_lat' nod_zz ];
-    if strcmp(coord,'geo')
-       [nod_xx,nod_yy] = LL2ckmd(nod_lon,nod_lat,lon0,lat0,0);
+    nod_zz = nan(size(nod_lon));
+    nod.loc = [ nod_lon nod_lat nod_zz ];
+    switch modspace.coord
+       case 'geo'
+          [nod_xx,nod_yy] = LL2ckmd(nod_lon,nod_lat,lon0,lat0,0);
+       case 'geo_polyconic'
+          [nod_xx,nod_yy] = latlon_to_xy(nod_lon,nod_lat,lon0,lat0,0);
+       case 'local'
+          nod_xx = nod_lon; nod_yy = nod_lat;
     end
-    if strcmp(coord,'local')
-       nod_xx = nod_lon; nod_yy = nod_lat;
-    end
-    nod_zz = zeros(1,length(nod_xx));
-    nod_crt = [ nod_xx;nod_yy;nod_zz ];			% cartesian - 3*n matrix [xx;yy;zz]; it is just Nin
-end
+    nod_zz = zeros(size(nod_xx));
+    nod.crt = [ nod_xx nod_yy nod_zz ];			% cartesian - n*3 matrix [xx yy zz]; it is just Nin'
 toc
+end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% stress point data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if sspnt.num~=0
+fprintf(1,'\n....... processing stress point data ........\t');
+tic
+    % convert point data from geographic to local cartesian coordinate
+    switch modspace.coord
+       case 'geo'
+          [sspxx,sspyy] = LL2ckmd(sspnt.loc(:,1),sspnt.loc(:,2),lon0,lat0,0);
+       case 'geo_polyconic'
+          [sspxx,sspyy] = latlon_to_xy(sspnt.loc(:,1),sspnt.loc(:,2),lon0,lat0,0);
+       case 'local'
+          sspxx = sspnt.loc(:,1); sspyy = sspnt.loc(:,2);
+    end
+    sspzz = sspnt.loc(:,3);
+    zz_ind = sspzz>0;  sspzz(zz_ind) = 0;               % positive depths are all set to be zero
+    sspnt.crt = [sspxx'; sspyy'; sspzz'];               % cartesian - 3*n matrix; it is just Xin
+toc
+end
 
-% form everything that is needed for x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)
-Xgrn = []; Bgrn = []; Ngrn = []; sm = []; Aeq = []; beq = []; lb = []; ub = []; x0 = [];
-% sm_abs for calculate absolute 1st derivative (strain)
-sm_abs = [];
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% strike variations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if addon.strnum~=0
+fprintf(1,'\n....... processing strike variations .......\t');
+tic
+    % convert strike controlling points from geographic to local cartesian coordinate
+    switch modspace.coord
+       case 'geo'
+          [sx1,sy1] = LL2ckmd(addon.str(:,1),addon.str(:,2),lon0,lat0,0);
+          [sx2,sy2] = LL2ckmd(addon.str(:,3),addon.str(:,4),lon0,lat0,0);
+       case 'geo_polyconic'
+          [sx1,sy1] = latlon_to_xy(addon.str(:,1),addon.str(:,2),lon0,lat0,0);
+          [sx2,sy2] = latlon_to_xy(addon.str(:,3),addon.str(:,4),lon0,lat0,0);
+       case 'local'
+          sx1 = addon.str(:,1); sy1 = addon.str(:,2);
+          sx2 = addon.str(:,3); sy2 = addon.str(:,4);
+    end
+    addon.crt = [ sx1 sy1 sx2 sy2 addon.str(:,[5 6]) ];
+toc
+else
+    addon.crt = addon.str;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% stress fault1 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ssflt1.fltnum~=0
+fprintf(1,'\n....... processing stress fault type-1 ......\t');
+tic
+    switch modspace.coord
+       case 'geo'
+          [x1,y1] = LL2ckmd(ssflt1.flt(:,1),ssflt1.flt(:,2),lon0,lat0,0);
+       case 'geo_polyconic'
+          [x1,y1] = latlon_to_xy(ssflt1.flt(:,1),ssflt1.flt(:,2),lon0,lat0,0);
+       case 'local'
+          x1 = ssflt1.flt(:,1); y1 = ssflt1.flt(:,2);
+    end
+    ssflt1.flt = [x1 y1 ssflt1.flt(:,3:end)];
+    [ ssflt1 ] = GTdef_stressfault1(ssflt1,addon);
+    switch modspace.coord
+       case 'geo'
+          [lon1,lat1] = ckm2LLd(ssflt1.crt(1,:),ssflt1.crt(2,:),lon0,lat0,0);
+          ssflt1.loc  = [ lon1; lat1; ssflt1.crt(3,:) ]';
+       case 'geo_polyconic'
+          [lon1,lat1] = xy_to_latlon(ssflt1.crt(1,:),ssflt1.crt(2,:),lon0,lat0,0);
+          ssflt1.loc  = [ lon1; lat1; ssflt1.crt(3,:) ]';
+       case 'local'
+          ssflt1.loc  = ssflt1.crt';
+    end
+toc
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% stress fault2 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ssflt2.fltnum~=0
+fprintf(1,'\n....... processing stress fault type-2 ......\t');
+tic
+    switch modspace.coord
+       case 'geo'
+          [x2_1,y2_1] = LL2ckmd(ssflt2.flt(:,1),ssflt2.flt(:,2),lon0,lat0,0);
+          [x2_2,y2_2] = LL2ckmd(ssflt2.flt(:,3),ssflt2.flt(:,4),lon0,lat0,0);
+       case 'geo_polyconic'
+          [x2_1,y2_1] = latlon_to_xy(ssflt2.flt(:,1),flt2.flt(:,2),lon0,lat0,0);
+          [x2_2,y2_2] = latlon_to_xy(ssflt2.flt(:,3),flt2.flt(:,4),lon0,lat0,0);
+       case 'local'
+          x2_1 = ssflt2.flt(:,1); y2_1 = ssflt2.flt(:,2);
+          x2_2 = ssflt2.flt(:,3); y2_2 = ssflt2.flt(:,4);
+    end
+    ssflt2.flt = [x2_1 y2_1 x2_2 y2_2 ssflt2.flt(:,5:end)];
+    [ ssflt2 ] = GTdef_stressfault2(ssflt2,addon);
+    switch modspace.coord
+       case 'geo'
+          [lon2,lat2] = ckm2LLd(ssflt2.crt(1,:),ssflt2.crt(2,:),lon0,lat0,0);
+          ssflt2.loc = [ lon2; lat2; ssflt2.crt(3,:) ]';
+       case 'geo_polyconic'
+          [lon2,lat2] = xy_to_latlon(ssflt2.crt(1,:),ssflt2.crt(2,:),lon0,lat0,0);
+          ssflt2.loc = [ lon2; lat2; ssflt2.crt(3,:) ]';
+       case 'local'
+          ssflt2.loc = ssflt2.crt';
+    end
+toc
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault1 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if flt1_num~=0
+if flt1.num~=0
 fprintf(1,'\n.......... processing fault type-1 ..........\t');
 tic
-    if strcmp(coord,'geo')
-       [x1,y1] = LL2ckmd(flt1(:,1),flt1(:,2),lon0,lat0,0);
+    switch modspace.coord
+        case 'geo'
+           [x1,y1] = LL2ckmd(flt1.flt(:,1),flt1.flt(:,2),lon0,lat0,0);
+        case 'geo_polyconic'
+           [x1,y1] = latlon_to_xy(flt1.flt(:,1),flt1.flt(:,2),lon0,lat0,0);
+        case 'local'
+           x1 = flt1.flt(:,1); y1 = flt1.flt(:,2);
     end
-    if strcmp(coord,'local')
-       x1 = flt1(:,1); y1 = flt1(:,2);
+    newflt1 = [ x1 y1 flt1.flt(:,3:end) ];
+    for ii = 1:flt1.num
+        cfname = flt1.name{ii};
+        cflt   = newflt1(ii,:);
+    	% find subfaults for the master fault
+    	subInd = strcmpi(cfname,subflt.name);
+        % find dips for the master fault
+    	dipInd = strcmpi(cfname,addon.dipname);
+        [ modspace,xyzflt,Xgrn1 ] = GTdef_fault1dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),...
+	                                            pnt.crt,bsl.crt,nod.crt,earth);
+        flt1.xyzflt{ii} = xyzflt; 
+        % save green's functions
+        if strcmpi(modspace.grnflag,'on')
+           [ ~,prjflt1,~ ] = GTdef_prjflt1dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
+           GTdef_save_greensfns(cfname,pnt,prjflt1,Xgrn1,modspace.coord,lon0,lat0,0);
+        end
     end
-    [ Xgrn1,Bgrn1,Ngrn1,sm1,Aeq1,beq1,lb1,ub1,x01 ] = GTdef_fault1([x1 y1 flt1(:,3:end)],pnt_crt,bsl_crt,nod_crt,rigidity,poisson);
-    [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_addall(Xgrn,Bgrn,Ngrn,sm,[],Aeq,beq,lb,ub,x0,...
-                                                          Xgrn1,Bgrn1,Ngrn1,sm1,[],Aeq1,beq1,lb1,ub1,x01);
 toc
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault2 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if flt2_num~=0
+if flt2.num~=0
 fprintf(1,'\n.......... processing fault type-2 ..........\t');
 tic
-    if strcmp(coord,'geo')
-       [x2_1,y2_1] = LL2ckmd(flt2(:,1),flt2(:,2),lon0,lat0,0);
-       [x2_2,y2_2] = LL2ckmd(flt2(:,3),flt2(:,4),lon0,lat0,0);
+    switch modspace.coord
+        case 'geo'
+           [x2_1,y2_1] = LL2ckmd(flt2.flt(:,1),flt2.flt(:,2),lon0,lat0,0);
+           [x2_2,y2_2] = LL2ckmd(flt2.flt(:,3),flt2.flt(:,4),lon0,lat0,0);
+        case 'geo_polyconic'
+           [x2_1,y2_1] = latlon_to_xy(flt2.flt(:,1),flt2.flt(:,2),lon0,lat0,0);
+           [x2_2,y2_2] = latlon_to_xy(flt2.flt(:,3),flt2.flt(:,4),lon0,lat0,0);
+        case 'local'
+           x2_1 = flt2.flt(:,1); y2_1 = flt2.flt(:,2);
+           x2_2 = flt2.flt(:,3); y2_2 = flt2.flt(:,4);
     end
-    if  strcmp(coord,'local')
-       x2_1 = flt2(:,1); y2_1 = flt2(:,2);
-       x2_2 = flt2(:,3); y2_2 = flt2(:,4);
+    newflt2 = [ x2_1 y2_1 x2_2 y2_2 flt2.flt(:,5:end) ];
+    for ii = 1:flt2.num
+        cfname = flt2.name{ii};
+        cflt   = newflt2(ii,:);
+    	% find subfaults for the master fault
+    	subInd = strcmpi(cfname,subflt.name);
+        % find dips for the master fault
+    	dipInd = strcmpi(cfname,addon.dipname);
+        % find strikes for the master fault
+    	strInd = strcmpi(cfname,addon.strname);
+        [ modspace,xyzflt,Xgrn2 ] = GTdef_fault2dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:),...
+                                                    pnt.crt,bsl.crt,nod.crt,earth);
+        flt2.xyzflt{ii} = xyzflt; 
+        % save green's functions
+        if strcmpi(modspace.grnflag,'on')
+            [ ~,prjflt2,~ ] = GTdef_prjflt2dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
+            GTdef_save_greensfns(cfname,pnt,prjflt2,Xgrn2,modspace.coord,lon0,lat0,0);
+        end
     end
-    [ Xgrn2,Bgrn2,Ngrn2,sm2,Aeq2,beq2,lb2,ub2,x02 ] = GTdef_fault2([x2_1 y2_1 x2_2 y2_2 flt2(:,5:end)],pnt_crt,bsl_crt,nod_crt,rigidity,poisson);
-    [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_addall(Xgrn,Bgrn,Ngrn,sm,[],Aeq,beq,lb,ub,x0,...
-                                                          Xgrn2,Bgrn2,Ngrn2,sm2,[],Aeq2,beq2,lb2,ub2,x02);
 toc
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault3 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if flt3_num~=0
+if flt3.num~=0
 fprintf(1,'\n.......... processing fault type-3 ..........\t');
 tic
-    if strcmp(coord,'geo')
-       [x3,y3] = LL2ckmd(flt3(:,1),flt3(:,2),lon0,lat0,0);
+    switch modspace.coord
+        case 'geo'
+           [x3,y3] = LL2ckmd(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0,0);
+        case 'geo_polyconic'
+           [x3,y3] = latlon_to_xy(flt3.flt(:,1),flt3.flt(:,2),lon0,lat0,0);
+        case 'local'
+           x3 = flt3.flt(:,1); y3 = flt3.flt(:,2);
     end
-    if  strcmp(coord,'local')
-       x3 = flt3(:,1); y3 = flt3(:,2);
-    end
-    for ii = 1:flt3_num
-        cflt_name = flt3_name{ii};
+    newflt3 = [x3 y3 flt3.flt(:,3:end)];
+    for ii = 1:flt3.num
+        cfname = flt3.name{ii};
+        cflt   = newflt3(ii,:);
     	% find subfaults for the master fault
-    	sub_ind = strcmpi(cflt_name,subflt_name);
-	% find dips for the master fault
-    	dip_ind = strcmpi(cflt_name,dip_name);
-	Xgrn3 = []; Bgrn3 = []; Ngrn3 = []; Aeq3 = []; beq3 = []; lb3 = []; ub3 = []; x03 = [];		% reset empty
-        [ Xgrn3,Bgrn3,Ngrn3,sm3,sm3_abs,Aeq3,beq3,lb3,ub3,x03 ] = ...
-	GTdef_fault3([x3(ii) y3(ii) flt3(ii,3:end)],subflt(sub_ind,:),dip(dip_ind,:),pnt_crt,bsl_crt,nod_crt,rigidity,poisson,smooth,surf);
-    	[ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = ...
-	GTdef_addall(Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0,...
-	             Xgrn3,Bgrn3,Ngrn3,sm3,sm3_abs,Aeq3,beq3,lb3,ub3,x03);
+    	subInd = strcmpi(cfname,subflt.name);
+        % find dips for the master fault
+    	dipInd = strcmpi(cfname,addon.dipname);
+        [ modspace,xyzflt,Xgrn3 ] = GTdef_fault3dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),...
+                                                    pnt.crt,bsl.crt,nod.crt,earth);
+        flt3.xyzflt{ii} = xyzflt; 
+        % save green's functions
+        if strcmpi(modspace.grnflag,'on')
+            [ ~,prjflt3,~ ] = GTdef_prjflt3dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
+            GTdef_save_greensfns(cfname,pnt,prjflt3,Xgrn3,modspace.coord,lon0,lat0,0);
+        end
     end
 toc
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault4 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if flt4_num~=0
+if flt4.num~=0
 fprintf(1,'\n.......... processing fault type-4 ..........\t');
 tic
-    if strcmp(coord,'geo')
-       [x4_1,y4_1] = LL2ckmd(flt4(:,1),flt4(:,2),lon0,lat0,0);
-       [x4_2,y4_2] = LL2ckmd(flt4(:,3),flt4(:,4),lon0,lat0,0);
+    switch modspace.coord
+       case 'geo'
+          [x4_1,y4_1] = LL2ckmd(flt4.flt(:,1),flt4.flt(:,2),lon0,lat0,0);
+          [x4_2,y4_2] = LL2ckmd(flt4.flt(:,3),flt4.flt(:,4),lon0,lat0,0);
+       case 'geo_polyconic'
+          [x4_1,y4_1] = latlon_to_xy(flt4.flt(:,1),flt4.flt(:,2),lon0,lat0,0);
+          [x4_2,y4_2] = latlon_to_xy(flt4.flt(:,3),flt4.flt(:,4),lon0,lat0,0);
+       case 'local'
+          x4_1 = flt4.flt(:,1); y4_1 = flt4.flt(:,2);
+          x4_2 = flt4.flt(:,3); y4_2 = flt4.flt(:,4);
     end
-    if strcmp(coord,'local')
-       x4_1 = flt4(:,1); y4_1 = flt4(:,2);
-       x4_2 = flt4(:,3); y4_2 = flt4(:,4);
-    end
-    for ii = 1:flt4_num
-        cflt_name = flt4_name{ii};
+    newflt4 = [x4_1 y4_1 x4_2 y4_2 flt4.flt(:,5:end)];
+    for ii = 1:flt4.num
+        cfname = flt4.name{ii};
+        cflt   = newflt4(ii,:);
     	% find subfaults for the master fault
-    	sub_ind = strcmpi(cflt_name,subflt_name);
-	% find dips for the master fault
-    	dip_ind = strcmpi(cflt_name,dip_name);
-	Xgrn4 = []; Bgrn4 = []; Ngrn4 = []; Aeq4 = []; beq4 = []; lb4 = []; ub4 = []; x04 = [];		% reset empty
-        [ Xgrn4,Bgrn4,Ngrn4,sm4,sm4_abs,Aeq4,beq4,lb4,ub4,x04 ] = ...
-	GTdef_fault4([x4_1(ii) y4_1(ii) x4_2(ii) y4_2(ii) flt4(ii,5:end)],subflt(sub_ind,:),dip(dip_ind,:),pnt_crt,bsl_crt,nod_crt,rigidity,poisson,smooth,surf);
-    	[ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = ...
-	GTdef_addall(Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0,...
-	             Xgrn4,Bgrn4,Ngrn4,sm4,sm4_abs,Aeq4,beq4,lb4,ub4,x04);
+    	subInd = strcmpi(cfname,subflt.name);
+        % find dips for the master fault
+    	dipInd = strcmpi(cfname,addon.dipname);
+        % find strikes for the master fault
+    	strInd = strcmpi(cfname,addon.strname);
+        [ modspace,xyzflt,Xgrn4 ] = GTdef_fault4dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:),...
+                                                    pnt.crt,bsl.crt,nod.crt,earth);
+        flt4.xyzflt{ii} = xyzflt; 
+        % save green's functions
+        if strcmpi(modspace.grnflag,'on')
+            [ ~,prjflt4,~ ] = GTdef_prjflt4dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
+            GTdef_save_greensfns(cfname,pnt,prjflt4,Xgrn4,modspace.coord,lon0,lat0,0);
+        end
     end
 toc
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault5 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-flt5_num = 0;
-if flt5_num~=0
-    fprintf(1,'\n.......... processing fault type-5 ..........\t');
-    tic
-        if strcmp(coord,'geo')
-           [bx1,by1] = LL2ckmd(bndry(:,3),bndry(:,4),lon0,lat0,0);		% upleft point
-           [bx2,by2] = LL2ckmd(bndry(:,6),bndry(:,7),lon0,lat0,0);		% lower left point
-           [bx3,by3] = LL2ckmd(bndry(:,9),bndry(:,10),lon0,lat0,0);		% lower right point
-           [bx4,by4] = LL2ckmd(bndry(:,12),bndry(:,13),lon0,lat0,0);	% upleft point
-           bndry_crt = [ bx1 by1 bndry(:,5) bx2 by2 bndry(:,8) bx3 by3 bndry(:,11) bx4 by4 bndry(:,14) ];
+if flt5.num~=0
+fprintf(1,'\n.......... processing fault type-5 ..........\t');
+tic
+    for ii = 1:flt5.num
+        cfname = flt5.name{ii};
+        cflt   = flt5.flt(ii,:);
+        % find geometry file for the fault
+        geoname = flt5.geoname{ii};
+        % find column names for the fault
+        colname = flt5.colname{ii};
+        % find subfaults for the master fault
+        subInd = strcmpi(cfname,subflt.name);
+
+        [ modspace,xyzflt,Xgrn5,newflt ] = GTdef_fault5(modspace,geoname,colname,cflt,subflt.flt(subInd,:),pnt.crt,bsl.crt,nod.crt,earth);
+
+        flt5.out(ii,:)  = newflt; % update Nd & Ns if not provided
+        flt5.xyzflt{ii} = xyzflt; 
+        % save green's functions
+        if strcmpi(modspace.grnflag,'on')
+            [ ~,prjflt5,~ ] = GTdef_prjflt5(modspace,geoname,colname,cflt,subflt.flt(subInd,:));
+            GTdef_save_greensfns(cfname,pnt,prjflt5,Xgrn5,modspace.coord,lon0,lat0,0);
         end
-        if strcmp(coord,'local')
-    	bndry_crt = bndry;
-        end
-        for ii = 1:flt5_num
-           cflt_name = flt5_name{ii};
-        	% find subfaults for the master fault
-        	sub_ind = strcmpi(cflt_name,subflt_name);
-        	% find the boundary for fault 5
-        	bnd_ind = strcmpi(cflt_name,bndry_name);
-    	Xgrn5 = []; Bgrn5 = []; Ngrn5 = []; Aeq5 = []; beq5 = []; lb5 = []; ub5 = []; x05 = [];		% reset empty
-            [ Xgrn5,Bgrn5,Ngrn5,sm5,sm5_abs,Aeq5,beq5,lb5,ub5,x05 ] = ...;
-    	GTdef_fault5(flt5,subflt(sub_ind,:),bndry(bnd_ind,:),pnt_crt,bsl_crt,nod_crt,rigidity,poisson,smooth,surf);
-        	[ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = ...
-    	GTdef_addall(Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0,...
-    	             Xgrn5,Bgrn5,Ngrn5,sm5,sm5_abs,Aeq5,beq5,lb5,ub5,x05);
-        end
-    toc
+    end
+toc
 end
 
-
-%basename = strtok(fin_name,'.');	% noly works for names without "."
-cellname = regexp(fin_name,'\.in','split');
-basename = char(cellname(1));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault6 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flt6.num~=0
+fprintf(1,'\n.......... processing fault type-6 ..........\t');
+tic
+    for ii = 1:flt6.num
+       cfname = flt6.name{ii};
+       % find subfaults for the master fault
+       subInd = strcmpi(cfname,subflt.name);
+       % find green functions for the fault
+       cgrname = flt6.grname{ii};
+       % read greens functions
+       [ siteList,siteloc,vertices,grnList,grnfns ] = PyLith_read_greensfns(cgrname);
+       % trim greens functions
+       [ siteloc,grnList,grnfns ] = PyLith_trim_greensfns(pnt.name,siteList,siteloc,grnList,grnfns);
+       [ Xgrn6,Bgrn6,Ngrn6,sm6,sm6_abs,Aeq6,beq6,lb6,ub6,x06 ] = ...
+       GTdef_fault6(flt6.flt(ii,:),subflt.flt(subInd,:),vertices,grnfns,modspace.smooth,modspace.surf);
+       [ modspace ] = GTdef_addall(modspace,Xgrn6,Bgrn6,Ngrn6,sm6,sm6_abs,Aeq6,beq6,lb6,ub6,x06);
+    end
+toc
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% forward only %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if lb==-Inf
-fprintf(1,'\n.......... doing forward modeling ..........\t');
-tic
-    [ sm_use ] = GTdef_condense(sm);
-    [ sm_abs ] = GTdef_condense(sm_abs);
-    fout_name = [ basename '_fwd.out' ];
-    % mod_info = [ data_num slip_num ndf rss rms wrrs wrms chi2 rchi2 r_1d r_2d ];
-    [ mod_info,pnt_out,bsl_out,nod_out ]...
-       = GTdef_forward(Xgrn,Bgrn,Ngrn,sm,sm_abs,lb,ub,x0,pnt_loc,pnt_obs,pnt_obs_err,pnt_wgt,bsl_loc,bsl_obs,bsl_obs_err,bsl_wgt,nod_loc,smooth);
-    GTdef_output(fout_name,'none','none',0,rigidity,poisson,flt1_name,flt1_num,flt1,flt2_name,flt2_num,flt2,flt3_name,flt3_num,flt3,...
-	  	 flt4_name,flt4_num,flt4,{},0,[],{},[],...
-		 subflt_name,subflt,dip_name,dip,pnt_name,pnt_num,pnt_out,bsl_name,bsl_num,bsl_out,...
-           	 prf_name,prf_num,prf,grd_name,grd_num,grd,nod_name,nod_out,mod_info);
-toc
+if modspace.lb==-Inf
+    % set up forward parameters
+    modspace.xx = modspace.x0;
+
+    % forward calculation
+    fprintf(1,'\n........... doing forward modeling ..........\t');
+    tic
+    [ modspace,pnt,bsl,nod ] = GTdef_forward(modspace,pnt,bsl,nod);
+    toc
+    if strcmp(modspace.sdropflag,'on')
+        % calculate stress drop
+        fprintf(1,'\n.......... calculating stress drop ..........\t');
+        tic
+        [ flt1,flt2,flt3,flt4,flt5 ] = GTdef_calc_stressdrop(earth,flt1,flt2,flt3,flt4,flt5);
+        toc
+    end
+
+    % stress calculation
+%    if sspnt.num~=0 || ssflt1.fltnum~=0 || ssflt2.fltnum~=0
+%        fstressName = [ basename '_stress.out' ];
+%        [ sspnt,ssflt1,ssflt2 ] = GTdef_calc_stress(sspnt,ssflt1,ssflt2,Min0,earth);
+%        GTdef_output_stress(fstressName,sspnt,ssflt1,ssflt2);
+%    end
+    foutName = [ basename '_fwd.out' ];
+    GTdef_output(foutName,earth,modspace,0,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,bsl,prf,grd,nod);
 else
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% inversion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'\n............. doing inversion .............\t');
-    % condense the smoothing matrix by removing rows of all zeros
-    [ sm_use ] = GTdef_condense(sm);
-    [ sm_abs ] = GTdef_condense(sm_abs);
-
     % do inversion for each beta
-    beta_num = length(beta);
-    for ii = 1:beta_num
-    bt = beta(ii);
-    fprintf(1,'\n............. beta = %16.5f .............\t',bt);
-    tic
-	if strcmp(smooth,'2d')
-	    kp = sqrt(bt);
+    betaNum = length(modspace.beta);
+    for ii = 1:betaNum
+        bt = modspace.beta(ii);
+        fprintf(1,'\n............. beta = %16.5f .............\t',bt);
+        tic
+        if strcmp(modspace.smooth,'2d')
+            kp = sqrt(bt);
             if kp>=1
-                fout_name = strcat(basename,'_kp',num2str(kp,'%-.0f'),'.out');
-	    else
-                fout_name = strcat(basename,'_kp',num2str(kp,'%-.5f'),'.out');
-	    end
-	else
+                foutName = strcat(basename,'_kp',num2str(kp,'%-.0f'),'.out');
+            else
+                foutName = strcat(basename,'_kp',num2str(kp,'%-.5f'),'.out');
+            end
+        else
             if bt>=1
-                fout_name = strcat(basename,'_bt',num2str(bt,'%-.0f'),'.out');
-	    else
-                fout_name = strcat(basename,'_bt',num2str(bt,'%-.5f'),'.out');
-	    end
-	end
-        [ xx ] = GTdef_invert(Xgrn,Bgrn,sm_use,Aeq,beq,lb,ub,x0,pnt_obs,pnt_coef,bsl_obs,bsl_coef,bt);
-	% faults info
-        [ flt1_out,flt2_out,subflt_name,subflt_out ]...
-          = GTdef_slips(lb,ub,xx,flt1_num,flt1,flt2_num,flt2,flt3_name,flt3_num,flt3,flt4_name,flt4_num,flt4,{},0,[]);
-        [ mod_info(ii,:),pnt_out,bsl_out,nod_out ]...
-          = GTdef_forward(Xgrn,Bgrn,Ngrn,sm_use,sm_abs,lb,ub,xx,pnt_loc,pnt_obs,pnt_obs_err,pnt_wgt,bsl_loc,bsl_obs,bsl_obs_err,bsl_wgt,nod_loc,smooth);
-	% output results
-        GTdef_output(fout_name,smooth,surf,bt,rigidity,poisson,flt1_name,flt1_num,flt1_out,flt2_name,flt2_num,flt2_out,flt3_name,flt3_num,flt3,...
-              	     flt4_name,flt4_num,flt4,{},0,[],{},[],...
-		     subflt_name,subflt_out,dip_name,dip,pnt_name,pnt_num,pnt_out,bsl_name,bsl_num,bsl_out,...
-               	     prf_name,prf_num,prf,grd_name,grd_num,grd,nod_name,nod_out,mod_info(ii,:));
-    toc
+                foutName = strcat(basename,'_bt',num2str(bt,'%-.0f'),'.out');
+            else
+                foutName = strcat(basename,'_bt',num2str(bt,'%-.5f'),'.out');
+            end
+        end
+        % inversion
+        [ modspace ] = GTdef_invert(modspace,pnt,bsl,bt);
+        % forward calculation
+        [ modspace,pnt,bsl,nod ] = GTdef_forward(modspace,pnt,bsl,nod);
+        % update fault slips
+        [ flt1,flt2,flt3,flt4,flt5,flt6,subflt ] = GTdef_update_slips(earth,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt);
+        if strcmp(modspace.sdropflag,'on')
+            % calculate stress drop
+            [ flt1,flt2,flt3,flt4,flt5 ] = GTdef_calc_stressdrop(earth,flt1,flt2,flt3,flt4,flt5);
+        end
+        % output results
+        GTdef_output(foutName,earth,modspace,bt,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,bsl,prf,grd,nod);
+        toc
     end
-    fout_sum = [ basename '_inv.out' ];
-    GTdef_summary(fout_sum,beta,mod_info);
+    fsumName = [ basename '_inv.out' ];
+    GTdef_summary(fsumName,modspace);
 end
 
 % close up matlabpool for parallel computing

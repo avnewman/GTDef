@@ -48,7 +48,7 @@ mx = 0.5/ds; 			% the patches on left and right
 my = 0.5/dd;			% the patches on top and bottom
 mxy = 0.5/sqrt(ds^2+dd^2);
 
-if nn==1, error('Only one patch. No need to smooth!'); end
+if nn==1, error('GTdef_sm1d_8pctr_rtdw_free ERROR: only one patch. No need to smooth!'); end
 
 % more layers
 %%%%%%%%% diagonals = 0 %%%%%%%%%

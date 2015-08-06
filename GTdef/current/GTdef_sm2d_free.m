@@ -48,7 +48,7 @@ my = 1/dd^2;			% the patches on top and bottom
 mxy = -2*mx-2*my;		% the patch in the center
 mxy_free = -2*mx-my;		% the free-surface patch in the center
 
-if nn==1, error('Only one patch. No need to smooth!'); end
+if nn==1, error('GTdef_sm2d_free ERROR: only one patch. No need to smooth!'); end
 
 % more layers
 d0 = mxy*ones(Nd,Ns);		% diagonals = 0

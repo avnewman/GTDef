@@ -1,7 +1,7 @@
 function [lon,lat] = ckm2LL(xx,yy,lon0,lat0,rot)
 
 %  This matlab program 
-%  (1) rotates the Cartesion coordinate by rot [degree]
+%  (1) rotates the cartesian coordinate by rot [degree]
 %      to the coordinate with horizontal x-axis 
 %  (2) transforms local Cartesian coordinate to lon,lat
 %      using (lon0,lat0) as origin
@@ -44,5 +44,5 @@ if size(xx)==size(yy)
    lat = lat0 + y_rot/mpd;
    lon = lon0 + x_rot/mpd./cos(lat0*pi/180);
 else
-   error('xx and yy are not consistent!');
+   error('ckm2LL ERROR: xx and yy are not consistent!');
 end

@@ -1,5 +1,35 @@
-function [U,D,S,FLAG,FLAG2] = disloc3d_mod2(M,Xin,mu,nu)
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [U,D,E,S,FLAG,FLAG2] = disloc3d_mod2(M,Xin,mu,nu)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                            disloc3d_mod2.m                              %
+% INPUT (row-wise):                                                       %
+% M   - regtangular planes                                                %
+% M   = [len;width;depth;dip;str;east;north;ss;ds;ts] [10*slip_num]       %
+% NMOD= slip_num                                                          %
+% Note: slip_num must be 1 here for the calculation of green functions    %
+% X   - point site locations in the local cartesian system                %
+% Xin = [ xx;yy;zz ] [3*station_num]                                      %
+% NSTAT = station_num                                                     %
+% mu  - shear modulus							  %
+% nu  - poisson's ratio                                                   %
+%                                                                         %
+% OUTPUT (column-wise):                                                   %
+% U   - displacement                                                      %
+% U   = [Ux;Uy;Uz] [3*station_num]                                        %
+% D   - displacement derivatives (not necessarily symmetric)              %
+% D   = [UXXT;UXYT;UXZT;UYXT;UYYT;UYZT;UZXT;UZYT;UZZT] [9*station_num]    %
+%       T means total here                                                %
+% E   - symmetric strain tensor (Voigt notation of 6-dimensional vector)  %
+% E   = [EXX;EYY;EZZ;EYZ;EXZ;EXY] [6*station_num]                         %
+% S   - symmetric stress tensor (Voigt notation of 6-dimensional vector)  %
+% S   = [SXX;SYY;SZZ;SYZ;SXZ;SXY] [6*station_num]                         %
+%                                                                         % 
+% functions used in this file: DC3D; DCCON0; DCCON2; UA; UB; UC           %
+% original Okada code                                                     %
+% corrected U(:,11) in UA function Lujia Feng Jun 15 13:30:24 SGT 2012    %
+% commented WARNINGs lfeng Mon Jul 27 15:44:42 SGT 2015                   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
     UXT=0; UYT=0; UZT=0;
 
     UXXT=0; UXYT=0; UXZT=0;
@@ -11,28 +41,28 @@ function [U,D,S,FLAG,FLAG2] = disloc3d_mod2(M,Xin,mu,nu)
     I=IJ(1);
     NMOD=IJ(2);
     if(I~=10)
-      disp('m must be 10x1 model vector');
+      disp('disloc3d_mod2 WARNING: M must be 10x1 model vector');
     end
 
     IJ=size(Xin);
     I=IJ(1);
     NSTAT=IJ(2);
     if(I~=3)
-      disp('x must be 3xn');
+      disp('disloc3d_mod2 WARNING: Xin must be 3xn');
     end
 
     IJ=size(mu);
     I=IJ(1);
     J=IJ(2);
     if((I~=1)||(J~=1))
-      disp('mu must be a scalar.');
+      disp('disloc3d_mod2 WARNING: mu must be a scalar.');
     end
 
     IJ=size(nu);
     I=IJ(1);
     J=IJ(2);
     if((I~=1)||(J~=1))
-      disp('nu must be a scalar.');
+      disp('disloc3d_mod2 WARNING: nu must be a scalar.');
     end
 
 %% CREATE A MATRIX FOR RETURN ARGUMENT
@@ -52,7 +82,7 @@ function [U,D,S,FLAG,FLAG2] = disloc3d_mod2(M,Xin,mu,nu)
         end
     end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    MU=mu;
+    MU=mu; 
     NU=nu;
     LAMBDA=2*MU*NU/(1-2*NU);
     DEG2RAD=3.14159265358979/180;
@@ -65,16 +95,17 @@ function [U,D,S,FLAG,FLAG2] = disloc3d_mod2(M,Xin,mu,nu)
           STAT(J)=Xin(J,I);
         end
         if(STAT(3)>0)
-          disp('Positive depth given.');
+          disp('disloc3d_mod2 WARNING: Positive depth given.');
         else
             for J=1:NMOD
                 for K=1:10
                   MODEL(K)=M(K,J);
                 end
-            
+                % real strike = MODEL(5)
+                % STRIKE here = start from east + clockwise positive
                 STRIKE = (MODEL(5)-90)*DEG2RAD;
-    		CS = cos(STRIKE);
-    		SS = sin(STRIKE);
+                CS = cos(STRIKE);
+                SS = sin(STRIKE);
                 DIP = MODEL(4);
                 CD = cos(DIP*DEG2RAD);
                 SD = sin(DIP*DEG2RAD);
@@ -91,13 +122,14 @@ function [U,D,S,FLAG,FLAG2] = disloc3d_mod2(M,Xin,mu,nu)
                 Z=STAT(3);
         
                 if((MODEL(3)-SD*MODEL(2)<0)|(MODEL(1)<=0)|(MODEL(2)<=0)|(MODEL(3)<0))
-                  disp('Unphysical model.');
+                  disp('disloc3d_mod2 WARNING: Unphysical model.');
                 else
                 [UX,UY,UZ,UXX,UYX,UZX,UXY,UYY,UZY,UXZ,UYZ,UZZ,FLAGOUT] =...
                     DC3D(ALPHA,X,Y,Z,DEPTH,DIP,AL1,AL2,AW1,AW2,DISL1,DISL2,DISL3);
                 
                 FLAG2(J,I)=FLAGOUT+5+5*FLAGOUT;
                 
+                % coordinate transformation
                 A = CS*UX +  SS*UY;
                 B = -SS*UX + CS*UY;
                 C = UZ;
@@ -127,34 +159,66 @@ function [U,D,S,FLAG,FLAG2] = disloc3d_mod2(M,Xin,mu,nu)
                 end
             end
         
-        UOUT=[UXT UYT UZT];
-        DOUT=[UXXT UXYT UXZT UYXT UYYT UYZT UZXT UZYT UZZT];
-        THETA=DOUT(1)+DOUT(5)+DOUT(9);
-                           
-        SOUT(1)=LAMBDA*THETA+2*MU*DOUT(1);
-        SOUT(2)=MU*(DOUT(2)+DOUT(4));
-        SOUT(3)=MU*(DOUT(3)+DOUT(7));
-        SOUT(4)=LAMBDA*THETA+2*MU*DOUT(5);
-        SOUT(5)=MU*(DOUT(6)+DOUT(8));
-        SOUT(6)=LAMBDA*THETA+2*MU*DOUT(9);
-        
-        for J=1:3
-            U(J,I)=UOUT(J);
-        end
-        for J=1:9
-            D(J,I)=DOUT(J);
-        end
-        for J=1:6
-            S(J,I)=SOUT(J);
-        end
+	    % UOUT - displacements
+            UOUT=[UXT UYT UZT];
+	    % DOUT - displacement derivatives
+	    % DOUT(1) = UXXT 
+	    % DOUT(2) = UXYT 
+	    % DOUT(3) = UXZT 
+	    % DOUT(4) = UYXT 
+	    % DOUT(5) = UYYT 
+	    % DOUT(6) = UYZT 
+	    % DOUT(7) = UZXT 
+	    % DOUT(8) = UZYT 
+	    % DOUT(9) = UZZT 
+            DOUT=[UXXT UXYT UXZT UYXT UYYT UYZT UZXT UZYT UZZT];
+	    % displacement derivatives to strain
+	    % use Voigt notation of a six-dimensional vector form
+	    EOUT=zeros(6,1);
+            EOUT(1)=UXXT;
+            EOUT(2)=UYYT;
+            EOUT(3)=UZZT;
+            EOUT(4)=0.5*(UYZT+UZYT);
+            EOUT(5)=0.5*(UXZT+UZXT);
+            EOUT(6)=0.5*(UXYT+UYXT);
+                               
+	    % strain to stress
+	    % use Voigt notation of a six-dimensional vector form
+            % SOUT(1) = SXX
+            % SOUT(2) = SYY
+            % SOUT(3) = SZZ
+            % SOUT(4) = SYZ
+            % SOUT(5) = SXZ
+            % SOUT(6) = SXY
+            THETA=UXXT+UYYT+UZZT;
+            SOUT=zeros(6,1);
+            SOUT(1)=LAMBDA*THETA+2*MU*UXXT;
+            SOUT(2)=LAMBDA*THETA+2*MU*UYYT;
+            SOUT(3)=LAMBDA*THETA+2*MU*UZZT;
+            SOUT(4)=2*MU*EOUT(4);
+            SOUT(5)=2*MU*EOUT(5);
+            SOUT(6)=2*MU*EOUT(6);
+            
+            for J=1:3
+                U(J,I)=UOUT(J);
+            end
+            for J=1:9
+                D(J,I)=DOUT(J);
+            end
+            for J=1:6
+                E(J,I)=EOUT(J);
+            end
+            for J=1:6
+                S(J,I)=SOUT(J);
+            end
 
-        FLAG(I)=FLAGOUT;
-        
-        UXT=0; UYT=0; UZT=0;
+            FLAG(I)=FLAGOUT;
+            
+            UXT=0; UYT=0; UZT=0;
 
-        UXXT=0; UXYT=0; UXZT=0;
-        UYXT=0; UYYT=0; UYZT=0;
-        UZXT=0; UZYT=0; UZZT=0;
+            UXXT=0; UXYT=0; UXZT=0;
+            UYXT=0; UYYT=0; UYZT=0;
+            UZXT=0; UZYT=0; UZZT=0;
         end
     end
 
@@ -171,21 +235,26 @@ function [UX,UY,UZ,UXX,UYX,UZX,UXY,UYY,UZY,UXZ,UYZ,UZZ,IRET] = ...
 %*****                         REVISED   Y.OKADA ... NOV 1991   *****    
 %*****                                                          *****    
 %********************************************************************    
-%                                                                        
+% FAULT COORDINATE
+% ORIGIN - CENTER OF ORECTANGULAR
+% X - STRIKE DIRECTION
+% Z - UPWARDS
+% Y - UPDIP DETERMINED BY RIGHT-HAND RULE
+%********************************************************************    
 %***** INPUT                                                             
 %*****   ALPHA : MEDIUM CONSTANT  (LAMBDA+MYU)/(LAMBDA+2*MYU)            
-%*****   X,Y,Z : COORDINATE OF OBSERVING POINT                           
-%*****   DEPTH : SOURCE DEPTH                                            
+%*****   X,Y,Z : COORDINATE OF OBSERVING POINT IN FAULT COORD
+%*****   DEPTH : RECTANGULAR SOURCE CENTRAL DEPTH                                            
 %*****   DIP   : DIP-ANGLE (DEGREE)                                      
-%*****   AL1,AL2   : FAULT LENGTH (-STRIKE,+STRIKE)                      
-%*****   AW1,AW2   : FAULT WIDTH  ( DOWNDIP, UPDIP)                      
+%*****   AL1,AL2   : FAULT LENGTH (-STRIKE,+STRIKE) usually AL1==AL2 both +
+%*****   AW1,AW2   : FAULT WIDTH  ( DOWNDIP, UPDIP) usually AW1==AW2 both +                     
 %*****   DISL1-DISL3 : STRIKE-, DIP-, TENSILE-DISLOCATIONS               
 %                                                                        
 %***** OUTPUT                                                            
-%*****   UX, UY, UZ  : DISPLACEMENT ( UNIT=(UNIT OF DISL)                
-%*****   UXX,UYX,UZX : X-DERIVATIVE ( UNIT=(UNIT OF DISL) /              
-%*****   UXY,UYY,UZY : Y-DERIVATIVE        (UNIT OF X,Y,Z,DEPTH,AL,AW) ) 
-%*****   UXZ,UYZ,UZZ : Z-DERIVATIVE                                     
+%*****   UX, UY, UZ  : DISPLACEMENT (UNIT=(UNIT OF DISL)                
+%*****   UXX,UYX,UZX : X-DERIVATIVE (UNIT=(UNIT OF DISL)/(UNIT OF X,Y,Z,DEPTH,AL,AW)
+%*****   UXY,UYY,UZY : Y-DERIVATIVE (UNIT=(UNIT OF DISL)/(UNIT OF X,Y,Z,DEPTH,AL,AW) 
+%*****   UXZ,UYZ,UZZ : Z-DERIVATIVE (UNIT=(UNIT OF DISL)/(UNIT OF X,Y,Z,DEPTH,AL,AW)                                    
 %*****   IRET        : RETURN CODE  ( =0....NORMAL,   =1....SINGULAR )
 
     global SD CD XI2 ET2 Q2 R;
@@ -458,7 +527,7 @@ function U = UA(XI,ET,Q,DISL1,DISL2,DISL3)
         DU( 8)=                    ALP2*EY;
         DU( 9)= ALP1*(CD/R+QY*SD) -ALP2*Q*FY;
         DU(10)= ALP1*XY*CD        +ALP2*XI*FZ+Y/F2*X11;
-        U(11)=                    ALP2*EZ;
+        DU(11)=                    ALP2*EZ;
         DU(12)=-ALP1*(SD/R-QY*CD) -ALP2*Q*FZ;
         for I=1:12
           U(I)=U(I)+DISL1/PI2*DU(I);

@@ -1,109 +1,139 @@
-function [ coord,smooth,surf,beta,rigidity,poisson,...
-           flt1_name,flt1_num,flt1,...
-	   flt2_name,flt2_num,flt2,...
-           flt3_name,flt3_num,flt3,...
-	   flt4_name,flt4_num,flt4,...
-	   flt5_name,flt5_num,flt5,...
-	   bndry_name,bndry,subflt_name,subflt,dip_name,dip...
-           pnt_name,pnt_num,pnt_loc,pnt_disp,pnt_err,pnt_wgt,...
-           bsl_name,bsl_num,bsl_loc,bsl_disp,bsl_err,bsl_wgt,...
-           prf_name,prf_num,prf,...
-	   grd_name,grd_num,grd ] = GTdef_open(filename)
+function [ modspace,earth,...
+           flt1,flt2,flt3,flt4,flt5,flt6,...
+           subflt,addon,...
+           pnt,bsl,prf,grd,...
+	   sspnt,ssflt1,ssflt2 ] = GTdef_open(filename)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                               GTdef_open.m				        %
-% 		  function to open the input file for GTdef		        %
-%										%
-% The format of the input file could be very free. 				%
-% Just make sure the first term of each line is an identifiable flag.		%
-% The program will ignore unidentifiable flags.					%
-%										%
-% The function reads in  							%
-% (1) Parameters are not case sensitive						%
-% 		  coord         string                  {geo}			%
-%                      geo   - geographic coordiante				%
-% 		       local - cartesian coordinate				%
-%                 smooth	string		        {2d}			%
-%         	   1d2pc - 1st derivative 2-point central			%
-%         	   1d3pf - 1st derivative 3-point forward                       %
-%         	   1d3pb - 1st derivative 3-point backward                      %
-%            	      2d - 2nd derivative 3-point central                       %
-%                 surf          string			{free}		   	%
-%                      fixed - no free-surface					%
-% 		       free  - assume free-surface				%
-%                 kappa 	(1*kappa_num)		{0}			%
-%                 beta 		(1*beta_num)		{0}			%
-% Note: beta is used to weight smoothing, usually for 1st derivative		%
-%       kappa^2 is used to weight smoothing, usually for 2nd derivative		%
-%     		  rigidity	scalar			{30e9 Pa}               %
-%		  poisson	scalar			{0.25}			%
-%   If not provided by the input file, default values in {} will be used.       %
-%										%
-% (2) Faults:									% 
-% Four types of fault and subfault will be read in separately.			%
-%  flt1 - [lon lat z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX]     	%
-%  flt2 - [lon1 lat1 lon2 lat2 z1 z2 dip ss ds ts ss0 ssX ds0 dsX ts0 tsX]   	%
-%  flt3 - [lon1 lat1 z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]	%
-%  flt4 - [lon1 lat1 lon2 lat2 z1 z2 dip ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]%
-%  subflt - [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]		  	%
-%  dip  - [ dnum  dip ] need to be used with dip_name				%
-%										%
-% (3) Data:									% 
-% Point: 	pnt_loc  - [lon lat z]				(nn*3)		% 
-%   	 	pnt_disp - [east north vert]			(nn*3)          %
-%   	 	pnt_err  - [east north vert]			(nn*3)          %
-%   	 	pnt_wgt  - [weight]				(nn*1)          % 
-% Baseline: 	bsl_loc  - [lon1 lat1 z1 lon2 lat2 z2]		(nn*6)          %
-%   		bsl_disp - [east north vert absolute]   	(nn*4)          %
-%   		bsl_err  - [east north vert absolute]   	(nn*4)          %
-%   		bsl_wgt  - [weight]                     	(nn*1)          %
-% Profile:	prf - [lon1 lat1 lon2 lat2 N]			(nn*5)          %
-% Grd:		grd - [Erot Nrot lon1 lat1 lon2 lat2 Ne Nn] 	(nn*8)          %
-% Note: 									%
-%   Longitude can be input as [0 360] or [-180 180]. The program will convert 	%
-%   [0 360] to [-180 180] internally.						%
-%   If weight is not assigned, default weight is 1 for all the data.		%
-%										%
-% first created by Lujia Feng Apr 2009					        %
-% added 'coord' flag for coordinate type lfeng Thu Nov  5 20:43:53 EST 2009	%
-% added 'smooth' flag for smoothing lfeng Wed Dec  2 02:26:17 EST 2009 		%
-% added 'beta' flag for smoothing lfeng Wed Dec  2 23:23:21 EST 2009		%
-% added 'dip' flag for bended fault lfeng Mon Dec  7 00:53:06 EST 2009		%
-% added 'freesurface' flag lfeng Wed Dec  9 17:06:48 EST 2009			%
-% added 'fault5' lfeng Fri Dec 11 12:38:41 EST 2009				%
-% changed 'freesurface' to 'surface' flag lfeng Wed Feb 24 12:46:01 EST 2010	%
-% changed 'coord' to string flag lfeng Wed Feb 24 13:40:01 EST 2010		%
-% use cell array of strings for names lfeng Wed Dec  1 14:41:46 EST 2010	%
-% commented out 'fault5' lfeng Wed Dec  1 14:42:53 EST 2010			%
-% last modified by Lujia Feng Wed Dec  1 14:52:00 EST 2010			%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                  GTdef_open.m				                 %
+% The format of the input file could be very free  				         %
+% Just make sure the first term of each line is an identifiable flag 		         %
+% The program will ignore unidentifiable flags 					         %
+%                                                                                        %
+% Note: 									         %
+%   Parameter names are not case sensitive						 %
+%   Longitude can be input as [0 360] or [-180 180]                                      %
+%   The program will convert [0 360] to [-180 180] internally                            %
+%   If weight is not assigned, default weight is 1 for all the data                      %
+%										         %
+% OUTPUT:  							                         %
+% modspace - model structure                                                             %
+% earth    - earth structure                                                             %
+% flt?     - fault structure                                                             %
+% subflt   - subfault structure                                                          %
+% pnt      - point structure                                                             %
+% bsl      - baseline structure                                                          %
+% prf      - profile structure                                                           %
+% grd      - grid structure                                                              %
+% sspnt    - to work on                                                                  %
+% ssflt1   -                                                                             %
+% ssflt2   -                                                                             %
+%                                                                                        %
+%                                                                                        %
+% first created by Lujia Feng Apr 2009                                                   %
+% added 'coord' flag for coordinate type lfeng Thu Nov  5 20:43:53 EST 2009	         %
+% added 'smooth' flag for smoothing lfeng Wed Dec  2 02:26:17 EST 2009 		         %
+% added 'beta' flag for smoothing lfeng Wed Dec  2 23:23:21 EST 2009		         %
+% added 'dip' flag for bended fault lfeng Mon Dec  7 00:53:06 EST 2009		         %
+% added 'freesurface' flag lfeng Wed Dec  9 17:06:48 EST 2009			         %
+% added 'fault5' lfeng Fri Dec 11 12:38:41 EST 2009				         %
+% changed 'freesurface' to 'surface' flag lfeng Wed Feb 24 12:46:01 EST 2010	         %
+% changed 'coord' to string flag lfeng Wed Feb 24 13:40:01 EST 2010		         %
+% use cell array of strings for names lfeng Wed Dec  1 14:41:46 EST 2010	         %
+% commented out 'fault5' lfeng Wed Dec  1 14:42:53 EST 2010			         %
+% added layered earth structure lfeng Mon Feb 20 17:16:32 SGT 2012                       %
+% used structures to simplify parameters lfeng Mon Feb 20 17:30:59 SGT 2012              %
+% merged fault1 & fault3 and fault2 & fault4 lfeng Tue May  8 16:20:25 SGT 2012          %
+% created new fault3 & fault4 for rake lfeng Tue May  8 18:35:44 SGT 2012                %
+% added stress lfeng Thu May 17 07:41:29 SGT 2012                                        %
+% added polyconic projection lfeng Thu Jun  7 13:43:28 SGT 2012                          %
+% changed flt5 to greensfns lfeng Fri Nov 30 14:37:49 SGT 2012                           %
+% added saving greensfns lfeng Mon Aug  5 15:51:38 SGT 2013                              %
+% added origin lfeng Thu Dec  5 21:40:47 SGT 2013                                        %
+% added addon to combine dip & strike lfeng Fri Oct 24 14:56:14 SGT 2014                 %
+% added sweepAngle lfeng Wed Nov  5 19:32:22 SGT 2014                                    %
+% added earth structure lfeng Fri Mar 20 11:11:22 SGT 2015                               %
+% added modspace structure lfeng Fri Mar 20 17:24:44 SGT 2015                            %
+% added modspace.sdropflag lfeng Thu Mar 26 17:27:41 SGT 2015                            %
+% added fault5 for external geometry with Paul Morgan lfeng Wed Jun 17 14:03:00 SGT 2015 %
+% last modified by Lujia Feng Tue Jun 23 18:15:59 SGT 2015                               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
 
 fin = fopen(filename,'r');
 
-%%%%%%%%%% set default values %%%%%%%%%%
-coord = 'geo';
-smooth = '2d';
-surf = 'free';
-rigidity = 30e9;
-poisson = 0.25;
-
 %%%%%%%%%% initialize parameters %%%%%%%%%%
+% modspace structure defaults
+modspace.coord     = 'geo';
+modspace.origin    = [];
+modspace.smooth    = '2d';
+modspace.surf      = 'free';
+modspace.grnflag   = 'off';
+modspace.sdropflag = 'off';
+%modspace.kappa    = 0; will be defined later
+%modspace.beta     = 0; will be defined later
+% form everything that is needed for x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)
+modspace.Xgrn = []; modspace.Bgrn = []; modspace.Ngrn = []; 
+modspace.Aeq  = []; modspace.beq  = []; 
+modspace.lb   = []; modspace.ub   = []; 
+modspace.x0   = []; modspace.xx   = [];
+modspace.sm   = []; modspace.sm_abs = []; % sm_abs for calculate absolute 1st derivative (strain)
+modspace.modinfo = [];
+
+% earth structure defaults
+earth.type      = 'homogeneous';
+earth.rigidity  = 30e9;
+earth.poisson   = 0.25;
+earth.edgrn     = [];
+earth.layer     = [];
+earth.edgrnfcts = [];
+
+% fault structure
+% - to read in
 % use CELL ARRAY OF STRINGS for names
-flt1_num = 0;  	 flt1_name = {};    flt1 = []; 
-flt2_num = 0;    flt2_name = {};    flt2 = []; 
-flt3_num = 0;    flt3_name = {};    flt3 = []; 
-flt4_num = 0;    flt4_name = {};    flt4 = []; 
-flt5_num = 0;    flt5_name = {};    flt5 = []; 
-bndry_num = 0;   bndry_name = {};   bndry= [];
-subflt_num = 0;  subflt_name = {};  subflt = []; 
-dip_num = 0;     dip_name = {};     dip = [];
-pnt_num = 0;     pnt_name = {};     pnt_loc = []; pnt_disp = []; pnt_err = []; pnt_wgt = []; 
-bsl_num = 0;     bsl_name = {};     bsl_loc = []; bsl_disp = []; bsl_err = []; bsl_wgt = []; 
-prf_num = 0;     prf_name = {};     prf = []; 
-grd_num = 0;     grd_name = {};     grd = [];
+flt1.num = 0;  	 flt1.name = {};    flt1.flt = [];    flt1.sdrop = []; 
+flt2.num = 0;    flt2.name = {};    flt2.flt = [];    flt2.sdrop = []; 
+flt3.num = 0;    flt3.name = {};    flt3.flt = [];    flt3.sdrop = []; 
+flt4.num = 0;    flt4.name = {};    flt4.flt = [];    flt4.sdrop = []; 
+flt5.num = 0;    flt5.name = {};    flt5.flt = [];    flt5.geoname = {};    flt5.colname = {};
+flt6.num = 0;    flt6.name = {};    flt6.flt = [];    flt6.grname  = {};
+% - to built up later
+% ordered along dip first, then along strike
+flt1.Min = {}; flt1.xyzflt = {};
+flt2.Min = {}; flt2.xyzflt = {};
+flt3.Min = {}; flt3.xyzflt = {};
+flt4.Min = {}; flt4.xyzflt = {};
+flt5.Min = {}; flt5.xyzflt = {};
+flt6.Min = {}; flt6.xyzflt = {};
+
+% subfault structure
+subflt.num   = 0;  subflt.name   = {};  subflt.flt = []; 
+
+% addon structure
+addon.dipnum = 0;  addon.dipname = {};  addon.dip  = [];
+addon.strnum = 0;  addon.strname = {};  addon.str  = [];
+addon.crt    = [];
+
+% data structure
+% - to read in
+pnt.num = 0;     pnt.name = {};     pnt.loc = [];   pnt.disp = [];  pnt.err = [];   pnt.wgt = []; 
+bsl.num = 0;     bsl.name = {};     bsl.loc = [];   bsl.disp = [];  bsl.err = [];   bsl.wgt = []; 
+prf.num = 0;     prf.name = {};     prf.prf = []; 
+grd.num = 0;     grd.name = {};     grd.grd = [];
+% - to be built later
+pnt.crt = []; pnt.obs = []; pnt.obs_err = []; pnt.obs_wgt = []; pnt.coef = [];
+bsl.crt = []; bsl.obs = []; bsl.obs_err = []; bsl.obs_wgt = []; bsl.coef = [];
+%nod.loc = []; nod.crt = []; nod.lon = [];     nod.lat = [];     nod.name = {};
+
+% stress fault
+sspnt.num  = 0;  sspnt.name  = {};  sspnt.loc  = []; sspnt.str = []; sspnt.dip = []; sspnt.rake = []; sspnt.fric = [];
+ssflt1.fltnum = 0;  ssflt1.num = 0;  ssflt1.fltname = {};  ssflt1.flt = []; 
+ssflt2.fltnum = 0;  ssflt2.num = 0;  ssflt2.fltname = {};  ssflt2.flt = []; 
 
 kappa_num = 0;
-beta_num = 0;
+beta_num  = 0;
+layer_num = 0;
 
 while(1)   
     % read in one line
@@ -118,18 +148,35 @@ while(1)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Controlling Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%% coordinate %%%%%
     if strcmpi(flag,'coord')
-	[coord,remain] = strtok(remain);
-	continue
+        [modspace.coord,remain] = strtok(remain);
+        if ~strcmpi(modspace.coord,'geo') && ~strcmpi(modspace.coord,'geo_polyconic') && ~strcmpi(modspace.coord,'local')
+            error('GTdef_open ERROR: coordinate system should be either geo, geo_polyconic or local!');
+        end
+        continue
+    end
+    %%%%% origin %%%%%
+    if strcmpi(flag,'origin')
+ 	[ lon0,remain ] = GTdef_read1double(remain);
+ 	[ lat0,remain ] = GTdef_read1double(remain);
+	modspace.origin = [ lon0 lat0 ];
+        continue
     end
     %%%%% smoothing algorithm %%%%%
     if strcmpi(flag,'smooth')
-	[smooth,remain] = strtok(remain);
-	continue
+        [modspace.smooth,remain] = strtok(remain);
+        if ~strcmpi(modspace.smooth,'none') && ~strcmpi(modspace.smooth,'2d') ...
+	&& ~strcmpi(modspace.smooth,'1d2pc') && ~strcmpi(modspace.smooth,'1d3pf') && ~strcmpi(modspace.smooth,'1d3pb')
+            error('GTdef_open ERROR: smooth algorithm should be 2d, 1d2pc, 1d3pf or 1d3pb!');
+        end
+        continue
     end
     %%%%% surface flag %%%%%
     if strcmpi(flag,'surface')
-	[surf,remain] = strtok(remain);
-	continue
+        [modspace.surf,remain] = strtok(remain);
+        if ~strcmpi(modspace.surf,'none') && ~strcmpi(modspace.surf,'free') && ~strcmpi(modspace.surf,'fixed')
+            error('GTdef_open ERROR: surfce should be either free or fixed!');
+        end
+        continue
     end
     %%%%% kappa %%%%%
     if strcmpi(flag,'kappa')
@@ -185,14 +232,57 @@ while(1)
 	end
 	continue
     end
-    %%%%% rigidity %%%%%
-    if strcmpi(flag,'rigidity')
- 	[ rigidity,remain ] = GTdef_read1double(remain);
+    %%%%% green's functions %%%%%
+    if strcmpi(flag,'greensfns')
+	[modspace.grnflag,remain] = strtok(remain);
+	if ~strcmpi(modspace.grnflag,'on') && ~strcmpi(modspace.grnflag,'off')
+            error('GTdef_open ERROR: greensfns should be either on or off!');
+	end
 	continue
     end
-    %%%%% poisson %%%%%
-    if strcmpi(flag,'poisson')
- 	[ poisson,remain ] = GTdef_read1double(remain);
+
+    %%%%% stress drop %%%%%
+    if strcmpi(flag,'stressdrop')
+	[modspace.sdropflag,remain] = strtok(remain);
+	if ~strcmpi(modspace.grnflag,'on') && ~strcmpi(modspace.grnflag,'off')
+            error('GTdef_open ERROR: stressdrop should be either on or off!');
+	end
+	continue
+    end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Earth Structures %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%% earth structure %%%%%
+    if strcmpi(flag,'earth')
+	[earth.type,remain] = strtok(remain);
+        %%%%% homogeneous OKADA %%%%%
+        if strcmpi(earth.type,'homogeneous')||strcmpi(earth.type,'homo')
+            [ earth.rigidity,remain ] = GTdef_read1double(remain);
+	    [ earth.poisson,remain ]  = GTdef_read1double(remain);
+	    earth.type = 'homogeneous';
+            continue
+        end
+        %%%%% layered EDGRN/EDCMP %%%%%
+        if strcmpi(earth.type,'layered');
+            [ edgrn.nl,remain ]    = GTdef_read1double(remain);
+	    [ edgrn.obsz,remain ]  = GTdef_read1double(remain);
+            [ edgrn.nr,remain ]    = GTdef_read1double(remain);
+            [ edgrn.minr,remain ]  = GTdef_read1double(remain);
+            [ edgrn.maxr,remain ]  = GTdef_read1double(remain);
+            [ edgrn.nz,remain ]    = GTdef_read1double(remain);
+            [ edgrn.minz,remain ]  = GTdef_read1double(remain);
+            [ edgrn.maxz,remain ]  = GTdef_read1double(remain);
+            [ edgrn.srate,remain ] = GTdef_read1double(remain);
+	    earth.edgrn = edgrn;
+            continue
+        end
+        error('GTdef_open ERROR: earth model should be either homogeneous or layered!');
+    end
+    %%%%% layers %%%%%
+    if strcmpi(flag,'layer')
+        layer_num = layer_num+1;
+	for ii = 1:5
+ 	    [ earth.layer(layer_num,ii),remain ] = GTdef_read1double(remain);
+	end
         continue
     end
 
@@ -203,77 +293,95 @@ while(1)
 	%% fault 1 %%
 	if strcmp(method,'1')
             [name,remain] = strtok(remain);
-	    flt1_num = flt1_num+1; flt1_name = [ flt1_name; name ];
-	    for ii = 1:16
- 		[ flt1(flt1_num,ii),remain ] = GTdef_read1double(remain);
+	    flt1.num = flt1.num+1; flt1.name = [ flt1.name; name ];
+	    for ii = 1:18
+ 		[ flt1.flt(flt1.num,ii),remain ] = GTdef_read1double(remain);
 	    end
 	    continue
 	end
 	%% fault 2 %%
 	if strcmp(method,'2')
-        [name,remain] = strtok(remain);
-	    flt2_num = flt2_num+1; flt2_name = [ flt2_name; name ];
-	    for ii = 1:16
- 		[ flt2(flt2_num,ii),remain ] = GTdef_read1double(remain);
+            [name,remain] = strtok(remain);
+	    flt2.num = flt2.num+1; flt2.name = [ flt2.name; name ];
+	    for ii = 1:18
+ 		[ flt2.flt(flt2.num,ii),remain ] = GTdef_read1double(remain);
 	    end
 	    continue
 	end
 	%% fault 3 %%
 	if strcmp(method,'3')
-        [name,remain] = strtok(remain);
-	    flt3_num = flt3_num+1; flt3_name = [ flt3_name; name ];
+            [name,remain] = strtok(remain);
+	    flt3.num = flt3.num+1; flt3.name = [ flt3.name; name ];
 	    for ii = 1:18
- 		[ flt3(flt3_num,ii),remain ] = GTdef_read1double(remain);
+ 		[ flt3.flt(flt3.num,ii),remain ] = GTdef_read1double(remain);
 	    end
 	    continue
 	end
 	%% fault 4 %%
 	if strcmp(method,'4')
-        [name,remain] = strtok(remain);
-	    flt4_num = flt4_num+1; flt4_name = [ flt4_name; name ];
+            [name,remain] = strtok(remain);
+	    flt4.num = flt4.num+1; flt4.name = [ flt4.name; name ];
 	    for ii = 1:18
- 		[ flt4(flt4_num,ii),remain ] = GTdef_read1double(remain);
+ 		[ flt4.flt(flt4.num,ii),remain ] = GTdef_read1double(remain);
 	    end
 	    continue
 	end
 	%%% fault 5 %%
-	%if strcmp(method,'5')
-        %[name,remain] = strtok(remain);
-	%    flt5_num = flt5_num+1; flt5_name = [ flt5_name; name ];
-	%    for ii = 1:13
- 	%	[ flt5(flt5_num,ii),remain ] = GTdef_read1double(remain);
-	%    end
-	%    continue
-	%end
+	if strcmp(method,'5')
+            [name,remain] = strtok(remain);
+	    flt5.num = flt5.num+1; flt5.name = [ flt5.name; name ];
+            [geoname,remain] = strtok(remain);
+            flt5.geoname = [ flt5.geoname; geoname ];
+            [colname,remain] = strtok(remain);
+            flt5.colname = [ flt5.colname; colname ];
+	    for ii = 1:11
+ 		[ flt5.flt(flt5.num,ii),remain ] = GTdef_read1double(remain);
+	    end
+	    continue
+	end
+	%%% fault 6 %%
+	if strcmp(method,'6')
+            [name,remain] = strtok(remain);
+	    flt6.num = flt6.num+1; flt6.name = [ flt6.name; name ];
+            [grname,remain] = strtok(remain);
+            flt6.grname = [ flt6.grname; grname ];
+	    for ii = 1:11
+ 		[ flt6.flt(flt6.num,ii),remain ] = GTdef_read1double(remain);
+	    end
+	    continue
+	end
 	continue
     end
     %%%%% subfault %%%%%
     if strcmpi(flag,'subfault')
         [name,remain] = strtok(remain);
-	subflt_num = subflt_num+1; subflt_name = [ subflt_name; name ];
+	subflt.num = subflt.num+1; subflt.name = [ subflt.name; name ];
 	for ii = 1:11
- 	    [ subflt(subflt_num,ii),remain ] = GTdef_read1double(remain);
+ 	    [ subflt.flt(subflt.num,ii),remain ] = GTdef_read1double(remain);
 	end
 	continue
     end
-    %%%%%% boundary for fault 5 patches %%%%%
-    %if strcmpi(flag,'boundary')
-    %    [name,remain] = strtok(remain);
-    %    bndry_num = bndry_num+1; bndry_name = [ bndry_name; name ];
-    %    for ii = 1:14
-    %        [ bndry(bndry_num,ii),remain ] = GTdef_read1double(remain);
-    %    end
-    %    continue
-    %end
     %%%%% dip %%%%%
     if strcmpi(flag,'dip')
         [name,remain] = strtok(remain);
-	dip_num = dip_num+1; dip_name = [ dip_name; name ];
-	for ii = 1:4
- 	    [ dip(dip_num,ii),remain ] = GTdef_read1double(remain);
-	end
-	continue
+        addon.dipnum  = addon.dipnum+1; addon.dipname = [ addon.dipname; name ];
+	% (1)dip (2)z1 (3)z2 (4)rows
+        for ii = 1:4
+ 	    [ addon.dip(addon.dipnum,ii),remain ] = GTdef_read1double(remain);
+        end
+        continue
     end
+    %%%%% strike %%%%%
+    if strcmpi(flag,'strike')
+        [name,remain] = strtok(remain);
+        addon.strnum  = addon.strnum+1; addon.strname = [ addon.strname; name ];
+	% (1)lon1 (2)lat1 (3)lon2 (4)lat2 (5)columns (6)sweepAngle
+        for ii = 1:6
+ 	    [ addon.str(addon.strnum,ii),remain ] = GTdef_read1double(remain);
+        end
+        continue
+    end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Geodetic Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%% point %%%%%
     if strcmpi(flag,'point')
@@ -281,75 +389,75 @@ while(1)
 	%% method 1 %%
 	if strcmp(method,'1')
             [name,remain] = strtok(remain);
-            pnt_num = pnt_num+1; pnt_name = [ pnt_name; name ];
+            pnt.num = pnt.num+1; pnt.name = [ pnt.name; name ];
             %% point location [lon lat z] %%
             for ii = 1:3
- 	        [ pnt_loc(pnt_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ pnt.loc(pnt.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% displacements [east north vert] %%
-	    pnt_disp(pnt_num,1) = nan; pnt_disp(pnt_num,2) = nan;
- 	    [ pnt_disp(pnt_num,3),remain ] = GTdef_read1double(remain);
+	    pnt.disp(pnt.num,1) = nan; pnt.disp(pnt.num,2) = nan;
+ 	    [ pnt.disp(pnt.num,3),remain ] = GTdef_read1double(remain);
             %% errors [east north vert] %%
-	    pnt_err(pnt_num,1) = nan; pnt_err(pnt_num,2) = nan;
- 	    [ pnt_err(pnt_num,3),remain ] = GTdef_read1double(remain);
+	    pnt.err(pnt.num,1) = nan; pnt.err(pnt.num,2) = nan;
+ 	    [ pnt.err(pnt.num,3),remain ] = GTdef_read1double(remain);
             %% weight %%
             [str,remain] = strtok(remain); 
 	    if isempty(str)||strncmp(str,'#',1)  % if weight is absent, use default 1
-	        pnt_wgt(pnt_num,1) = 1;
+	        pnt.wgt(pnt.num,1) = 1;
 	    else
-                pnt_wgt(pnt_num,1) = str2double(str);
+                pnt.wgt(pnt.num,1) = str2double(str);
 	    end
             continue
 	end
 	%% method 2 %%
 	if strcmp(method,'2')
             [name,remain] = strtok(remain);
-            pnt_num = pnt_num+1; pnt_name = [ pnt_name; name ];
+            pnt.num = pnt.num+1; pnt.name = [ pnt.name; name ];
             %% point location [lon lat z] %%
             for ii = 1:3
- 	        [ pnt_loc(pnt_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ pnt.loc(pnt.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% displacements [east north vert] %%
             for ii = 1:2
- 	        [ pnt_disp(pnt_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ pnt.disp(pnt.num,ii),remain ] = GTdef_read1double(remain);
             end
-	    pnt_disp(pnt_num,3) = nan;
+	    pnt.disp(pnt.num,3) = nan;
             %% errors [east north vert] %%
             for ii = 1:2
- 	        [ pnt_err(pnt_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ pnt.err(pnt.num,ii),remain ] = GTdef_read1double(remain);
             end
-	    pnt_err(pnt_num,3) = nan;
+	    pnt.err(pnt.num,3) = nan;
             %% weight %%
             [str,remain] = strtok(remain); 
 	    if isempty(str)||strncmp(str,'#',1)  % if weight is absent, use default 1
-	        pnt_wgt(pnt_num,1) = 1;
+	        pnt.wgt(pnt.num,1) = 1;
 	    else
-                pnt_wgt(pnt_num,1) = str2double(str);
+                pnt.wgt(pnt.num,1) = str2double(str);
 	    end
             continue
 	end
 	%% method 3 %%
 	if strcmp(method,'3')
             [name,remain] = strtok(remain);
-            pnt_num = pnt_num+1; pnt_name = [ pnt_name; name ];
+            pnt.num = pnt.num+1; pnt.name = [ pnt.name; name ];
             %% point location [lon lat z] %%
             for ii = 1:3
- 	        [ pnt_loc(pnt_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ pnt.loc(pnt.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% displacements [east north vert] %%
             for ii = 1:3
- 	        [ pnt_disp(pnt_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ pnt.disp(pnt.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% errors [east north vert] %%
             for ii = 1:3
- 	        [ pnt_err(pnt_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ pnt.err(pnt.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% weight %%
             [str,remain] = strtok(remain); 
 	    if isempty(str)||strncmp(str,'#',1)  % if weight is absent, use default 1
-	        pnt_wgt(pnt_num,1) = 1;
+	        pnt.wgt(pnt.num,1) = 1;
 	    else
-                pnt_wgt(pnt_num,1) = str2double(str);
+                pnt.wgt(pnt.num,1) = str2double(str);
 	    end
             continue
 	end
@@ -361,75 +469,75 @@ while(1)
 	%% method 1 %%
 	if strcmp(method,'1')
             [name,remain] = strtok(remain);
-            bsl_num = bsl_num+1; bsl_name = [ bsl_name; name ];
+            bsl.num = bsl.num+1; bsl.name = [ bsl.name; name ];
             %% baseline site locations [lon1 lat1 z1 lon2 lat2 z2] %%
             for ii = 1:6
- 	        [ bsl_loc(bsl_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ bsl.loc(bsl.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% displacements & length change %%
-	    bsl_disp(bsl_num,1) = nan; bsl_disp(bsl_num,2) = nan; bsl_disp(bsl_num,3) = nan;
- 	    [ bsl_disp(bsl_num,4),remain ] = GTdef_read1double(remain);
+	    bsl.disp(bsl.num,1) = nan; bsl.disp(bsl.num,2) = nan; bsl.disp(bsl.num,3) = nan;
+ 	    [ bsl.disp(bsl.num,4),remain ] = GTdef_read1double(remain);
             %% errors %%
-	    bsl_err(bsl_num,1) = nan; bsl_err(bsl_num,2) = nan; bsl_err(bsl_num,3) = nan;
- 	    [ bsl_err(bsl_num,4),remain ] = GTdef_read1double(remain);
+	    bsl.err(bsl.num,1) = nan; bsl.err(bsl.num,2) = nan; bsl.err(bsl.num,3) = nan;
+ 	    [ bsl.err(bsl.num,4),remain ] = GTdef_read1double(remain);
             %% weight %%
             [str,remain] = strtok(remain); 
 	    if isempty(str)||strncmp(str,'#',1)  % if weight is absent, use default 1
-	        bsl_wgt(bsl_num,1) = 1;
+	        bsl.wgt(bsl.num,1) = 1;
 	    else
-                bsl_wgt(bsl_num,1) = str2double(str);
+                bsl.wgt(bsl.num,1) = str2double(str);
 	    end
             continue
 	end
 	%% method 2 %%
 	if strcmp(method,'2')
             [name,remain] = strtok(remain);
-            bsl_num = bsl_num+1; bsl_name = [ bsl_name; name ];
+            bsl.num = bsl.num+1; bsl.name = [ bsl.name; name ];
             %% baseline site locations [lon1 lat1 z1 lon2 lat2 z2] %%
             for ii = 1:6
- 	        [ bsl_loc(bsl_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ bsl.loc(bsl.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% displacements & length change %%
             for ii = 1:3
- 	        [ bsl_disp(bsl_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ bsl.disp(bsl.num,ii),remain ] = GTdef_read1double(remain);
             end
-	    bsl_disp(bsl_num,4) = nan;
+	    bsl.disp(bsl.num,4) = nan;
             %% errors %%
             for ii = 1:3
- 	        [ bsl_err(bsl_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ bsl.err(bsl.num,ii),remain ] = GTdef_read1double(remain);
             end
-	    bsl_err(bsl_num,4) = nan;
+	    bsl.err(bsl.num,4) = nan;
             %% weight %%
             [str,remain] = strtok(remain); 
 	    if isempty(str)||strncmp(str,'#',1)  % if weight is absent, use default 1
-	        bsl_wgt(bsl_num,1) = 1;
+	        bsl.wgt(bsl.num,1) = 1;
 	    else
-                bsl_wgt(bsl_num,1) = str2double(str);
+                bsl.wgt(bsl.num,1) = str2double(str);
 	    end
             continue
 	end
 	%% method 3 %%
 	if strcmp(method,'3')
             [name,remain] = strtok(remain);
-            bsl_num = bsl_num+1; bsl_name = [ bsl_name; name ];
+            bsl.num = bsl.num+1; bsl.name = [ bsl.name; name ];
             %% baseline site locations [lon1 lat1 z1 lon2 lat2 z2] %%
             for ii = 1:6
- 	        [ bsl_loc(bsl_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ bsl.loc(bsl.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% displacements & length change %%
             for ii = 1:4
- 	        [ bsl_disp(bsl_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ bsl.disp(bsl.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% errors %%
             for ii = 1:4
- 	        [ bsl_err(bsl_num,ii),remain ] = GTdef_read1double(remain);
+ 	        [ bsl.err(bsl.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% weight %%
             [str,remain] = strtok(remain); 
 	    if isempty(str)||strncmp(str,'#',1)  % if weight is absent, use default 1
-	        bsl_wgt(bsl_num,1) = 1;
+	        bsl.wgt(bsl.num,1) = 1;
 	    else
-                bsl_wgt(bsl_num,1) = str2double(str);
+                bsl.wgt(bsl.num,1) = str2double(str);
 	    end
             continue
 	end
@@ -438,20 +546,64 @@ while(1)
     %%%%% profile %%%%%
     if strcmpi(flag,'profile')
         [name,remain] = strtok(remain);
-	prf_num = prf_num+1; prf_name = [ prf_name; name ];
+	prf.num = prf.num+1; prf.name = [ prf.name; name ];
 	for ii = 1:5
- 	    [ prf(prf_num,ii),remain ] = GTdef_read1double(remain);
+ 	    [ prf.prf(prf.num,ii),remain ] = GTdef_read1double(remain);
 	end
 	continue
     end
     %%%%% grid %%%%%
     if strcmpi(flag,'grid')
         [name,remain] = strtok(remain);
-	grd_num = grd_num+1; grd_name = [ grd_name; name ];
+	grd.num = grd.num+1; grd.name = [ grd.name; name ];
 	for ii = 1:8
- 	    [ grd(grd_num,ii),remain ] = GTdef_read1double(remain);
+ 	    [ grd.grd(grd.num,ii),remain ] = GTdef_read1double(remain);
 	end
 	continue
+    end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Stress Calculation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if strcmpi(flag,'stress')
+        [type,remain] = strtok(remain);
+        %%%%% point %%%%%
+        if strcmpi(type,'point')
+            [name,remain] = strtok(remain);
+            sspnt.num = sspnt.num+1; sspnt.name = [ sspnt.name; name ];
+            %% point location [lon lat z] %%
+            for ii = 1:3
+                [ sspnt.loc(sspnt.num,ii),remain ] = GTdef_read1double(remain);
+            end
+            %% point fault parameters %%
+            [ sspnt.str(sspnt.num,1),remain ]  = GTdef_read1double(remain);
+            [ sspnt.dip(sspnt.num,1),remain ]  = GTdef_read1double(remain);
+            [ sspnt.rake(sspnt.num,1),remain ] = GTdef_read1double(remain);
+            [ sspnt.fric(sspnt.num,1),remain ] = GTdef_read1double(remain);
+            continue
+        end
+        %%%%% fault %%%%%
+        if strcmpi(type,'fault')
+            [method,remain] = strtok(remain);
+            %% fault 1 %%
+            if strcmp(method,'1')
+                [name,remain]  = strtok(remain);
+                ssflt1.fltnum  = ssflt1.fltnum+1;
+                ssflt1.fltname = [ ssflt1.fltname; name ];
+                for ii = 1:11
+                    [ ssflt1.flt(ssflt1.fltnum,ii),remain ] = GTdef_read1double(remain);
+                end
+                continue
+            end
+            %% fault 2 %%
+            if strcmp(method,'2')
+                [name,remain]  = strtok(remain);
+                ssflt2.fltnum  = ssflt2.fltnum+1;
+                ssflt2.fltname = [ ssflt2.fltname; name ];
+                for ii = 1:11
+                    [ ssflt2.flt(ssflt2.fltnum,ii),remain ] = GTdef_read1double(remain);
+                end
+                continue
+            end
+        end
     end
 end
 
@@ -463,32 +615,50 @@ elseif kappa_num>0
 elseif (kappa_num==0)&&(beta_num==0)
     beta = 0;
 end
+modspace.beta  = beta;
+modspace.kappa = sqrt(beta);
+
 
 % convert longitude [0 360] to [-180 180]
-if strcmpi(coord,'geo')
-   if flt1_num~=0, [ flt1(:,1) ] = GTdef_convertlon(flt1(:,1)); end
-   if flt2_num~=0
-       [ flt2(:,1) ] = GTdef_convertlon(flt2(:,1));
-       [ flt2(:,3) ] = GTdef_convertlon(flt2(:,3));
+if strcmpi(modspace.coord,'geo') || strcmpi(modspace.coord,'geo_polyconic')
+   if flt1.num~=0, [ flt1.flt(:,1) ] = GTdef_convertlon(flt1.flt(:,1)); end
+   if flt2.num~=0
+       [ flt2.flt(:,1) ] = GTdef_convertlon(flt2.flt(:,1));
+       [ flt2.flt(:,3) ] = GTdef_convertlon(flt2.flt(:,3));
    end
-   if flt3_num~=0, [ flt3(:,1) ] = GTdef_convertlon(flt3(:,1)); end
-   if flt4_num~=0
-       [ flt4(:,1) ] = GTdef_convertlon(flt4(:,1));
-       [ flt4(:,3) ] = GTdef_convertlon(flt4(:,3));
+   if flt3.num~=0, [ flt3.flt(:,1) ] = GTdef_convertlon(flt3.flt(:,1)); end
+   if flt4.num~=0
+       [ flt4.flt(:,1) ] = GTdef_convertlon(flt4.flt(:,1));
+       [ flt4.flt(:,3) ] = GTdef_convertlon(flt4.flt(:,3));
    end
-   if pnt_num~=0, [ pnt_loc(:,1) ] = GTdef_convertlon(pnt_loc(:,1)); end
-   if bsl_num~=0
-       [ bsl_loc(:,1) ] = GTdef_convertlon(bsl_loc(:,1));
-       [ bsl_loc(:,4) ] = GTdef_convertlon(bsl_loc(:,4));
+   if pnt.num~=0, [ pnt.loc(:,1) ] = GTdef_convertlon(pnt.loc(:,1)); end
+   if bsl.num~=0
+       [ bsl.loc(:,1) ] = GTdef_convertlon(bsl.loc(:,1));
+       [ bsl.loc(:,4) ] = GTdef_convertlon(bsl.loc(:,4));
    end
-   if prf_num~=0
-       [ prf(:,1) ] = GTdef_convertlon(prf(:,1));
-       [ prf(:,3) ] = GTdef_convertlon(prf(:,3));
+   if prf.num~=0
+       [ prf.prf(:,1) ] = GTdef_convertlon(prf.prf(:,1));
+       [ prf.prf(:,3) ] = GTdef_convertlon(prf.prf(:,3));
    end
-   if grd_num~=0
-       [ grd(:,3) ] = GTdef_convertlon(grd(:,3));
-       [ grd(:,5) ] = GTdef_convertlon(grd(:,5));
+   if grd.num~=0
+       [ grd.grd(:,3) ] = GTdef_convertlon(grd.grd(:,3));
+       [ grd.grd(:,5) ] = GTdef_convertlon(grd.grd(:,5));
    end
+end
+
+% set out as the same as input first
+flt1.out = flt1.flt; 
+flt2.out = flt2.flt; 
+flt3.out = flt3.flt; 
+flt4.out = flt4.flt; 
+flt5.out = flt5.flt;
+flt6.out = flt5.flt;
+subflt.out     = subflt.flt; 
+subflt.outname = subflt.name;
+
+% if layer exists, sort layer according to the ascending id
+if ~isempty(earth.layer)
+   earth.layer = sortrows(earth.layer,1);
 end
 
 fclose(fin);
@@ -503,7 +673,7 @@ function [ value,remain ] = GTdef_read1double(str)
 
 [str1,remain] = strtok(str);
 if isempty(str1)||strncmp(str1,'#',1)  
-    error('The input file is wrong!');
+    error('GTdef_open ERROR: the input file is wrong!');
 end
 value = str2double(str1);
 

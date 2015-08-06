@@ -1,9 +1,9 @@
 function [x_rot,y_rot] = LL2ckmd(lon,lat,lon0,lat0,rot)
 
 %  This matlab program 
-%  (1) transforms lon,lat to local Cartesian coordinate
+%  (1) transforms lon,lat to local cartesian coordinate
 %      using (lon0,lat0) as origin
-%  (2) rotates the Cartesion coordinate by rot [degree]
+%  (2) rotates the cartesian coordinate by rot [degree]
 %  Input:
 %  (1) lon,lat [degree] can be scalars, vectors or matrices,
 %      but they must have the same size
@@ -43,5 +43,5 @@ if size(lon)==size(lat)
    x_rot = xx*cos_rot + yy*sin_rot;
    y_rot =-xx*sin_rot + yy*cos_rot;
 else
-   error('lon and lat are not consistent!'); 
+   error('LL2ckmd ERROR: lon and lat are not consistent!'); 
 end

@@ -44,7 +44,7 @@ mx = 1/ds^2; 			% the patches on left and right
 my = 1/dd^2;			% the patches on top and bottom
 mxy = -2*mx-2*my;		% the patch in the center
 
-if nn==1, error('Only one patch. No need to smooth!'); end
+if nn==1, error('GTdef_sm2d ERROR: only one patch. No need to smooth!'); end
 
 d0 = mxy*ones(Nd,Ns);		% diagonals = 0
 d0 = reshape(d0,[],1);

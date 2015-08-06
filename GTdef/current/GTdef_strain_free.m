@@ -46,7 +46,7 @@ nn = Ns*Nd;			% total patch/slip number
 mx = 0.5/ds; 			% the patches on left and right
 my = 0.5/dd;			% the patches on top and bottom
 
-if nn==1, error('Only one patch. No need to smooth!'); end
+if nn==1, error('GTdef_strain_free ERROR: only one patch. No need to smooth!'); end
 
 % x direction (from left to right)
 dn = mx*ones(nn,1);		% diagonal +/- Nd

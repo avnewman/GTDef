@@ -7,8 +7,8 @@ function [ M ] = GTdef_fault1p_to_okada(xx,yy,z1,z2,len,str,dip,ss,ds,ts)
 % converted to Matlab                                                     %
 % (1) 1-point fault input:                                                %
 %      xx,yy - one endpoint of the fault        			  %
-%      z1  - vertical burial depth (top of fault)                         %  
-%      z2  - vertical locking depth (bottom of fault)                     %
+%      z1  - vertical burial depth (top of fault) >=0                     %  
+%      z2  - vertical locking depth (bottom of fault) >=0                 %
 %      len - fault length                                                 %
 %      str - strike from the endpoint (degree CW from N) [0-360]          %
 %      dip - down from Horiz, right looking from the endpoint [0 180]     %
@@ -17,11 +17,14 @@ function [ M ] = GTdef_fault1p_to_okada(xx,yy,z1,z2,len,str,dip,ss,ds,ts)
 %      ts  - tensile-slip (opening +)                                     %
 % Note: they can be scalars or column vectors; the endpoint can be either %
 %       the left one or the right one					  %
-% (2) disloc3d_mod2 format output in M:                                   %
+% (2) disloc3d_mod2 format output in M  [10*slipnum]                      %
 %      M = [length;width;depth;dip;str;east;north;ss;ds;ts]               %
 %      [east north depth] is the bottom center for dip > 0,               %
 %      and is the top center for dip < 0                                  %
 % Note: the dip Okada's code takes is [-90 90]                            %
+%									  %
+% OUTPUT								  %
+% M = [ len width depth dip str east north ss ds ts ] [slipnum*10]	  %
 %                                                                         %
 % based on Peter Cervelli's Fortran code (Ting Chen converted to Matlab)  %
 % related function: GTdef_fault2p_to_okada()                              %
@@ -71,8 +74,8 @@ if z1<z2	% burial depth must be smaller than locking depth
         north = cy+0.5.*len.*cosd(str);
         M = [ len width depth dip str east north ss ds ts ];
     else
-        error('Dip must be within [0 180]!');
+        error('GTdef_fault1p_to_okada ERROR: dip must be within [0 180]!');
     end
 else
-   error('Burial depth can not be greater than locking depth!');
+   error('GTdef_fault1p_to_okada ERROR: burial depth can not be greater than locking depth!');
 end

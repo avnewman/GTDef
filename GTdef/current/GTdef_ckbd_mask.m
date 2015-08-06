@@ -17,20 +17,20 @@ function [ ] = GTdef_ckbd_mask(model_name,ckbdin_name,ckbdout_name,slip,percent,
 %										%
 % first created by lfeng Tue Dec  7 08:20:54 EST 2010				%
 % print out as a new output file lfeng Thu Apr 14 11:57:08 EDT 2011		%
-% last modified by lfeng Thu Apr 14 13:03:22 EDT 2011				%
+% used structure lfeng Thu Feb 23 14:27:39 SGT 2012				%
+% last modified by lfeng Thu Feb 23 14:44:03 SGT 2012				%
+% no test has been done after last modification					%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[ coord,smooth,surf,beta,rigidity,poisson,... 
-  flt1_name,flt1_num,flt1, flt2_name,flt2_num,flt2,...
-  flt3_name,flt3_num,flt3, flt4_name,flt4_num,flt4,...
-  ~,~,~,~,~,...
-  subflt_name,subflt,dip_name,dip,...
-  pnt_name,pnt_num,pnt_loc,pnt_disp,pnt_err,pnt_wgt,... 
-  bsl_name,bsl_num,bsl_loc,bsl_disp,bsl_err,bsl_wgt,...
-  prf_name,prf_num,prf,grd_name,grd_num,grd ] = GTdef_open(model_name);
+[ coord,origin,smooth,surf,beta,grnflag,...
+  rigidity,poisson,...
+  earth,edgrn,layer,...
+  flt1,flt2,flt3,flt4,flt5,flt6,...
+  bndry,subflt,dip,...
+  pnt,bsl,prf,grd ] = GTdef_open(model_name);
 
-fckbdin  =  fopen(ckbdin_name,'r');
+fckbdin  = fopen(ckbdin_name,'r');
 fckbdout = fopen(ckbdout_name,'r');
 
 % keep column 2 3 & 15 (dip-slip)
@@ -51,7 +51,7 @@ elseif strcmpi(slip,'ds')
 elseif strcmpi(slip,'ts')
     colnum = 5;
 else
-    error('Slip is not correctly specified!');
+    error('GTdef_ckbd_mask ERROR: slip is not correctly specified!');
 end
 slipmax = max(abs(ckbdin));	% for checkerboard, maximum slips are the same
 
@@ -61,7 +61,7 @@ diff =abs(diff)/slipmax;
 Bdnum = ceil(Nd/dd);		% block num each column
 Bsnum = ceil(Ns/ss);		% block num each row
 Bdiff = reshape(diff,Nd,Ns);
-Bmodel = reshape(subflt(:,colnum),Nd,Ns);
+Bmodel = reshape(subflt.flt(:,colnum),Nd,Ns);
 
 flag = zeros(Bdnum,Bsnum);
 for ii=0:Bdnum-1
@@ -80,7 +80,6 @@ for ii=0:Bdnum-1
        end
    end
 end
-
 
 % identify isolated good blocks
 for ii=1:Bdnum
@@ -102,18 +101,16 @@ for ii=1:Bdnum
    end
 end
 model = reshape(Bmodel,[],1);
-subflt(:,colnum) = model;
+subflt.flt(:,colnum) = model;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% output %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-cellname = regexp(model_name,'\.out','split');
-basename = char(cellname(1));
+[ ~,basename,~ ] = fileparts(model_name);
 fout_name = [ basename '_mask.out' ];
 
-pnt_num = 0; bsl_num = 0; prf_num = 0;grd_num = 0; nod_name = 0;
-GTdef_output(fout_name,'none','none',0,rigidity,poisson,flt1_name,flt1_num,flt1,flt2_name,flt2_num,flt2,flt3_name,flt3_num,flt3,...
-      	 flt4_name,flt4_num,flt4,{},0,[],{},[],...
-    	 subflt_name,subflt,dip_name,dip,pnt_name,pnt_num,[],bsl_name,bsl_num,[],...
-       	 prf_name,prf_num,prf,grd_name,grd_num,grd,nod_name,[],[]);
+pnt.num = 0; bsl.num = 0; prf.num = 0; grd.num = 0;
+
+GTdef_output(fout_name,coord,'none','none',0,rigidity,poisson,earth,edgrn,layer,...
+    	     flt1,flt2,flt3,flt4,flt5,bndry,subflt,dip,pnt,bsl,prf,grd,nod,mod_info);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% output magnitude estimate for Nicoya %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % output magnitude estimate

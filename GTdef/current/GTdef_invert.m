@@ -1,5 +1,4 @@
-function [ xx ] = GTdef_invert(Xgrn,Bgrn,sm,Aeq,beq,lb,ub,x0,...
-            		   pnt_obs,pnt_coef,bsl_obs,bsl_coef,beta)
+function [ modspace ] = GTdef_invert(modspace,pnt,bsl,beta)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            GTdef_invert				  %
@@ -8,55 +7,56 @@ function [ xx ] = GTdef_invert(Xgrn,Bgrn,sm,Aeq,beq,lb,ub,x0,...
 % Here we have no inequalities, so set A=[];b=[]			  %
 %									  %
 % INPUT:					  		  	  %
-% Each fault has three (strike, dip, and tensile) components, so          %
-% slip_num = flt_num*3                                                    %
-%  Xgrn - displacements [east;north;vertical] for different sites   	  %
-%         from unit slips [(3*nn)*slip_num] 				  %
-%         (nn is the  number of sites)  				  %
-%  Bgrn - length changes [east;north;vertical;absolute] for 	  	  %
-%         different baselines from unit slips [(4*nn)*slip_num] 	  %
-%         (nn is the  number of baselines)  				  %
-%  sm  - condensed smoothing matrix with rows of all zeros removed	  %
-%  Aeq - left-hand side matrix for linear equalities  [slip_num*slip_num] %
-%  beq - right-hand side vector for linear equalities [slip_num*1]        %
-%  x0  - initial values for ss,ds,ts 	[slip_num*1]                      %
-%  lb  - lower bounds for ss,ds,ts 	[slip_num*1]                      %
-%  ub  - upper bounds for ss,ds,ts	[slip_num*1]			  %
-%									  %
-% Point:    pnt_obs  - [east;north;vert]	     (3nn*1)		  %
-%   	    pnt_coef - [east;north;vert]	     (3nn*1)    	  %
-% Baseline: bsl_obs  - [east;north;vert;length]      (4nn*1)    	  %
-%   	    bsl_coef - [east;north;vert;length]      (4nn*1)    	  %
-%  beta - smoothing parameter			     scalar		  %
-%           beta = kappa^2						  %
+% modspace - model structure                                              %
+% pnt      - point structure	  	                                  %
+% bsl      - baseline structure                                           %
+% beta     - current beta value                                           %
 %									  %
 % OUTPUT:                                                                 %
-%  xx - final values for ss,ds,ts from inversion     [slip_num*1]	  %
+% add .xx to modspace                                                     %
+% modspace.xx - final values for ss,ds,ts from inversion     [slip_num*1] %
 %                                                                         %
 % first created by Lujia Feng Tue May  5 20:21:47 EDT 2009		  %
-% last modified by Lujia Feng Mon May 11 16:40:22 EDT 2009		  %
 % used beta = beta^2 instead of beta lfeng Wed Dec  2 23:35:12 EST 2009   %
+% used structure lfeng Wed Feb 22 19:36:43 SGT 2012			  %
+% added modspace structure lfeng Thu Mar 19 17:32:29 SGT 2015             %
+% added condensing sm & sm_abs lfeng Fri Mar 20 20:28:15 SGT 2015         %
+% last modified by Lujia Feng Fri Mar 20 20:28:23 SGT 2015                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Xgrn = modspace.Xgrn;
+Bgrn = modspace.Bgrn;
+Aeq  = modspace.Aeq;
+beq  = modspace.beq;
+lb   = modspace.lb;
+ub   = modspace.ub;
+x0   = modspace.x0;
+
+% condense the smoothing matrix by removing rows of all zeros
+sm     = GTdef_condense(modspace.sm);
+sm_abs = GTdef_condense(modspace.sm_abs);
+modspace.sm     = sm;
+modspace.sm_abs = sm_abs;
 
 C = []; d = [];
 % add error & weight to the equations
 if ~isempty(Xgrn)
-    eq_num = size(Xgrn,1);
-    for ii = 1:eq_num
-        Xgrn(ii,:) = Xgrn(ii,:).*pnt_coef(ii);
-	pnt_obs(ii) = pnt_obs(ii).*pnt_coef(ii);
+    eqNum = size(Xgrn,1);
+    for ii = 1:eqNum
+        Xgrn(ii,:) = Xgrn(ii,:).*pnt.coef(ii);
+	pnt.obs(ii) = pnt.obs(ii).*pnt.coef(ii);
     end
-    ind = find(~isnan(pnt_obs));		% exclude nan values
-    C = [ C;Xgrn(ind,:) ]; d = [ d;pnt_obs(ind) ];
+    ind = find(~isnan(pnt.obs));		% exclude nan values
+    C = [ C;Xgrn(ind,:) ]; d = [ d;pnt.obs(ind) ];
 end
 if ~isempty(Bgrn)
-    eq_num = size(Bgrn,1);
-    for ii = 1:eq_num
-        Bgrn(ii,:) = Bgrn(ii,:).*bsl_coef(ii,1);
-	bsl_obs(ii,1) = bsl_obs(ii,1).*bsl_coef(ii,1);
+    eqNum = size(Bgrn,1);
+    for ii = 1:eqNum
+        Bgrn(ii,:) = Bgrn(ii,:).*bsl.coef(ii,1);
+	bsl.obs(ii,1) = bsl.obs(ii,1).*bsl.coef(ii,1);
     end
-    ind = find(~isnan(bsl_obs));		% exclude nan values
-    C = [ C;Bgrn(ind,:) ]; d = [ d;bsl_obs(ind) ];
+    ind = find(~isnan(bsl.obs));		% exclude nan values
+    C = [ C;Bgrn(ind,:) ]; d = [ d;bsl.obs(ind) ];
 end
 
 % add beta to the smoothing matrix
@@ -69,7 +69,9 @@ C = [ C;sm ]; d = [ d;d_sm ];
 ind = find(isinf(lb));
 Aeq_red = Aeq(ind,:); beq_red = beq(ind);
 
-options = optimset('MaxIter',1000,'TolFun',1e-30);
+options = optimset('MaxIter',2000,'TolFun',1e-30);
 [xx,resnorm] = lsqlin(C,d,[],[],Aeq_red,beq_red,lb,ub,x0,options);
 %[xx,resnorm,res,exitflag,output] = lsqlin(C,d,[],[],Aeq_red,beq_red,lb,ub,x0);
 fprintf(1,'resnorm = %-12.5e\n',resnorm);
+
+modspace.xx = xx;

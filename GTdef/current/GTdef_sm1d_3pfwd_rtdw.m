@@ -50,7 +50,7 @@ mx0 = -3*mx;  my0 = -3*my;	% coeff for the point where the derivative is calcula
 mx1 = 4*mx;   my1 = 4*my;       % coeff for 1st point forward from point 0
 mx2 = -mx;    my2 = -my;	% coeff for 2nd point forward from point 0
 
-if nn==1, error('Only one patch. No need to smooth!');  end
+if nn==1, error('GTdef_sm1d_3pfwd_rtdw ERROR: only one patch. No need to smooth!');  end
 
 % only one horizontal layer
 if Nd==1			
