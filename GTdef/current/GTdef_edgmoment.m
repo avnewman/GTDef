@@ -1,9 +1,9 @@
-function [ ms,cs,sfct,kpower ] = GTdef_edgmoment(srctype,ro,vp,vs)
+function [ source ] = GTdef_edgmoment(srctype,vp,vs,ro)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                 GTdef_edgmoment.m                                     %
 %                                                                                       %
-% Calculate source functions based on EDGRN edgmoment.F                                 %
+% Calculate source functions based on fortran code EDGRN edgmoment.F                    %
 % change exponential ** in Fortran to ^ in MATLAB                                       %
 %                                                                                       %
 % INPUT										        %
@@ -15,13 +15,15 @@ function [ ms,cs,sfct,kpower ] = GTdef_edgmoment(srctype,ro,vp,vs)
 %    'vs' - vertical-single-force (fz=F0)                                               %
 %    'hs' - horizontal-single-force (fx=F0)                                             %
 %    'gn' - airgun in small pool (m11=m22=M0, fz=M0/r_source)                           %
-% ro      - density of the source                                                       %
 % vp      - P-wave velocity of the source                                               %
 % vs      - S-wave velocity of the source                                               %
+% ro      - density of the source                                                       %
 %										        %
 % OUTPUT                                                                                %
+% source structure                                                                      %
+% r0        - point source scale [m] (scalar)                                           %
 % ms        - (scalar)                                                                  %
-% cs        - (scalar)                                                                  %
+% cs        - (scalar) is ics (integer) in edgmoment.F                                  %
 %	    = 1  the azmuth-factor is cos(ms*theta) for poloidal mode (P-SV waves)      %
 %                and sin(ms*theta) for toroidal mode (SH wave)                          %
 %	    = -1 otherwise                                                              %
@@ -35,10 +37,10 @@ function [ ms,cs,sfct,kpower ] = GTdef_edgmoment(srctype,ro,vp,vs)
 % Computers & Geosciences, 29(2), 195-207. doi:10.1016/S0098-3004(02)00111-5	        %
 %		                                                                        %
 % first created by Lujia Feng Wed Dec 10 15:44:04 SGT 2014                              %
-% last modified by Lujia Feng Wed Dec 10 16:29:32 SGT 2014                              %
+% last modified by Lujia Feng Tue Sep  1 13:18:59 SGT 2015                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-strength = ro*vs*vs; % moment of the source
+strength = ro*vs*vs;  % moment of the source
 
 sfct   = zeros(1,6);
 kpower = zeros(1,6);
@@ -90,4 +92,11 @@ switch srctype
 %     sfct(2)=-strength/(2.d0*pi*r0)  r0 not provided
 %     sfct(4)=-strength/(2.d0*pi)
 %     kpower(4)=1
+   otherwise
+      error('GTdef_edgmoment ERROR: source type must be es, ss, ds, cl, vs, or hs!');
 end
+
+source.ms     = ms;
+source.cs     = cs;
+source.sfct   = sfct;
+source.kpower = kpower;

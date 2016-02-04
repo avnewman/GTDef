@@ -131,11 +131,26 @@ pnt (structure)
       pnt.disp    (nn*3)       - observed displacements = [east north vert]			          
       pnt.err     (nn*3)       - observed errors        = [east north vert]			          
       pnt.wgt     (nn*1)       - weight for points      = [weight]				           
-     *pnt.crt     (3*nn)       - cartesian location     = Xin = [xx;yy;zz] 
+     *pnt.crt     (nn*3)       - cartesian location     = [xx yy zz] = Xin
      *pnt.obs     (3*nn)*1     - observation vector     = [east;north;vertical]
      *pnt.obs_err (3*nn)*1     - error vector           = [east;north;vertical]
      *pnt.obs_wgt (3*nn)*1     - weight vector          = [east;north;vertical]
      *pnt.coef                                          = sqrt(pnt.obs_wgt)./pnt.obs_err; 
+
+# InSAR LOS Point:
+los (structure)
+      los.num     (scalar)     - number of points 
+      los.name    (cell array) - names of points
+      los.loc     (nn*3)       - location of points     = [lon lat z]				           
+      los.disp    (nn*1)       - observed displacements = [los]			          
+      los.err     (nn*1)       - observed errors        = [los]			          
+      los.wgt     (nn*1)       - weight for points      = [weight]				           
+     *los.crt     (nn*6)       - cartesian location     = [xx yy zz dirE dirN dirV] = Lin 
+                                 & los direction      
+     *los.obs     (nn)*1       - observation vector     = [los]
+     *los.obs_err (nn)*1       - error vector           = [los]
+     *los.obs_wgt (nn)*1       - weight vector          = [los]
+     *los.coef                                          = sqrt(los.obs_wgt)./los.obs_err; 
 
 # Baseline: 									          
 bsl (structure) 
@@ -145,7 +160,7 @@ bsl (structure)
       bsl.disp    (nn*4)       - observed length change = [east north vert absolute]   	             
       bsl.err     (nn*4)       - observed errors        = [east north vert absolute]   	             
       bsl.wgt     (nn*1)       - weight for baselines   = [weight]                     	             
-     *bsl.crt     (6*nn)       - cartesian location     = Bin = [bx1;by1;bz1;bx2;by2;bz2]
+     *bsl.crt     (nn*6)       - cartesian location     = [bx1 by1 bz1 bx2 by2 bz2] = Bin
      *bsl.obs     (4*nn)*1     - observation vector     = [east;north;vertical:length] 
      *bsl.obs_err (4*nn)*1     - error vector           = [east;north;vertical:length] 
      *bsl.obs_wgt (4*nn)*1     - weight vector          = [east;north;vertical:length] 
@@ -165,7 +180,7 @@ grd (structure)
 
      *nod.name    (cell array)
      *nod.loc     (nn*3)       - location of baselines  = [lon lat z] 
-     *nod.crt     (3*nn)       - cartesian location     = Nin = [xx;yy;zz]
+     *nod.crt     (nn*3)       - cartesian location     = [xx yy zz] = Nin
 										          
 # (5) Stress:                                                                             
 # Point:                                                                                  

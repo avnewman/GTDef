@@ -1,5 +1,5 @@
-function [ xyzflt,Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = ...
-           GTdef_fault2uni(earth,flt,xyzflt,Xin,Bin,Nin)
+function [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = ...
+           GTdef_fault2uni(earth,flt,xyzflt,Xin,Lin,Bin,Nin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            GTdef_fault2uni				  %
@@ -26,6 +26,8 @@ function [ xyzflt,Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = ...
 %    ssX,dsX,tsX - upper bounds for slips				  %
 %  Xin - point site locations in the local cartesian system 	  	  %
 %        [3*n] [ xx yy zz ]						  %
+%  Lin - los point locations in the local cartesian system + los dir      %
+%        [n*6] [xx yy zz dirE dirN dirV]                                  %
 %  Bin - baseline site locations in the local cartesian system 	  	  %
 %        [6*n] [ x1 y1 z1 x2 y2 z2 ]					  %
 %  Nin - grid and profile node locations in the local cartesian system    %
@@ -51,6 +53,9 @@ function [ xyzflt,Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = ...
 %  Xgrn - displacements [east;north;vertical] for different sites   	  %
 %         from unit slips [(3*nn)*slip_num] 				  %
 %         (nn is the  number of sites)  				  %
+%  Lgrn - los displacements [los] for different sites   	          %
+%         from unit slips [(1*nn)*slip_num] 				  %
+%         (nn is the number of los points)                                %
 %  Bgrn - length changes [east;north;vertical;length] for 	  	  %
 %         different baselines from unit slips [(4*nn)*slip_num] 	  %
 %         (nn is the  number of baselines)  				  %
@@ -71,7 +76,8 @@ function [ xyzflt,Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = ...
 % added output Min0 for stress calculation lfeng Thu May 17 SGT 2012      %
 % added earth structure lfeng Fri Mar 20 11:39:54 SGT 2015                %
 % added Min,SSgrn,DSgrn,TSgrn to xyzflt lfeng Thu Mar 26 15:54:56 SGT 2015%
-% last modified by Lujia Feng Thu Mar 26 16:41:03 SGT 2015                %
+% added los Lin & Lgrn lfeng Tue Nov  3 11:46:52 SGT 2015                 %
+% last modified by Lujia Feng Tue Nov  3 14:39:52 SGT 2015                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt,2)~=16, error('GTdef_fault2uni ERROR: need a n*16 fault vector as input!'); end
@@ -173,7 +179,8 @@ DSgrn = [];
 TSgrn = [];
 
 % form green matrix
-Xgrn = []; Bgrn = []; Ngrn = [];
+Xgrn = []; Lgrn = []; Bgrn = []; Ngrn = [];
+
 % point data
 if ~isempty(Xin)
     Xin  = Xin';
@@ -188,6 +195,35 @@ if ~isempty(Xin)
             [ U,~,~,~ ] = GTdef_edcmp(edgrn,[],edgrnfcts,pntsrc,Xin);
 	    end
     	    Xgrn(:,ii) = reshape(U',[],1);
+        end
+    end
+end
+
+% InSAR los data
+if ~isempty(Lin)
+    Ldir = Lin(:,4:end);                        % LOS direction from ground to satellite [east north vert]
+    Lin  = Lin(:,1:3)';                         % LOS point locations
+    Lgrn = zeros(1*size(Lin,2),slip_num);	% preallocate (fast) to avoid dynamically allocating (slow)
+    parfor ii = 1:slip_num			% parfor for parallel computing on multiple workers
+        if xunit(ii)~=0				% no need to calculate, if we don't consider this slip
+            if strcmpi(etype,'homogeneous')
+            [ U,~,~,~,~,~ ] = disloc3d_mod2(Min(:,ii),Lin,mu,nu);
+        else
+            % pntsrc = [ pxs pys pzs pmoment ]
+            [ pntsrc ]  = GTdef_edcmp_discretize(Min(:,ii),edgrn);
+            [ U,~,~,~ ] = GTdef_edcmp(edgrn,[],edgrnfcts,pntsrc,Lin);
+            end
+            % project deformation in 3D to LOS using dot product
+            %        [ dirE dirN dirV ]              
+            % Ldir = |  :    :    :   |      [lospnt_num*3]
+            %        [  :    :    :   ]              
+            % ------------------------------------------------
+            %     [ Ue ... ]    [ Ux ... ]
+            % U = | Un ... | or | Uy ... |   [3*lospnt_num]
+            %     [ Uu ... ]    [ Uz ... ]
+            % ------------------------------------------------
+            ULOS       = dot(Ldir,U',2);        % 2 means along row dim
+    	    Lgrn(:,ii) = ULOS;
         end
     end
 end

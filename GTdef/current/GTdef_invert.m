@@ -1,4 +1,4 @@
-function [ modspace ] = GTdef_invert(modspace,pnt,bsl,beta)
+function [ modspace ] = GTdef_invert(modspace,pnt,los,bsl,beta)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            GTdef_invert				  %
@@ -9,6 +9,7 @@ function [ modspace ] = GTdef_invert(modspace,pnt,bsl,beta)
 % INPUT:					  		  	  %
 % modspace - model structure                                              %
 % pnt      - point structure	  	                                  %
+% los      - los structure                                                %
 % bsl      - baseline structure                                           %
 % beta     - current beta value                                           %
 %									  %
@@ -21,10 +22,12 @@ function [ modspace ] = GTdef_invert(modspace,pnt,bsl,beta)
 % used structure lfeng Wed Feb 22 19:36:43 SGT 2012			  %
 % added modspace structure lfeng Thu Mar 19 17:32:29 SGT 2015             %
 % added condensing sm & sm_abs lfeng Fri Mar 20 20:28:15 SGT 2015         %
-% last modified by Lujia Feng Fri Mar 20 20:28:23 SGT 2015                %
+% added InSAR los & Lgrn lfeng Tue Nov  3 23:17:37 SGT 2015               %
+% last modified by Lujia Feng Tue Nov  3 23:57:38 SGT 2015                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Xgrn = modspace.Xgrn;
+Xgrn = modspace.Xgrn;  
+Lgrn = modspace.Lgrn;  
 Bgrn = modspace.Bgrn;
 Aeq  = modspace.Aeq;
 beq  = modspace.beq;
@@ -41,18 +44,29 @@ modspace.sm_abs = sm_abs;
 C = []; d = [];
 % add error & weight to the equations
 if ~isempty(Xgrn)
-    eqNum = size(Xgrn,1);
+    eqNum = size(Xgrn,1); % equation number
     for ii = 1:eqNum
-        Xgrn(ii,:) = Xgrn(ii,:).*pnt.coef(ii);
-	pnt.obs(ii) = pnt.obs(ii).*pnt.coef(ii);
+        Xgrn(ii,:)  = Xgrn(ii,:).*pnt.coef(ii);
+        pnt.obs(ii) = pnt.obs(ii).*pnt.coef(ii);
     end
     ind = find(~isnan(pnt.obs));		% exclude nan values
     C = [ C;Xgrn(ind,:) ]; d = [ d;pnt.obs(ind) ];
 end
+
+if ~isempty(Lgrn)
+    eqNum = size(Lgrn,1);
+    for ii = 1:eqNum
+        Lgrn(ii,:)  = Lgrn(ii,:).*los.coef(ii);
+        los.obs(ii) = los.obs(ii).*los.coef(ii);
+    end
+    ind = find(~isnan(los.obs));		% exclude nan values
+    C = [ C;Lgrn(ind,:) ]; d = [ d;los.obs(ind) ];
+end
+
 if ~isempty(Bgrn)
     eqNum = size(Bgrn,1);
     for ii = 1:eqNum
-        Bgrn(ii,:) = Bgrn(ii,:).*bsl.coef(ii,1);
+        Bgrn(ii,:)    = Bgrn(ii,:).*bsl.coef(ii,1);
 	bsl.obs(ii,1) = bsl.obs(ii,1).*bsl.coef(ii,1);
     end
     ind = find(~isnan(bsl.obs));		% exclude nan values

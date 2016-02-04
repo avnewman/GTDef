@@ -1,7 +1,7 @@
 function [] = GTdef_output(filename,earth,modspace,beta,...
            		   flt1,flt2,flt3,flt4,flt5,flt6,...   
-			   subflt,addon,...
-          		   pnt,bsl,prf,grd,nod)
+                           subflt,addon,...
+          		   pnt,los,bsl,prf,grd,nod)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                   GTdef_output.m                                       %
@@ -15,6 +15,7 @@ function [] = GTdef_output(filename,earth,modspace,beta,...
 % subflt   - subfault structure                                                          %
 % addon    - addon structure                                                             %
 % pnt      - point structure	  	                                                 %
+% los      - los structure                                                               %
 % bsl      - baseline structure                                                          %
 % prf      - profile structure	  	                                                 %
 % grd      - grid structure                                                              %
@@ -42,7 +43,8 @@ function [] = GTdef_output(filename,earth,modspace,beta,...
 % added sdropflag lfeng Thu Mar 26 17:35:06 SGT 2015                                     %
 % added fault5 external geometry lfeng Tue Jun 23 13:33:47 SGT 2015                      %
 % added output origin lfeng with Paul M.  Wed Jun 24 12:34:52 SGT 2015                   %
-% last modified by Lujia Feng Wed Jun 24 12:35:02 SGT 2015                               %
+% added InSAR los & Lgrn lfeng Tue Nov  3 23:17:37 SGT 2015                              %
+% last modified by Lujia Feng Tue Nov  3 23:24:32 SGT 2015                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 etype     = earth.type;
@@ -193,12 +195,12 @@ for ii =1:flt6.num
     end
 end
 
-%%%%%%%%%%   dip   %%%%%%%%%%
+%%%%%%%%%%  dip  %%%%%%%%%%
 for ii =1:addon.dipnum
     fprintf(fout,'dip   %s  %12.4f  %14.4e  %14.4e  %4d\n',addon.dipname{ii},addon.dip(ii,:));
 end
 
-%%%%%%%%%%   strike %%%%%%%%%%
+%%%%%%%%%%  strike  %%%%%%%%%%
 for ii =1:addon.strnum
     fprintf(fout,'strike   %s  %14.8f %12.8f %14.8f %12.8f %4d %14.3f\n',addon.strname{ii},addon.str(ii,:));
 end
@@ -211,6 +213,17 @@ if strcmp(coord,'local')
 else
     for ii =1:pnt.num
         fprintf(fout,'point 3 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n', pnt.name{ii},pnt.out(ii,:));
+    end
+end
+
+%%%%%%%%%%  los point  %%%%%%%%%%
+if strcmp(coord,'local')
+    for ii =1:los.num
+        fprintf(fout,'los 1 %s\t%14.5e %14.5e %14.5e  %10.5f %10.5f   %10.5f %10.5f %10.5f  %-5.2f\n', los.name{ii},los.out(ii,:));
+    end
+else
+    for ii =1:los.num
+        fprintf(fout,'los 1 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f   %10.5f %10.5f %10.5f  %-5.2f\n', los.name{ii},los.out(ii,:));
     end
 end
 

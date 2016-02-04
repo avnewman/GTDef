@@ -51,7 +51,9 @@ function [] = GTdef(finName,wnum)
 % fixed profile & grid lfeng Mon Jul 27 16:14:16 SGT 2015                              %
 % 3D geometry for Okada models can be imported using fault5 lfeng Tue Aug  4 SGT 2015  %
 % fixed greensfns for fault5 lfeng Wed Aug  5 15:57:54 SGT 2015                        %
-% last modified Lujia Feng Wed Aug  5 15:58:24 SGT 2015                                %
+% added InSAR los lfeng Tue Nov  3 10:47:25 SGT 2015                                   %
+% added Matlab equivalent of edgrn lfeng Thu Feb  4 14:51:26 SGT 2016                  %
+% last modified Lujia Feng Thu Feb  4 14:52:08 SGT 2016                                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,7 +79,7 @@ tic
 [ modspace,earth,...
   flt1,flt2,flt3,flt4,flt5,flt6,...
   subflt,addon,...
-  pnt,bsl,prf,grd,...
+  pnt,los,bsl,prf,grd,...
   sspnt,ssflt1,ssflt2 ] = GTdef_open(finName);
 toc
 
@@ -115,18 +117,27 @@ end
 if strcmp(earth.type,'layered')
 fprintf(1,'\n..... calculating point source library ......\t');
 tic
-    %---------- only need to create green functions once ----------
-    %fedgrnName = [ basename '_edgrn.inp' ];
-    %GTdef_write_edgrn_input(fedgrnName,edgrn,layer);
-    %folderName = 'edgrnfcts';
-    %% create green function folder if it does not exist
-    %if ~exist(folderName,'dir'), mkdir(folderName); end
-    %system(['echo ' fedgrnName ' | /Users/lfeng/matlab/edgrn2.0']);
-    %%system(['echo ' fedgrnName ' | ./edgrn2.0']);
-    %--------------------------------------------------------------
+   folderName = 'edgrnfcts';
+   fssName = [ folderName '/izmhs.ss' ];
+   fdsName = [ folderName '/izmhs.ds' ];
+   fclName = [ folderName '/izmhs.cl' ];
+   if exist(fssName,'file') && exist(fdsName,'file') && exist(fclName,'file')
+      % read in point source green functions
+      [ earth.edgrn,earth.edgrnfcts ] = GTdef_read_edgrn_output(earth.edgrn);
+   else
+      %---------- option 1: using Fortran code (edcmp/edgrn) to create green functions ----------
+      % only need to run once
+      %fedgrnName = [ basename '_edgrn.inp' ];
+      %GTdef_write_edgrn_input(fedgrnName,edgrn,layer);
+      %folderName = 'edgrnfcts';
+      %% create green function folder if it does not exist
+      %if ~exist(folderName,'dir'), mkdir(folderName); end
+      %system(['echo ' fedgrnName ' | /Users/lfeng/matlab/edgrn2.0']);
+      %%system(['echo ' fedgrnName ' | ./edgrn2.0']);
 
-    % read in point source green functions
-    [ earth.edgrn,earth.edgrnfcts ] = GTdef_read_edgrn_output(earth.edgrn);
+      %---------- option 2: using Matlab code to create green functions (recommended) ----------
+      [ earth ] = GTdef_edgrn(earth);
+   end
 toc
 end
 
@@ -151,6 +162,30 @@ tic
     pnt.obs_err = reshape(pnt.err,[],1);            % (3*n)*1 error vector [east;north;vertical]
     pnt.obs_wgt = [pnt.wgt;pnt.wgt;pnt.wgt];        % (3*n)*1 weight vector [east;north;vertical]
     pnt.coef = sqrt(pnt.obs_wgt)./pnt.obs_err;      % (3*n)*1 coefficient vector
+toc
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% InSAR los data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if los.num~=0
+fprintf(1,'\n........... processing point data ...........\t');
+tic
+    % convert InSAR los data from geographic to local cartesian coordinate
+    switch modspace.coord
+       case 'geo'
+          [pxx,pyy] = LL2ckmd(los.loc(:,1),los.loc(:,2),lon0,lat0,0);
+       case 'geo_polyconic'
+          [pxx,pyy] = latlon_to_xy(los.loc(:,1),los.loc(:,2),lon0,lat0,0);
+       case 'local'
+          pxx = los.loc(:,1); pyy = los.loc(:,2);
+    end
+    pzz = los.loc(:,3);
+    zz_ind = pzz>0; pzz(zz_ind) = 0;                % positive depths are all set to be zero   
+    los.crt = [ pxx pyy pzz los.dir ];              % cartesian - n*3 matrix [xx yy zz] & add los dir from ground to satellite
+    % prepare the los observation data
+    los.obs     = los.disp;                         % (1*n)*1 observation vector [los]
+    los.obs_err = los.err;                          % (1*n)*1 error vector [los]
+    los.obs_wgt = los.wgt;                          % (1*n)*1 weight vector [los]
+    los.coef    = sqrt(los.obs_wgt)./los.obs_err;   % (1*n)*1 coefficient vector
 toc
 end
 
@@ -336,7 +371,7 @@ tic
         % find dips for the master fault
     	dipInd = strcmpi(cfname,addon.dipname);
         [ modspace,xyzflt,Xgrn1 ] = GTdef_fault1dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),...
-	                                            pnt.crt,bsl.crt,nod.crt,earth);
+	                                            pnt.crt,los.crt,bsl.crt,nod.crt,earth);
         flt1.xyzflt{ii} = xyzflt; 
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
@@ -373,7 +408,7 @@ tic
         % find strikes for the master fault
     	strInd = strcmpi(cfname,addon.strname);
         [ modspace,xyzflt,Xgrn2 ] = GTdef_fault2dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:),...
-                                                    pnt.crt,bsl.crt,nod.crt,earth);
+                                                    pnt.crt,los.crt,bsl.crt,nod.crt,earth);
         flt2.xyzflt{ii} = xyzflt; 
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
@@ -405,7 +440,7 @@ tic
         % find dips for the master fault
     	dipInd = strcmpi(cfname,addon.dipname);
         [ modspace,xyzflt,Xgrn3 ] = GTdef_fault3dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),...
-                                                    pnt.crt,bsl.crt,nod.crt,earth);
+                                                    pnt.crt,los.crt,bsl.crt,nod.crt,earth);
         flt3.xyzflt{ii} = xyzflt; 
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
@@ -442,7 +477,7 @@ tic
         % find strikes for the master fault
     	strInd = strcmpi(cfname,addon.strname);
         [ modspace,xyzflt,Xgrn4 ] = GTdef_fault4dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:),...
-                                                    pnt.crt,bsl.crt,nod.crt,earth);
+                                                    pnt.crt,los.crt,bsl.crt,nod.crt,earth);
         flt4.xyzflt{ii} = xyzflt; 
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
@@ -467,7 +502,7 @@ tic
         % find subfaults for the master fault
         subInd = strcmpi(cfname,subflt.name);
 
-        [ modspace,xyzflt,Xgrn5,newflt ] = GTdef_fault5(modspace,geoname,colname,cflt,subflt.flt(subInd,:),pnt.crt,bsl.crt,nod.crt,earth);
+        [ modspace,xyzflt,Xgrn5,newflt ] = GTdef_fault5(modspace,geoname,colname,cflt,subflt.flt(subInd,:),pnt.crt,los.crt,bsl.crt,nod.crt,earth);
 
         flt5.out(ii,:)  = newflt; % update Nd & Ns if not provided
         flt5.xyzflt{ii} = xyzflt; 
@@ -509,7 +544,7 @@ if modspace.lb==-Inf
     % forward calculation
     fprintf(1,'\n........... doing forward modeling ..........\t');
     tic
-    [ modspace,pnt,bsl,nod ] = GTdef_forward(modspace,pnt,bsl,nod);
+    [ modspace,pnt,los,bsl,nod ] = GTdef_forward(modspace,pnt,los,bsl,nod);
     toc
     if strcmp(modspace.sdropflag,'on')
         % calculate stress drop
@@ -526,7 +561,7 @@ if modspace.lb==-Inf
 %        GTdef_output_stress(fstressName,sspnt,ssflt1,ssflt2);
 %    end
     foutName = [ basename '_fwd.out' ];
-    GTdef_output(foutName,earth,modspace,0,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,bsl,prf,grd,nod);
+    GTdef_output(foutName,earth,modspace,0,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl,prf,grd,nod);
 else
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% inversion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'\n............. doing inversion .............\t');
@@ -551,9 +586,9 @@ fprintf(1,'\n............. doing inversion .............\t');
             end
         end
         % inversion
-        [ modspace ] = GTdef_invert(modspace,pnt,bsl,bt);
+        [ modspace ] = GTdef_invert(modspace,pnt,los,bsl,bt);
         % forward calculation
-        [ modspace,pnt,bsl,nod ] = GTdef_forward(modspace,pnt,bsl,nod);
+        [ modspace,pnt,los,bsl,nod ] = GTdef_forward(modspace,pnt,los,bsl,nod);
         % update fault slips
         [ flt1,flt2,flt3,flt4,flt5,flt6,subflt ] = GTdef_update_slips(earth,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt);
         if strcmp(modspace.sdropflag,'on')
@@ -561,7 +596,7 @@ fprintf(1,'\n............. doing inversion .............\t');
             [ flt1,flt2,flt3,flt4,flt5 ] = GTdef_calc_stressdrop(earth,flt1,flt2,flt3,flt4,flt5);
         end
         % output results
-        GTdef_output(foutName,earth,modspace,bt,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,bsl,prf,grd,nod);
+        GTdef_output(foutName,earth,modspace,bt,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl,prf,grd,nod);
         toc
     end
     fsumName = [ basename '_inv.out' ];

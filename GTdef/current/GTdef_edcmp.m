@@ -160,85 +160,85 @@ for ii = 1:nrec
     uzx=0.0; uzy=0.0;
     for jj = 1:nps
         pzs = pzs_all(jj);
-	pmoment = pmoment_all(jj,:)';
- 	dis = dis_all(jj);	
-	azi = azi_all(jj);
+        pmoment = pmoment_all(jj,:)';
+        dis = dis_all(jj);	
+        azi = azi_all(jj);
         % depth
         iz  = floor((pzs-minz)/dz);
-	dzs = (pzs-(minz+dz*iz))/dz;
-	iz  = iz+1;
-	% distance
-	idis = floor((dis-minr)/dr);
-	ddis = (dis-(minr+dr*idis))/dr;
-	idis = idis+1;
-    	% weighting factors for the interpolation
-	w00 = (1.0-ddis)*(1.0-dzs);
-	w10 = ddis*(1.0-dzs);
-	w01 = (1.0-ddis)*dzs;
-	w11 = ddis*dzs;
-	co  = cosd(azi);
-	si  = sind(azi);
-	co2 = cosd(2.0*azi);
-	si2 = sind(2.0*azi);
-	% contributions from the strike-slip components
-	ps  = pmoment(1)*si2+pmoment(4)*co2;
-	sh  = pmoment(1)*co2-pmoment(4)*si2;
-	uz  = ps*(w00*ssdisp0(1,idis,iz)+w10*ssdisp0(1,idis+1,iz)+w01*ssdisp0(1,idis,iz+1)+w11*ssdisp0(1,idis+1,iz+1));
-	ur  = ps*(w00*ssdisp0(2,idis,iz)+w10*ssdisp0(2,idis+1,iz)+w01*ssdisp0(2,idis,iz+1)+w11*ssdisp0(2,idis+1,iz+1));
-	ut  = sh*(w00*ssdisp0(3,idis,iz)+w10*ssdisp0(3,idis+1,iz)+w01*ssdisp0(3,idis,iz+1)+w11*ssdisp0(3,idis+1,iz+1));
-	ezz = ps*(w00*ssstrn(1,idis,iz) +w10*ssstrn(1,idis+1,iz)+w01*ssstrn(1,idis,iz+1)+w11*ssstrn(1,idis+1,iz+1));
-	err = ps*(w00*ssstrn(2,idis,iz) +w10*ssstrn(2,idis+1,iz)+w01*ssstrn(2,idis,iz+1)+w11*ssstrn(2,idis+1,iz+1));
-	ett = ps*(w00*ssstrn(3,idis,iz) +w10*ssstrn(3,idis+1,iz)+w01*ssstrn(3,idis,iz+1)+w11*ssstrn(3,idis+1,iz+1));
-	ezr = ps*(w00*ssstrn(4,idis,iz) +w10*ssstrn(4,idis+1,iz)+w01*ssstrn(4,idis,iz+1)+w11*ssstrn(4,idis+1,iz+1));
-	ert = sh*(w00*ssstrn(5,idis,iz) +w10*ssstrn(5,idis+1,iz)+w01*ssstrn(5,idis,iz+1)+w11*ssstrn(5,idis+1,iz+1));
-	etz = sh*(w00*ssstrn(6,idis,iz) +w10*ssstrn(6,idis+1,iz)+w01*ssstrn(6,idis,iz+1)+w11*ssstrn(6,idis+1,iz+1));
-	uzr = ps*(w00*ssuzr(idis,iz)+w10*ssuzr(idis+1,iz)+w01*ssuzr(idis,iz+1)+w11*ssuzr(idis+1,iz+1));
-	uzt = sh*(w00*ssdisp0(1,idis,iz)+w10*ssdisp0(1,idis+1,iz) ...
-	    + w01*ssdisp0(1,idis,iz+1)+w11*ssdisp0(1,idis+1,iz+1))*2.0/dis;
-	% contributions from the dip-slip components
-	ps  = pmoment(2)*co+pmoment(5)*si;
-	sh  = pmoment(2)*si-pmoment(5)*co;
-	uz  = uz +ps*(w00*dsdisp(1,idis,iz)+w10*dsdisp(1,idis+1,iz)+w01*dsdisp(1,idis,iz+1)+w11*dsdisp(1,idis+1,iz+1));
-	ur  = ur +ps*(w00*dsdisp(2,idis,iz)+w10*dsdisp(2,idis+1,iz)+w01*dsdisp(2,idis,iz+1)+w11*dsdisp(2,idis+1,iz+1));
-	ut  = ut +sh*(w00*dsdisp(3,idis,iz)+w10*dsdisp(3,idis+1,iz)+w01*dsdisp(3,idis,iz+1)+w11*dsdisp(3,idis+1,iz+1));
-	ezz = ezz+ps*(w00*dsstrn(1,idis,iz)+w10*dsstrn(1,idis+1,iz)+w01*dsstrn(1,idis,iz+1)+w11*dsstrn(1,idis+1,iz+1));
-	err = err+ps*(w00*dsstrn(2,idis,iz)+w10*dsstrn(2,idis+1,iz)+w01*dsstrn(2,idis,iz+1)+w11*dsstrn(2,idis+1,iz+1));
-	ett = ett+ps*(w00*dsstrn(3,idis,iz)+w10*dsstrn(3,idis+1,iz)+w01*dsstrn(3,idis,iz+1)+w11*dsstrn(3,idis+1,iz+1));
-	ezr = ezr+ps*(w00*dsstrn(4,idis,iz)+w10*dsstrn(4,idis+1,iz)+w01*dsstrn(4,idis,iz+1)+w11*dsstrn(4,idis+1,iz+1));
-	ert = ert+sh*(w00*dsstrn(5,idis,iz)+w10*dsstrn(5,idis+1,iz)+w01*dsstrn(5,idis,iz+1)+w11*dsstrn(5,idis+1,iz+1));
-	etz = etz+sh*(w00*dsstrn(6,idis,iz)+w10*dsstrn(6,idis+1,iz)+w01*dsstrn(6,idis,iz+1)+w11*dsstrn(6,idis+1,iz+1));
-	uzr = uzr+ps*(w00*dsuzr(idis,iz)+w10*dsuzr(idis+1,iz)+w01*dsuzr(idis,iz+1)+w11*dsuzr(idis+1,iz+1));
-	uzt = uzt+sh*(w00*dsdisp(1,idis,iz)+w10*dsdisp(1,idis+1,iz) ...
-	    + w01*dsdisp(1,idis,iz+1)+w11*dsdisp(1,idis+1,iz+1))*(-1.0/dis);
-	% contributions from the clvd components
-	ps  = pmoment(3);
-	uz  = uz +ps*(w00*cldisp(1,idis,iz)+w10*cldisp(1,idis+1,iz)+w01*cldisp(1,idis,iz+1)+w11*cldisp(1,idis+1,iz+1));
-	ur  = ur +ps*(w00*cldisp(2,idis,iz)+w10*cldisp(2,idis+1,iz)+w01*cldisp(2,idis,iz+1)+w11*cldisp(2,idis+1,iz+1));
-	ezz = ezz+ps*(w00*clstrn(1,idis,iz)+w10*clstrn(1,idis+1,iz)+w01*clstrn(1,idis,iz+1)+w11*clstrn(1,idis+1,iz+1));
-	err = err+ps*(w00*clstrn(2,idis,iz)+w10*clstrn(2,idis+1,iz)+w01*clstrn(2,idis,iz+1)+w11*clstrn(2,idis+1,iz+1));
-	ett = ett+ps*(w00*clstrn(3,idis,iz)+w10*clstrn(3,idis+1,iz)+w01*clstrn(3,idis,iz+1)+w11*clstrn(3,idis+1,iz+1));
-	ezr = ezr+ps*(w00*clstrn(4,idis,iz)+w10*clstrn(4,idis+1,iz)+w01*clstrn(4,idis,iz+1)+w11*clstrn(4,idis+1,iz+1));
-	uzr = uzr+ps*(w00*cluzr(idis,iz)+w10*cluzr(idis+1,iz)+w01*cluzr(idis,iz+1)+w11*cluzr(idis+1,iz+1));
+        dzs = (pzs-(minz+dz*iz))/dz;
+        iz  = iz+1;
+        % distance
+        idis = floor((dis-minr)/dr);
+        ddis = (dis-(minr+dr*idis))/dr;
+        idis = idis+1;
+        % weighting factors for the interpolation
+        w00 = (1.0-ddis)*(1.0-dzs);
+        w10 = ddis*(1.0-dzs);
+        w01 = (1.0-ddis)*dzs;
+        w11 = ddis*dzs;
+        co  = cosd(azi);
+        si  = sind(azi);
+        co2 = cosd(2.0*azi);
+        si2 = sind(2.0*azi);
+        % contributions from the strike-slip components
+        ps  = pmoment(1)*si2+pmoment(4)*co2;
+        sh  = pmoment(1)*co2-pmoment(4)*si2;
+        uz  = ps*(w00*ssdisp0(1,idis,iz)+w10*ssdisp0(1,idis+1,iz)+w01*ssdisp0(1,idis,iz+1)+w11*ssdisp0(1,idis+1,iz+1));
+        ur  = ps*(w00*ssdisp0(2,idis,iz)+w10*ssdisp0(2,idis+1,iz)+w01*ssdisp0(2,idis,iz+1)+w11*ssdisp0(2,idis+1,iz+1));
+        ut  = sh*(w00*ssdisp0(3,idis,iz)+w10*ssdisp0(3,idis+1,iz)+w01*ssdisp0(3,idis,iz+1)+w11*ssdisp0(3,idis+1,iz+1));
+        ezz = ps*(w00*ssstrn(1,idis,iz) +w10*ssstrn(1,idis+1,iz)+w01*ssstrn(1,idis,iz+1)+w11*ssstrn(1,idis+1,iz+1));
+        err = ps*(w00*ssstrn(2,idis,iz) +w10*ssstrn(2,idis+1,iz)+w01*ssstrn(2,idis,iz+1)+w11*ssstrn(2,idis+1,iz+1));
+        ett = ps*(w00*ssstrn(3,idis,iz) +w10*ssstrn(3,idis+1,iz)+w01*ssstrn(3,idis,iz+1)+w11*ssstrn(3,idis+1,iz+1));
+        ezr = ps*(w00*ssstrn(4,idis,iz) +w10*ssstrn(4,idis+1,iz)+w01*ssstrn(4,idis,iz+1)+w11*ssstrn(4,idis+1,iz+1));
+        ert = sh*(w00*ssstrn(5,idis,iz) +w10*ssstrn(5,idis+1,iz)+w01*ssstrn(5,idis,iz+1)+w11*ssstrn(5,idis+1,iz+1));
+        etz = sh*(w00*ssstrn(6,idis,iz) +w10*ssstrn(6,idis+1,iz)+w01*ssstrn(6,idis,iz+1)+w11*ssstrn(6,idis+1,iz+1));
+        uzr = ps*(w00*ssuzr(idis,iz)+w10*ssuzr(idis+1,iz)+w01*ssuzr(idis,iz+1)+w11*ssuzr(idis+1,iz+1));
+        uzt = sh*(w00*ssdisp0(1,idis,iz)+w10*ssdisp0(1,idis+1,iz) ...
+            + w01*ssdisp0(1,idis,iz+1)+w11*ssdisp0(1,idis+1,iz+1))*2.0/dis;
+        % contributions from the dip-slip components
+        ps  = pmoment(2)*co+pmoment(5)*si;
+        sh  = pmoment(2)*si-pmoment(5)*co;
+        uz  = uz +ps*(w00*dsdisp(1,idis,iz)+w10*dsdisp(1,idis+1,iz)+w01*dsdisp(1,idis,iz+1)+w11*dsdisp(1,idis+1,iz+1));
+        ur  = ur +ps*(w00*dsdisp(2,idis,iz)+w10*dsdisp(2,idis+1,iz)+w01*dsdisp(2,idis,iz+1)+w11*dsdisp(2,idis+1,iz+1));
+        ut  = ut +sh*(w00*dsdisp(3,idis,iz)+w10*dsdisp(3,idis+1,iz)+w01*dsdisp(3,idis,iz+1)+w11*dsdisp(3,idis+1,iz+1));
+        ezz = ezz+ps*(w00*dsstrn(1,idis,iz)+w10*dsstrn(1,idis+1,iz)+w01*dsstrn(1,idis,iz+1)+w11*dsstrn(1,idis+1,iz+1));
+        err = err+ps*(w00*dsstrn(2,idis,iz)+w10*dsstrn(2,idis+1,iz)+w01*dsstrn(2,idis,iz+1)+w11*dsstrn(2,idis+1,iz+1));
+        ett = ett+ps*(w00*dsstrn(3,idis,iz)+w10*dsstrn(3,idis+1,iz)+w01*dsstrn(3,idis,iz+1)+w11*dsstrn(3,idis+1,iz+1));
+        ezr = ezr+ps*(w00*dsstrn(4,idis,iz)+w10*dsstrn(4,idis+1,iz)+w01*dsstrn(4,idis,iz+1)+w11*dsstrn(4,idis+1,iz+1));
+        ert = ert+sh*(w00*dsstrn(5,idis,iz)+w10*dsstrn(5,idis+1,iz)+w01*dsstrn(5,idis,iz+1)+w11*dsstrn(5,idis+1,iz+1));
+        etz = etz+sh*(w00*dsstrn(6,idis,iz)+w10*dsstrn(6,idis+1,iz)+w01*dsstrn(6,idis,iz+1)+w11*dsstrn(6,idis+1,iz+1));
+        uzr = uzr+ps*(w00*dsuzr(idis,iz)+w10*dsuzr(idis+1,iz)+w01*dsuzr(idis,iz+1)+w11*dsuzr(idis+1,iz+1));
+        uzt = uzt+sh*(w00*dsdisp(1,idis,iz)+w10*dsdisp(1,idis+1,iz) ...
+            + w01*dsdisp(1,idis,iz+1)+w11*dsdisp(1,idis+1,iz+1))*(-1.0/dis);
+        % contributions from the clvd components
+        ps  = pmoment(3);
+        uz  = uz +ps*(w00*cldisp(1,idis,iz)+w10*cldisp(1,idis+1,iz)+w01*cldisp(1,idis,iz+1)+w11*cldisp(1,idis+1,iz+1));
+        ur  = ur +ps*(w00*cldisp(2,idis,iz)+w10*cldisp(2,idis+1,iz)+w01*cldisp(2,idis,iz+1)+w11*cldisp(2,idis+1,iz+1));
+        ezz = ezz+ps*(w00*clstrn(1,idis,iz)+w10*clstrn(1,idis+1,iz)+w01*clstrn(1,idis,iz+1)+w11*clstrn(1,idis+1,iz+1));
+        err = err+ps*(w00*clstrn(2,idis,iz)+w10*clstrn(2,idis+1,iz)+w01*clstrn(2,idis,iz+1)+w11*clstrn(2,idis+1,iz+1));
+        ett = ett+ps*(w00*clstrn(3,idis,iz)+w10*clstrn(3,idis+1,iz)+w01*clstrn(3,idis,iz+1)+w11*clstrn(3,idis+1,iz+1));
+        ezr = ezr+ps*(w00*clstrn(4,idis,iz)+w10*clstrn(4,idis+1,iz)+w01*clstrn(4,idis,iz+1)+w11*clstrn(4,idis+1,iz+1));
+        uzr = uzr+ps*(w00*cluzr(idis,iz)+w10*cluzr(idis+1,iz)+w01*cluzr(idis,iz+1)+w11*cluzr(idis+1,iz+1));
 
-	% transform to cartesian coordinates
-	disp(ii,1) = disp(ii,1)+ur*co-ut*si;
-	disp(ii,2) = disp(ii,2)+ur*si+ut*co;
-	disp(ii,3) = disp(ii,3)+uz;
+        % transform to cartesian coordinates
+        disp(ii,1) = disp(ii,1)+ur*co-ut*si;
+        disp(ii,2) = disp(ii,2)+ur*si+ut*co;
+        disp(ii,3) = disp(ii,3)+uz;
  
         % strain order in edcgrn.F [exx eyy ezz exy eyz ezx]
         % adjust strain order      [exx eyy ezz eyz exz exy]
-	strain(ii,1) = strain(ii,1)+err*co*co+ett*si*si-ert*si2;
-	strain(ii,2) = strain(ii,2)+err*si*si+ett*co*co+ert*si2;
-	strain(ii,3) = strain(ii,3)+ezz;	
-	strain(ii,4) = strain(ii,4)+ezr*si+etz*co;
-	strain(ii,5) = strain(ii,5)+ezr*co-etz*si;
+        strain(ii,1) = strain(ii,1)+err*co*co+ett*si*si-ert*si2;
+        strain(ii,2) = strain(ii,2)+err*si*si+ett*co*co+ert*si2;
+        strain(ii,3) = strain(ii,3)+ezz;	
+        strain(ii,4) = strain(ii,4)+ezr*si+etz*co;
+        strain(ii,5) = strain(ii,5)+ezr*co-etz*si;
         strain(ii,6) = strain(ii,6)+0.5*(err-ett)*si2+ert*co2;
 
-	uzx = uzx+uzr*co-uzt*si;
-	uzy = uzy+uzr*si+uzt*co;
+        uzx = uzx+uzr*co-uzt*si;
+        uzy = uzy+uzr*si+uzt*co;
 	% transform of hrizontal tilts to vertical tilts
-	tilt(ii,1) = 2.0*strain(ii,5)-uzx;
-	tilt(ii,2) = 2.0*strain(ii,4)-uzy;
+        tilt(ii,1) = 2.0*strain(ii,5)-uzx;
+        tilt(ii,2) = 2.0*strain(ii,4)-uzy;
     end
 end
 

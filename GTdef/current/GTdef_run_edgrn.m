@@ -7,13 +7,6 @@ function [ ] = GTdef_run_edgrn(finName)
 %											%
 % INPUT											%
 % GTdef input file									%
-% Layered earth structure:								%
-%   edgrn.nl        		(scalar)                                		%	
-%   edgrn.obsz     		(scalar)                                		%
-%   edgrn.nr,edgrn.maxr     	(scalar)                                		%
-%   edgrn.nz,edgrn.maxz     	(scalar)                                		%
-%   edgrn.srate			(scalar)						%	
-%   layer - [ id depth vp vs ro ]	(nn*5)						%
 %											%
 % OUTPUT										%
 % "edgrnfcts" folder contains point source library that should cover the whole region 	%
@@ -35,7 +28,7 @@ tic
   earth,edgrn,layer,...
   flt1,flt2,flt3,flt4,flt5,flt6,...
   bndry,subflt,dip,...
-  pnt,bsl,prf,grd,...
+  pnt,los,bsl,prf,grd,...
   sspnt,ssflt1,ssflt2 ] = GTdef_open(finName);
 toc
 

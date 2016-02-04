@@ -11,13 +11,6 @@ function [ pntsrc ] = GTdef_edcmp_discretize(M,edgrn)
 %     M represents only one plane source						%
 %											%
 % (2) edgrn structure									%
-%		edgrn.nl        	(scalar)                                	%
-% 		edgrn.obsz     		(scalar)                                	%
-% 		edgrn.nr	        (scalar)                                	%
-% 		edgrn.minr,edgrn.maxr   (scalar)                                	%
-% 		edgrn.nz                (scalar)                                	%
-% 		edgrn.minz,edgrn.maxz   (scalar)                                	%
-%		edgrn.srate		(scalar)					%	
 %---------------------------------------------------------------------------------------%
 %											%
 % OUTPUT										%
@@ -83,10 +76,10 @@ pnum = nx*ny;
 
 % IMPORTANT: slip needs to be multiply by area!
 if dx>0.0
-  slip = slip*dx;
+   slip = slip*dx;
 end
 if dy>0.0
-  slip = slip*dy;
+   slip = slip*dy;
 end
 
 % create discretized point sources

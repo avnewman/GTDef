@@ -28,7 +28,7 @@ function [ ] = GTdef_ckbd_mask(model_name,ckbdin_name,ckbdout_name,slip,percent,
   earth,edgrn,layer,...
   flt1,flt2,flt3,flt4,flt5,flt6,...
   bndry,subflt,dip,...
-  pnt,bsl,prf,grd ] = GTdef_open(model_name);
+  pnt,los,bsl,prf,grd ] = GTdef_open(model_name);
 
 fckbdin  = fopen(ckbdin_name,'r');
 fckbdout = fopen(ckbdout_name,'r');
@@ -110,7 +110,7 @@ fout_name = [ basename '_mask.out' ];
 pnt.num = 0; bsl.num = 0; prf.num = 0; grd.num = 0;
 
 GTdef_output(fout_name,coord,'none','none',0,rigidity,poisson,earth,edgrn,layer,...
-    	     flt1,flt2,flt3,flt4,flt5,bndry,subflt,dip,pnt,bsl,prf,grd,nod,mod_info);
+    	     flt1,flt2,flt3,flt4,flt5,bndry,subflt,dip,pnt,los,bsl,prf,grd,nod,mod_info);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% output magnitude estimate for Nicoya %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % output magnitude estimate

@@ -7,13 +7,7 @@ function [ ] = GTdef_write_edgrn_input(finp_name,edgrn,layer)
 %											%
 % INPUT											%
 % Layered earth structure:								%
-%   edgrn.nl        		(scalar)                                		%	
-%   edgrn.obsz     		(scalar)                                		%
-%   edgrn.nr                	(scalar)                                		%
-%   edgrn.minr,edgrn.maxr     	(scalar)                                		%
-%   edgrn.nz                	(scalar)                                		%
-%   edgrn.minz,edgrn.maxz     	(scalar)                                		%
-%   edgrn.srate			(scalar)						%	
+%   edgrn  structure                                                    		%	
 %   layer - [ id depth vp vs ro ]	(nn*5)						%
 %											%
 % OUTPUT										%

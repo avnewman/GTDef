@@ -1,5 +1,5 @@
 function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
-                                    flt,subflt,dipin,Xin,Bin,Nin,earth)
+                       flt,subflt,dipin,Xin,Lin,Bin,Nin,earth)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                              GTdef_fault3dif				         %
@@ -37,6 +37,8 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
 %        = [ dip z1 z2 rows ]                                                    %
 %  Xin - point site locations in the local cartesian system 	  	         %
 %        [n*3] [ xx yy zz ]						         %
+%  Lin - los point locations in the local cartesian system + los direction       %
+%        [n*6] [xx yy zz dirE dirN dirV]                                         %
 %  Bin - baseline site locations in the local cartesian system 	  	         %
 %        [n*6] [ x1 y1 z1 x2 y2 z2 ]					         %
 %  Nin - grid and profile node locations in the local cartesian system           %
@@ -69,6 +71,9 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
 % Xgrn - displacements [east;north;vertical] for different sites   	         %
 %        from unit slips [(3*nn)*slip_num] 				         %
 %        (nn is the  number of sites)                                            %
+% Lgrn - los displacements [los] for different sites   	                         %
+%        from unit slips [(1*nn)*slip_num] 				         %
+%        (nn is the number of los points)                                        %
 % Bgrn - length changes [east;north;vertical;length] for 	  	         %
 %        different baselines from unit slips [(4*nn)*slip_num] 	                 %
 %        (nn is the  number of baselines)  				         %
@@ -102,7 +107,8 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
 % added Min,SSgrn,DSgrn,TSgrn to xyzflt lfeng Thu Mar 26 15:54:56 SGT 2015       %
 % added output Xgrn lfeng Fri Jun 12 12:12:10 SGT 2015                           %
 % removed smooth & surf from input lfeng Tue Jun 23 13:02:35 SGT 2015            %
-% last modified by Lujia Feng Tue Jun 23 13:10:17 SGT 2015                       %
+% added InSAR los Lin & Lgrn lfeng Tue Nov  3 11:46:52 SGT 2015                  %
+% last modified by Lujia Feng Tue Nov  3 14:25:38 SGT 2015                       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 18], error('GTdef_fault3dif ERROR: need a 1*18 fault vector as input!'); end
@@ -126,10 +132,10 @@ if subflt_num==1
     prjflt = [ 1 1 mx1 my1 mz1 mz2 mlen mstr mdip mslips ];
     [ ~,xyzflt ] = GTdef_prjflt3uni(prjflt);
 
-    [ xyzflt,Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,[flt(:,1:end-2)],xyzflt,Xin,Bin,Nin);
+    [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,[flt(:,1:end-2)],xyzflt,Xin,Lin,Bin,Nin);
     sm_abs = [];
     sm     = [];
-    [ modspace ] = GTdef_addall(modspace,Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);
+    [ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);
     return
 end
 
@@ -175,7 +181,7 @@ dnum = reshape(dmat,[],1);        snum = reshape(smat,[],1);
 prjflt = [ dnum snum x1 y1 z1 z2 len str dip slips ];
 [ ~,xyzflt ] = GTdef_prjflt3uni(prjflt);
 
-[ xyzflt,Xgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,newflt,xyzflt,Xin,Bin,Nin);
+[ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
 
 % create smoothing matrices
 if strcmp(surf,'free')
@@ -199,4 +205,4 @@ end
 ind_fixed = find(lb==-Inf);	% index for fixed slips 
 sm(ind_fixed) = 0;		% don't do smoothing for them
 
-[ modspace ] = GTdef_addall(modspace,Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);
+[ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);

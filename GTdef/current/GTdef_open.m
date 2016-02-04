@@ -1,8 +1,8 @@
 function [ modspace,earth,...
            flt1,flt2,flt3,flt4,flt5,flt6,...
            subflt,addon,...
-           pnt,bsl,prf,grd,...
-	   sspnt,ssflt1,ssflt2 ] = GTdef_open(filename)
+           pnt,los,bsl,prf,grd,...
+           sspnt,ssflt1,ssflt2 ] = GTdef_open(filename)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                  GTdef_open.m				                 %
@@ -22,6 +22,7 @@ function [ modspace,earth,...
 % flt?     - fault structure                                                             %
 % subflt   - subfault structure                                                          %
 % pnt      - point structure                                                             %
+% los      - los structure                                                               %
 % bsl      - baseline structure                                                          %
 % prf      - profile structure                                                           %
 % grd      - grid structure                                                              %
@@ -56,7 +57,8 @@ function [ modspace,earth,...
 % added modspace structure lfeng Fri Mar 20 17:24:44 SGT 2015                            %
 % added modspace.sdropflag lfeng Thu Mar 26 17:27:41 SGT 2015                            %
 % added fault5 for external geometry with Paul Morgan lfeng Wed Jun 17 14:03:00 SGT 2015 %
-% last modified by Lujia Feng Tue Jun 23 18:15:59 SGT 2015                               %
+% added InSAR los lfeng Tue Nov  3 10:50:07 SGT 2015                                     %
+% last modified by Lujia Feng Mon Nov  9 14:14:49 SGT 2015                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -74,7 +76,8 @@ modspace.sdropflag = 'off';
 %modspace.kappa    = 0; will be defined later
 %modspace.beta     = 0; will be defined later
 % form everything that is needed for x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)
-modspace.Xgrn = []; modspace.Bgrn = []; modspace.Ngrn = []; 
+modspace.Xgrn = []; modspace.Lgrn = [];
+modspace.Bgrn = []; modspace.Ngrn = []; 
 modspace.Aeq  = []; modspace.beq  = []; 
 modspace.lb   = []; modspace.ub   = []; 
 modspace.x0   = []; modspace.xx   = [];
@@ -118,11 +121,13 @@ addon.crt    = [];
 % data structure
 % - to read in
 pnt.num = 0;     pnt.name = {};     pnt.loc = [];   pnt.disp = [];  pnt.err = [];   pnt.wgt = []; 
+los.num = 0;     los.name = {};     los.loc = [];   loc.disp = [];  los.err = [];   los.wgt = [];  los.dir = [];
 bsl.num = 0;     bsl.name = {};     bsl.loc = [];   bsl.disp = [];  bsl.err = [];   bsl.wgt = []; 
 prf.num = 0;     prf.name = {};     prf.prf = []; 
 grd.num = 0;     grd.name = {};     grd.grd = [];
 % - to be built later
 pnt.crt = []; pnt.obs = []; pnt.obs_err = []; pnt.obs_wgt = []; pnt.coef = [];
+los.crt = []; los.obs = []; los.obs_err = []; los.obs_wgt = []; los.coef = [];
 bsl.crt = []; bsl.obs = []; bsl.obs_err = []; bsl.obs_wgt = []; bsl.coef = [];
 %nod.loc = []; nod.crt = []; nod.lon = [];     nod.lat = [];     nod.name = {};
 
@@ -461,6 +466,37 @@ while(1)
 	    end
             continue
 	end
+	continue
+    end
+    %%%%% los displacement %%%%%
+    if strcmpi(flag,'los')
+        [method,remain] = strtok(remain);
+	%% method 1 %%
+	if strcmp(method,'1')
+            [name,remain] = strtok(remain);
+            los.num = los.num+1; los.name = [ los.name; name ];
+            %% InSAR point location [lon lat z] %%
+            for ii = 1:3
+ 	        [ los.loc(los.num,ii),remain ] = GTdef_read1double(remain);
+            end
+            %% los displacement %%
+ 	    [ los.disp(los.num,1),remain ] = GTdef_read1double(remain);
+            %% los displacement error %%
+ 	    [ los.err(los.num,1),remain ]  = GTdef_read1double(remain);
+            %% unit vector for los direction [east north vert] %%
+            for ii = 1:3
+ 	        [ los.dir(los.num,ii),remain ] = GTdef_read1double(remain);
+            end
+            %% weight %%
+            [str,remain] = strtok(remain); 
+	    if isempty(str)||strncmp(str,'#',1)  % if weight is absent, use default 1
+	        los.wgt(los.num,1) = 1;
+	    else
+                los.wgt(los.num,1) = str2double(str);
+	    end
+            continue
+	end
+	%% no other methods yet %%
 	continue
     end
     %%%%% baseline %%%%%

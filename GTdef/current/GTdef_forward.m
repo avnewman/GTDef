@@ -1,4 +1,4 @@
-function [ modspace,pnt,bsl,nod ] = GTdef_forward(modspace,pnt,bsl,nod)
+function [ modspace,pnt,los,bsl,nod ] = GTdef_forward(modspace,pnt,los,bsl,nod)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                  GTdef_forward                                     %
@@ -15,8 +15,9 @@ function [ modspace,pnt,bsl,nod ] = GTdef_forward(modspace,pnt,bsl,nod)
 % add modinfo to modspace                                                            %
 % modinfo = [ data_num slip_num ndf rss rms wrss wrms chi2 rchi2 r_1d r_2d strain ]  %
 % ---------------------------------------------------------------------------------- %
-% add .out to pnt, bsl, and nod                                                      %
+% add .out to pnt, los, bsl, and nod                                                 %
 % pnt.out  - [lon lat zz Ue Un Uv eUe eUn eUv weight]                                %
+% los.out  - [lon lat zz ULOS eULOS LOSdirE LOSdirN LOSdirV weight]                  %
 % bsl.out  - [lon1 lat1 z1 lon2 lat2 z2 Ue Un Uv Ul eUe eUn eUv eUl wgt]             %
 % nod.out  - [lon lat zz Ue Un Uv eUe eUn eUv weight]			             %
 %                                                                                    %
@@ -29,10 +30,12 @@ function [ modspace,pnt,bsl,nod ] = GTdef_forward(modspace,pnt,bsl,nod)
 % added size check for sm/sm_abs with xx lfeng Oct 21 17:30:35 SGT 2014              %
 % added modspace structure lfeng Thu Mar 19 17:32:29 SGT 2015                        %
 % changed output to pnt, bsl, nod lfeng Fri Mar 20 16:37:00 SGT 2015                 %
-% last modified by Lujia Feng Fri Mar 20 17:46:06 SGT 2015                           %
+% added InSAR los & Lgrn lfeng Tue Nov  3 19:30:36 SGT 2015                          %
+% last modified by Lujia Feng Tue Nov  3 19:37:40 SGT 2015                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Xgrn    = modspace.Xgrn;
+Lgrn    = modspace.Lgrn;
 Bgrn    = modspace.Bgrn;
 Ngrn    = modspace.Ngrn;
 sm      = modspace.sm;
@@ -58,6 +61,8 @@ rss = 0; wrss = 0; chi2 = 0;
 rms = 0; wrms = 0; rchi2 = 0;
 pnt.out = []; bsl.out = []; nod.out = [];
 
+
+%%%%% point %%%%%
 if ~isempty(Xgrn)
     Xmod = Xgrn*xx; 						% model prediction for point data
     pnt_mod = reshape(Xmod,[],3);
@@ -72,6 +77,23 @@ if ~isempty(Xgrn)
     wrss = wrss+sum(pnt.obs_wgt(data_ind).*pnt_dif2./pnt_err2); % weighted rss 
     chi2 = chi2+sum(pnt_dif2./pnt_err2);			% chi-square
 end
+
+%%%%% los displacement %%%%%
+if ~isempty(Lgrn)
+    los_mod = Lgrn*xx;                                          % model prediction for los
+    los_mod_err = nan(size(los_mod));
+    los.out = [ los.loc los_mod los_mod_err los.dir los.wgt ];  % reuse los.loc, los.dir and los.wgt
+
+    data_ind = find(~isnan(los.obs));				% exclude nan data
+    data_num = data_num+length(data_ind);
+    los_dif2 = (los_mod(data_ind)-los.obs(data_ind)).^2;        % squared residuals/differences
+    los_err2 = los.obs_err(data_ind).^2; 			% squared errors
+    rss  = rss+sum(los_dif2);					% residual sum of squares
+    wrss = wrss+sum(los.obs_wgt(data_ind).*los_dif2./los_err2); % weighted rss 
+    chi2 = chi2+sum(los_dif2./los_err2);			% chi-square
+end
+
+%%%%% baseline %%%%%
 if ~isempty(Bgrn)
     Bmod = Bgrn*xx; 
     bsl_mod = reshape(Bmod,[],4);
@@ -86,6 +108,8 @@ if ~isempty(Bgrn)
     wrss = wrss+sum(bsl.obs_wgt(data_ind).*bsl_dif2./bsl_err2);	% weighted rss
     chi2 = chi2+sum(bsl_dif2./bsl_err2);			% chi-square
 end
+
+%%%%% node %%%%%
 if ~isempty(Ngrn)
     Nmod = Ngrn*xx;
     nod_mod = reshape(Nmod,[],3);

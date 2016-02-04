@@ -1,12 +1,13 @@
-function [ edgrnfcts ] = GTdef_edgrn(edgrn,layer)
+function [ earth ] = GTdef_edgrn(earth)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                           	     	GTdef_edgrn.m					%
+%                                   GTdef_edgrn.m					%
 %											%
-% Calculate point sources using EDGRN						        %
+% Create point source greens functions                                                  %
+% This code is converted from fortran EDGRN code                                        %
 %											%
 % INPUT											%
-% (1) edgrn structure									%
+% (1) earth.edgrn structure                                                             %
 % edgrn.obsz  - uniform observation depth                                    (scalar)   %
 % edgrn.nr    - number of equidistant radial distances [m]	             (scalar)   %
 % edgrn.minr  - minimum radial distance [m]                                  (scalar)   %
@@ -20,17 +21,60 @@ function [ edgrnfcts ] = GTdef_edgrn(edgrn,layer)
 % edgrn.dz    - source depth step [m]                                        (scalar)   %
 % edgrn.rr    - radial distances [m]                                (1*nr row vector)   %  
 % edgrn.zz    - source depths [m]                                (nz*1 column vector)   %  
+% edgrn.r0    - point source scale [m]                                        (scale)   %  
 %											%
-% edgrn.nl    - number of layers                                             (scalar)   %
-% edgrn.z1    - top depth of each layer [m]                      (nl*1 column vector)   %
-% edgrn.z2    - bottom depth of each layer [m]                   (nl*1 column vector)   %
-% edgrn.ro    - density for each source depth [kg/m^3]           (nl*1 column vector)   %
-% edgrn.vp    - P-wave velocity for each source depth [m/s]      (nl*1 column vector)   %
-% edgrn.vs    - S-wave velocity for each source depth [m/s]      (nl*1 column vector)   %
+% (2) earth.layer = [ id depth vp vs ro ]	(nn*5)                                  %
+%											%
 %---------------------------------------------------------------------------------------%
-% (2) layer = [ id depth vp vs ro ]	(nn*5)						%
+% INTERMEDIATE                                                                          %
+% (1) earth.sublayer structure (model sublayers)                                        %
+%     corresponds to /model/ h,ro,vp,vs,n0 [h->hh,n0->nl]                               %
+% sublayer.nl    - number of sublayers                                       (scalar)   %
+% sublayer.topz  - top depth of each sublayer [m]                (nl*1 column vector)   %
+% sublayer.botz  - bottom depth of each sublayer [m]             (nl*1 column vector)   %
+% sublayer.hh    - thickness of each sublayer [m]                (nl*1 column vector)   %
+% sublayer.vp    - P-wave velocity for each sublayer [m/s]       (nl*1 column vector)   %
+% sublayer.vs    - S-wave velocity for each sublayer [m/s]       (nl*1 column vector)   %
+% sublayer.ro    - density for each sublayer [kg/m^3]            (nl*1 column vector)   %
+%											%
+% (2) depths structure (changing layers including source and receiver)                  %
+%     corresponds to /sublayer/ hp,lp,nno  [hp->hh,lp->nl]                              %
+%                    /receiver/ zrec,lzrec [zrec->recz,lzrec->lrec]                     %
+%                     /source/  zs,ls      [zs->srcz,ls->lsrc]                          %
+% depths.nl        - the number of depths including source depth and receiver depth     %   
+% depths.hh        - thickness of each depth                                            %   
+% depths.nno       - layer number for each depth                                        %   
+% depths.srcz      - depth of source                                                    %
+% depths.recz      - depth of receiver                                                  %
+% depths.lsrc      - depth number for the source                                        %   
+% depths.lrec      - depth number for the receiver                                      %   
+%											%
+% (3) source structure (changing source)                                                %
+%     corresponds to /source/ r0,ms,ics,sfct,kpower [ics->cs]                           %
+% source.r0      - point source scale [m] (scalar)                                      %
+% source.ms      - (scalar)                                                             %
+% source.cs      - (scalar) is ics (integer) in edgmoment.F                             %
+%                = 1  the azmuth-factor is cos(ms*theta) for poloidal mode (P-SV waves) %
+%                     and sin(ms*theta) for toroidal mode (SH wave)                     %
+%                = -1 otherwise                                                         %
+% source.sfct    - six depth-dependent coefficients                                     %
+%                  the first four (Um,Em,Vm,Fm) are in the poloidal mode                %
+%                  the last two (Wm,Gm) are in the toroidal mode                        %
+% source.kpower  -                     (6 integers)                                     %
+%											%
+% (4) bess structure                                                                    %
+%     corresponds to /bessels/ bsdx,bsfct                                               %
+% bess.nbess     = 2048                                                                 %
+% bess.ndbess    = 128                                                                  %
+% bess.nnbess    = nbess*ndbess                                                         %
+% bess.nnbess1   = nnbess+ndbess                                                        %
+% bess.bsdx      - step along x in besselj functions                                    %
+% bess.bsfct     - table of J_n(x), dJ_n(x)/dx and n*J_n(x)/x                           %
+%                  all multiplied by sqrt(x)                                            %
+% Note: bsfct index starts from zero and length is nnbess1+1 because bsfct(0:nnbess1,3) %
 %---------------------------------------------------------------------------------------%
-% (3) edgrnfcts structure								%
+% OUTPUT (rowwise to be consistent with Okada)                                          %
+% (1) earth.edgrnfcts structure								%
 % point strike-slip source								%
 %       ssdisp0(1-3): Uz, Ur, Ut                                                        %
 %       ssstrn(1-6): Ezz,Err,Ett,Ezr=Erz,Ert=Etr,Etz=Ezt                                %
@@ -45,7 +89,6 @@ function [ edgrnfcts ] = GTdef_edgrn(edgrn,layer)
 %	cluzr(1)									%
 % Note ssdisp is a Matlab function, so ssdisp0 is used instead				%
 %											%
-% OUTPUT (rowwise to be consistent with Okada)                                          %
 % disp   = [ Ux;Uy;Uz ] (3 row vectors)							%
 % strain = [exx;eyy;ezz;eyz;exz;exy] (6 row vectors)                                    %
 % stress = [sxx;syy;szz;syz;sxz;sxy] (6 row vectors)                                    %
@@ -56,312 +99,208 @@ function [ edgrnfcts ] = GTdef_edgrn(edgrn,layer)
 % Computers & Geosciences, 29(2), 195-207. doi:10.1016/S0098-3004(02)00111-5		%
 %		                                                                	%
 % first created by Lujia Feng Wed Dec 10 15:31:46 SGT 2014                              %
-% last modified by Lujia Feng
+% last modified by Lujia Feng Thu Feb  4 15:19:44 SGT 2016                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        subroutine edgwvint(u,r,nr,srate,lambda,mu,itty)
-        integer nr,itty
-        double precision srate,lambda,mu
-        double precision r(nrmax)
-        double precision u(10,nrmax)
-%
-% 	table of J_n(x), dJ_n(x)/dx and n*J_n(x)/x
-%	all multiplied by sqrt(x)
-%
-	double precision bsdx,bsfct(0:nnbess1,3)
-	common /bessels/ bsdx,bsfct
-%
-        double precision eps,eps0
-        data eps,eps0/1.0d-08,1.0d-03/
-%
-        integer lp,nno(nzmax)
-        double precision hp(nzmax)
-        common /sublayer/ hp,lp,nno
-
-        integer lzrec
-        double precision zrec
-        common /receiver/ zrec,lzrec
-%       n0: number of model layers
-        integer n0
-        double precision h(lmax),ro(lmax),vp(lmax),vs(lmax)
-        common /model/ h,ro,vp,vs,n0
-%       source parameters
-        integer ls,ms,ics
-        integer kpower(6)
-        double precision zs,r0
-        double precision sfct(6)
-        common /source/ zs,r0,sfct,ls,ms,ics,kpower
-c
-%       parameters for hankel integrations
-c
-        integer i,ir,ir1,ncall,ik,nk,nx
-        double precision k,k0,klimit,dk,x,wl,wr
-        double precision cs,fps,fsh,fac,yabs,dyabs,ymax
-        double precision y(6),y0(6),u0(6),uk0(6),bs(3),bs1(3)
-	double precision r00(nrmax)
-        logical ps,sh,analytic
-% u: 1=uz, 2=ur, 3=ut, 4=ezz, 5=err, 6=ett, 7=ezr, 8=ert, 9=etz, 10=duz/dr
-% NOTE: uz, ur, ezz, err, ett, ezr duz/dr have the same azimuth-factor as the poloidal mode (p-sv)
-%	ut, ert and etz have the same azimuth-factor as the toroidal mode (sh)
-
-% edgrn structure
-nl    = edgrn.nl;
-obsz  = edgrn.obsz; % zrec in EDGRN
-nr    = edgrn.nr;
-minr  = edgrn.minr; 
-maxr  = edgrn.maxr;
-nz    = edgrn.nz;  
-minz  = edgrn.minz; 
-maxz  = edgrn.maxz;
-srate = edgrn.srate;
-dr    = edgrn.dr;
-dz    = edgrn.dz;
-
-% test if poloidal and toroidal modes are significant
-if sum(abs(sfct(1:4)))>0.0
-  ps = true; 
-else
-  ps = false;
+folderName = 'edgrnfcts';
+if ~exist(folderName,'dir')
+   mkdir(folderName);
 end
-if sum(abs(sfct(5:6)))>0.0
-  sh = true;
-else
-  sh = false;
+fssName = [ folderName '/izmhs.ss' ];
+fdsName = [ folderName '/izmhs.ds' ];
+fclName = [ folderName '/izmhs.cl' ];
+
+% read in edgrn structure locally
+obsz  = earth.edgrn.obsz;
+nr    = earth.edgrn.nr;
+minr  = earth.edgrn.minr;
+maxr  = earth.edgrn.maxr;
+nz    = earth.edgrn.nz;
+minz  = earth.edgrn.minz;
+maxz  = earth.edgrn.maxz;
+srate = earth.edgrn.srate;
+
+if nr<=1 || nz<=1
+   error('GTdef_edgrn ERROR: nz & nr must be > 1!');
+end
+if minr >= maxr
+   error('GTdef_edgrn ERROR: minr must be < maxr!');
+end
+if minz >= maxz
+   error('GTdef_edgrn ERROR: minz must be < maxz!');
+end
+if srate<=10
+   srate = 10;
 end
 
-% loop through depth
-for ii=1:nz
-% initialization
-do ir=1,nr
-  r00(ir)=dmax1(r0,0.01*abs(zs-zrec),0.01*r(ir))
-end
-uu  = zeros(10,nr); % 10 observables to output
-u0  = zeros(1,6);
-uk0 = zeros(1,6);
-y0  = zeros(1,6);
-
-% determine wavenumber limit
-% determine limits of y(i), i=1,...,6
+% calculate other edgrn parameters
+dr   = (maxr-minr)/(nr-1);
+dz   = (maxz-minz)/(nz-1);
+rr   = (minr:dr:maxr)';
+zz   = (minz:dz:maxz)';
 r0   = 0.5*max(dz,dr);
-eps0 = 0.003;
-ncall=0
-if zs==zrec
-   k0   = 2*eps0*pi/(r0+abs(zs-zrec)+r(nr));
-   ymax = 0.0;
-   yabs = 0.0;
-   while(yabs>eps0*ymax)
-      call edgkern(y,k0,ps,sh,eps)
-      ncall = ncall+1
-      do i=1,5,2
-        yabs=yabs+y(i)*y(i)
-      enddo
-      yabs=k0*sqrt(k0*yabs)*exp(-(k0*r0)**2);
-      ymax=max(ymax,yabs);
-      k0=1.25d0*k0;
+
+% check insignificant depth difference between source and observation depth
+zdiff = abs(zz-obsz);
+ind   = find(zdiff<1e-2*dz);
+if isscalar(ind)
+   obsz = zz(ind);
+elseif length(ind)>=2
+   error('GTdef_edgrn ERROR: source depth wrong!');
+end
+
+earth.edgrn.obsz = obsz;
+earth.edgrn.dr   = dr;
+earth.edgrn.dz   = dz;
+earth.edgrn.rr   = rr;
+earth.edgrn.zz   = zz;
+earth.edgrn.r0   = r0;
+
+% divide earth.layer into earth.sublayers
+[ sublayer ] = GTdef_edgsublay(earth.layer);
+
+nl   = sublayer.nl;
+topz = sublayer.topz;
+botz = sublayer.botz;
+hh   = sublayer.hh;
+vp   = sublayer.vp;
+vs   = sublayer.vs;
+ro   = sublayer.ro;
+
+% calcuate properties at receiver depth
+% call edglayer(zs1,ls,zrec,lzrec,h,n0)
+if obsz == 0
+   ind = 1;
+else
+   ind = find(obsz>topz & obsz<=botz);
+end
+mu     = ro(ind)*vs(ind)*vs(ind);        % shear modulus/rigidity/Lamé's second parameter
+lambda = ro(ind)*vp(ind)*vp(ind)-2.0*mu; % Lamé's first parameter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% nr->nr+2 nz->nz+2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% extend another two records
+ssdisp0  = zeros(3,nr+2,nz+2);	% to avoid conflict naming with Matlab
+ssstrn0  = zeros(6,nr+2,nz+2);
+ssuzr0   = zeros(nr+2,nz+2);
+dsdisp0  = zeros(3,nr+2,nz+2);
+dsstrn0  = zeros(6,nr+2,nz+2);
+dsuzr0   = zeros(nr+2,nz+2);
+cldisp0  = zeros(2,nr+2,nz+2);
+clstrn0  = zeros(4,nr+2,nz+2);
+cluzr0   = zeros(nr+2,nz+2);
+
+% 1='Source type: strike-slip'
+% 2='Source type: dip-slip'
+% 3='Source type: compensated linear vector dipole'
+for istype=1:3
+   switch istype
+      case 1
+         fprintf(1,'Source type: strike-slip\n');
+         fout = fopen(fssName,'w');
+         fprintf(fout,'# Green functions calculated with GTdef_edgrn.m\n');
+         fprintf(fout,'# Source type: strike-slip;  Dislocation: 1 [m]\n');
+         fprintf(fout,'# The first line: nr r1[m] r2[m] nzs zs1[m] zs2[m] obs.depth[m] obs.lambda[Pa] obs.mu[Pa]\n');
+         fprintf(fout,'# The following lines are\n');
+         fprintf(fout,'#   uz[m]         ur[m]         ut[m]         ezz           err           ett           ezr           ert           etz           duz/dr\n');
+         srctype = 'ss';
+      case 2
+         fprintf(1,'Source type: dip-slip\n');
+         fout = fopen(fdsName,'w');
+         fprintf(fout,'# Green functions calculated with GTdef_edgrn.m\n');
+         fprintf(fout,'# Source type: dip-slip;  Dislocation: 1 [m]\n');
+         fprintf(fout,'# The first line: nr r1[m] r2[m] nzs zs1[m] zs2[m] obs.depth[m] obs.lambda[Pa] obs.mu[Pa]\n');
+         fprintf(fout,'# The following lines are\n');
+         fprintf(fout,'#   uz[m]         ur[m]         ut[m]         ezz           err           ett           ezr           ert           etz           duz/dr\n');
+         srctype = 'ds';
+      case 3
+         fprintf(1,'Source type: compensated linear vector dipole\n');
+         fout = fopen(fclName,'w');
+         fprintf(fout,'# Green functions calculated with GTdef_edgrn.m\n');
+         fprintf(fout,'# Source type: compensated linear vector dipole;  Dislocation: 1 [m]\n');
+         fprintf(fout,'# The first line: nr r1[m] r2[m] nzs zs1[m] zs2[m] obs.depth[m] obs.lambda[Pa] obs.mu[Pa]\n');
+         fprintf(fout,'# The following lines are\n');
+         fprintf(fout,'#   uz[cm]        ur[cm]        ezz           err           ett           ezr           duz/dr\n');
+         srctype = 'cl';
+   end
+   fprintf(fout,'%.0f %e %e %.0f %e %e %e %e %e\n',nr,minr,maxr,nz,minz,maxz,obsz,lambda,mu);
+
+   % calculate Bessel function tables
+   [ bess ] = GTdef_edgbstab(srctype);
+
+   % loop through source at different depths
+   for ii=1:nz
+      srcz = zz(ii); % source depth
+      [ depths ] = GTdef_edgdepth(topz,botz,srcz,obsz);
+      ind    = depths.nno(depths.lsrc);
+      srcvp  = vp(ind);
+      srcvs  = vs(ind); 
+      srcro  = ro(ind);
+      [ source ] = GTdef_edgmoment(srctype,srcvp,srcvs,srcro);
+      source.r0  = r0;
+      [ uu ] = GTdef_edgwvint(rr,nr,srate,lambda,mu,sublayer,depths,source,bess);
+
+      % write out
+     if istype<=2
+        for jj=1:nr
+                       %     1      2      3      4      5      6      7      8      9     10
+           fprintf(fout,'%14.6e %14.6e %14.6e %14.6e %14.6e %14.6e %14.6e %14.6e %14.6e %14.6e\n',uu(:,jj));
+        end
+     else
+        for jj=1:nr
+                       %     1      2      3      4      5      6      7 
+           fprintf(fout,'%14.6e %14.6e %14.6e %14.6e %14.6e %14.6e %14.6e\n',uu([1 2 4 5 6 7 10],jj));
+        end
+     end
+
+     % add to greens function
+     if istype==1
+        ssdisp0(:,1:nr,ii) = uu(1:3,:);
+        ssstrn0(:,1:nr,ii) = uu(4:9,:);
+        ssuzr0(1:nr,ii)    = uu(10,:);
+     end
+     if istype==2
+        dsdisp0(:,1:nr,ii) = uu(1:3,:);
+        dsstrn0(:,1:nr,ii) = uu(4:9,:);
+        dsuzr0(1:nr,ii)    = uu(10,:);
+     end
+     if istype==3
+        cldisp0(:,1:nr,ii) = uu(1:2,:);
+        clstrn0(:,1:nr,ii) = uu(3:6,:);
+        cluzr0(1:nr,ii)    = uu(7,:);
+     end
    end
 
-   analytic = true;
+   fclose(fout);
+end
 
-   k=eps0*pi2/(r0+dabs(zs-zrec)+r(nr))
-   call edgkern(y,k,ps,sh,eps)
-   ncall=ncall+1
-   do i=2,6,2
-     y(i)=y(i)/(k*mu)
-   enddo
-   yabs=0.d0
-   dyabs=0.d0
-   do i=1,6
-     yabs=yabs+y(i)**2
-     dyabs=dyabs+(y(i)-y0(i))**2
-     y0(i)=y(i)
-   enddo
-   if(dyabs.gt.eps*yabs)then
-     if(k.ge.k0)then
-       analytic=.false.
-       do i=1,6
-         y0(i)=0.d0
-       enddo
-     else
-       k=1.25d0*k
-       goto 20
-     endif
-   endif
-   do i=2,6,2
-     y0(i)=y0(i)*mu
-   enddo
-else
-   analytic = false;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% if observation point coincides with source point, output is zero
+% so use the nearest to replace the zero output
+if  obsz>=minz && obsz<=maxz && minr<1.0e-6
+   iz  = round((obsz-minz)/dz);
+   dzs = abs(obsz-(minz+dz*iz))/dz;
+   if dzs<0.02
+      iz = iz+1;
+      ssdisp0(:,1,iz) = ssdisp0(:,2,iz);
+      dsdisp0(:,1,iz) = dsdisp0(:,2,iz);
+      cldisp0(:,1,iz) = cldisp0(:,2,iz);
+      ssstrn0(:,1,iz) = ssstrn0(:,2,iz);
+      dsstrn0(:,1,iz) = dsstrn0(:,2,iz);
+      clstrn0(:,1,iz) = clstrn0(:,2,iz);
+      ssuzr0(1,iz)    = ssuzr0(2,iz);
+      dsuzr0(1,iz)    = dsuzr0(2,iz);
+      cluzr0(1,iz)    = cluzr0(2,iz);
+   end
 end
-%
-	klimit=eps*pi2/(r0+dabs(zs-zrec)+r(nr))
-        ymax=0.d0
-30      yabs=0.d0
-        call edgkern(y,klimit,ps,sh,eps)
-        ncall=ncall+1
-        do i=1,5,2
-          yabs=yabs+(y(i)-y0(i))**2
-        enddo
-	yabs=klimit*dsqrt(klimit*yabs)*dexp(-(klimit*r00(1))**2)
-	ymax=dmax1(ymax,yabs)
-        if(yabs.gt.eps0*ymax)then
-          klimit=1.2d0*klimit
-          goto 30
-        endif
-%
-%	determine wavenumber sampling rate
-%
-	dk=pi2/(srate*(r00(1)+r(nr))+dabs(zs-zrec))
-	nk=500+idnint(klimit/dk)
-	dk=klimit/dble(nk)
-%
-%	too small distances will be treated as r = 0!
-%
-	if(r(1).gt.0.d0)then
-	  ir1=1
-	else
-	  ir1=2
-	endif
-%
-        do ik=1,nk
-          k=dble(ik)*dk
-          call edgkern(y,k,ps,sh,eps)
-	  if(analytic)then
-	    do i=1,5,2
-	      y(i)=y(i)-y0(i)
-	    enddo
-	    do i=2,6,2
-	      y(i)=y(i)-y0(i)*k
-	    enddo
-	  else if(ir1.eq.2)then
-c
-c	  for r=0
-c
-	    fac=k*dexp(-(k*r00(1))**2)*dk
-	    do i=1,6
-	      u0(i)=u0(i)+y(i)*fac
-	      uk0(i)=uk0(i)+y(i)*k*fac
-	    enddo
-	  endif
-          do ir=ir1,nr
-	    fac=dsqrt(k)*dk*dexp(-(k*r00(ir))**2)/dsqrt(r(ir))
-	    x=k*r(ir)
-c
-c	    bessels functions from pre-calculated tables
-c
-	    nx=idint(x/bsdx)
-	    wr=x/bsdx-dble(nx)
-	    wl=1.d0-wr
-	    if(nx.gt.nnbess)then
-	      nx=nnbess+mod(nx-nnbess,ndbess)
-	      do i=1,3
-	        bs(i)=fac*(wl*bsfct(nx,i)+wr*bsfct(nx+1,i))
-	      enddo
-	      bs(3)=bs(3)*(dble(nx)+wr)*bsdx/x
-	    else
-	      do i=1,3
-	        bs(i)=fac*(wl*bsfct(nx,i)+wr*bsfct(nx+1,i))
-	      enddo
-	    endif
-%
-%	    u1-3 are displacement components:
-%	    u4 = normal stress: szz
-%	    u5 = surface strain: err+ett
-%	    u6 will be derived later
-%	    u7 = shear stress: szr
-%	    u8 = strain component: dut/dr - (dur/dt)/r + ut/r
-%	    u9 = shear stress: szt
-%	    u10 = tilt: duz/dr
-%
-	    u(1,ir)=u(1,ir)+y(1)*bs(1)
-	    u(2,ir)=u(2,ir)+y(3)*bs(2)+cs*y(5)*bs(3)
-	    u(3,ir)=u(3,ir)-cs*y(3)*bs(3)-y(5)*bs(2)
-	    u(4,ir)=u(4,ir)+y(2)*bs(1)
-	    u(5,ir)=u(5,ir)-y(3)*k*bs(1)
-	    u(7,ir)=u(7,ir)+y(4)*bs(2)+cs*y(6)*bs(3)
-	    u(8,ir)=u(8,ir)+y(5)*k*bs(1)
-	    u(9,ir)=u(9,ir)-cs*y(4)*bs(3)-y(6)*bs(2)
-	    u(10,ir)=u(10,ir)+y(1)*k*bs(2)
-	  enddo
-        enddo
-c
-c       end of total integral
-c
-        if(itty.eq.1)then
-          write(*,'(a,i7,a,i7)')'   wavenumber samples: ',ncall+nk,
-     &                          ', really used: ',nk
-        endif
-c
-	if(ir1.eq.2.and..not.analytic)then
-c
-c	  for very small r including r=0
-c
-	  if(ms.eq.0)then
-	    u(1,1)=u0(1)
-	    u(4,1)=u0(2)
-	    u(5,1)=-0.5d0*uk0(3)
-	    u(6,1)=u(5,1)
-	  else if(ms.eq.1)then
-	    u(2,1)=0.5d0*(u0(3)+cs*u0(5))
-	    u(3,1)=-0.5d0*(cs*u0(3)+u0(5))
-	    u(7,1)=0.5d0*(u0(4)+cs*u0(6))
-	    u(9,1)=-0.5d0*(cs*u0(4)+u0(6))
-	    u(10,1)=0.5d0*uk0(1)
-	  else if(ms.eq.2)then
-	    u(5,1)=0.25d0*(uk0(3)+cs*uk0(5))
-	    u(6,1)=-u(5,1)
-	    u(8,1)=-0.25d0*(cs*uk0(3)+uk0(5))
-	  endif
-	endif
-	do ir=ir1,nr
-	  if(analytic)then
-	    if(ms.eq.0)then
-	      bs(1)=0.d0
-	      bs(2)=-1.d0/r(ir)**2
-	      bs(3)=0.d0
-	      bs1(1)=-1.d0/r(ir)**3
-	      bs1(2)=0.d0
-	      bs1(3)=0.d0
-	    else if(ms.eq.1)then
-	      bs(1)=1.d0/r(ir)**2
-	      bs(2)=-1.d0/r(ir)**2
-	      bs(3)=1.d0/r(ir)**2
-	      bs1(1)=0.d0
-	      bs1(2)=-2.d0/r(ir)**3
-	      bs1(3)=1.d0/r(ir)**3
-	    else if(ms.eq.2)then
-	      bs(1)=2.d0/r(ir)**2
-	      bs(2)=-1.d0/r(ir)**2
-	      bs(3)=2.d0/r(ir)**2
-	      bs1(1)=3.d0/r(ir)**3
-	      bs1(2)=-4.d0/r(ir)**3
-	      bs1(3)=4.d0/r(ir)**3
-	    endif
-	    u(1,ir)=u(1,ir)+y0(1)*bs(1)
-	    u(2,ir)=u(2,ir)+y0(3)*bs(2)+cs*y0(5)*bs(3)
-	    u(3,ir)=u(3,ir)-y0(5)*bs(2)-cs*y0(3)*bs(3)
-	    u(4,ir)=u(4,ir)+y0(2)*bs1(1)
-	    u(5,ir)=u(5,ir)-y0(3)*bs1(1)
-	    u(7,ir)=u(7,ir)+y0(4)*bs1(2)+cs*y0(6)*bs1(3)
-	    u(8,ir)=u(8,ir)+y0(5)*bs1(1)
-	    u(9,ir)=u(9,ir)-y0(6)*bs1(2)-cs*y0(4)*bs1(3)
-	    u(10,ir)=u(10,ir)+y0(1)*bs1(2)
-	  endif
-%
-%	  u6 is ett = ur/r + (dut/dt)/r
-%
-	  u(6,ir)=(u(2,ir)+cs*dble(ms)*u(3,ir))/r(ir)
-%
-%	  u5 now is err = u5(before) - ett
-%
-	  u(5,ir)=u(5,ir)-u(6,ir)
-%
-%	  u8 now is ert = 0.5 * u8(before) + (dur/dt)/r - ut/r
-%	                = 0.5 * (dut/dr + (dur/dt)/r - ut/r)
-%
-	  u(8,ir)=0.5d0*u(8,ir)-(cs*dble(ms)*u(2,ir)+u(3,ir))/r(ir)
-	enddo
-do ir=1,nr
-	  u(4,ir)=(u(4,ir)-lambda*(u(5,ir)+u(6,ir)))/(lambda+2.d0*mu)
-	  u(7,ir)=u(7,ir)/(2.d0*mu)
-	  u(9,ir)=u(9,ir)/(2.d0*mu)
-end
+
+% assign to structure
+earth.sublayer         = sublayer;
+earth.edgrnfcts.ssdisp = ssdisp0;
+earth.edgrnfcts.dsdisp = dsdisp0;
+earth.edgrnfcts.cldisp = cldisp0;
+earth.edgrnfcts.ssstrn = ssstrn0;
+earth.edgrnfcts.dsstrn = dsstrn0;
+earth.edgrnfcts.clstrn = clstrn0;
+earth.edgrnfcts.ssuzr  = ssuzr0;
+earth.edgrnfcts.dsuzr  = dsuzr0;
+earth.edgrnfcts.cluzr  = cluzr0;

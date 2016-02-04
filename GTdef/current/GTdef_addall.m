@@ -1,4 +1,4 @@
-function [ modspace ] = GTdef_addall(modspace,Xgrn1,Bgrn1,Ngrn1,sm1,sm_abs1,Aeq1,beq1,lb1,ub1,x01)
+function [ modspace ] = GTdef_addall(modspace,Xgrn1,Lgrn1,Bgrn1,Ngrn1,sm1,sm_abs1,Aeq1,beq1,lb1,ub1,x01)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            GTdef_addall				                 %
@@ -16,10 +16,12 @@ function [ modspace ] = GTdef_addall(modspace,Xgrn1,Bgrn1,Ngrn1,sm1,sm_abs1,Aeq1
 % added auxiliary sm lfeng Thu Dec  3 00:58:41 EST 2009			                 %
 % replaced auxiliary sm with sm_abs lfeng Wed Dec  9 16:47:55 EST 2009	                 %
 % added modspace structure lfeng Thu Mar 19 17:32:29 SGT 2015                            %
-% last modified by Lujia Feng Thu Mar 19 17:55:24 SGT 2015                               %
+% added InSAR los green functions Lgrn lfeng Tue Nov  3 14:14:35 SGT 2015                %
+% last modified by Lujia Feng Tue Nov  3 14:16:57 SGT 2015                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Xgrn0   = modspace.Xgrn;
+Lgrn0   = modspace.Lgrn;
 Bgrn0   = modspace.Bgrn;
 Ngrn0   = modspace.Ngrn;
 sm0     = modspace.sm;
@@ -32,6 +34,7 @@ x00     = modspace.x0;
 
 %%%%%%%%%%%%%%%%%%%% green %%%%%%%%%%%%%%%%%%%%
 Xgrn = [ Xgrn0 Xgrn1 ];
+Lgrn = [ Lgrn0 Lgrn1 ];
 Bgrn = [ Bgrn0 Bgrn1 ];
 Ngrn = [ Ngrn0 Ngrn1 ];
 
@@ -63,6 +66,7 @@ ub = [ ub0;ub1 ];
 x0 = [ x00;x01 ];
 
 modspace.Xgrn   = Xgrn;
+modspace.Lgrn   = Lgrn;
 modspace.Bgrn   = Bgrn;
 modspace.Ngrn   = Ngrn;
 modspace.sm     = sm;

@@ -23,29 +23,8 @@ function [ edgrn,edgrnfcts ] = GTdef_read_edgrn_output(edgrn)
 %											%
 % OUTPUT										%
 % (1) edgrn structure                                                                   %
-%   edgrn.nl        		(scalar)                                		%	
-%   edgrn.obsz     		(scalar)                                		%
-%   edgrn.nr                	(scalar)                                		%
-%   edgrn.minr,edgrn.maxr     	(scalar)                                		%
-%   edgrn.nz                	(scalar)                                		%
-%   edgrn.minz,edgrn.maxz     	(scalar)                                		%
-%   edgrn.srate			(scalar)						%	
-%   edgrn.dr			(scalar)	new					%
-%   edgrn.dz			(scalar)       	new                                     %
 %											%
 % (2) edgrnfcts structure								%
-% point strike-slip source								%
-%       ssdisp(1-3): Uz, Ur, Ut                                                         %
-%       ssstrn(1-6): Ezz,Err,Ett,Ezr=Erz,Ert=Etr,Etz=Ezt                                %
-%	ssuzr(1)									%
-% point dip-slip source                                                                 %
-%       dsdisp(1-3): Uz, Ur, Ut                                                         %
-%       dsstrn(1-6): Ezz,Err,Ett,Ezr=Erz,Ert=Etr,Etz=Ezt                                %
-%	dsuzr(1)									%
-% point clvd source                                                                     %
-%       cldisp(1-2): Uz, Ur (Ut=0)                                                      %
-%       clstrn(1-4): Ezz,Err,Ett,Ezr=Erz (Ert=Etr=Etz=Ezt=0)                            %
-%	cluzr(1)									%
 % 											%
 % REFERENCE  										%
 % Wang, R., Martin, F. L., & Roth, F. (2003)						%

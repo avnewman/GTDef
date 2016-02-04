@@ -1,4 +1,4 @@
-function [ limits ] = GTdef_detect_greensfns(fgrnName,threshold,area)
+function [ limits ] = GTdef_detect_greensfns(fgrnName,threshold,sitenum,area,mu)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            GTdef_detect_greensfns                             %
@@ -18,6 +18,7 @@ function [ limits ] = GTdef_detect_greensfns(fgrnName,threshold,area)
 %     id dnum snum Site  ss_E  ss_N  ss_U  ds_E  ds_N  ds_U  ts_E  ts_N  ts_u   %
 % threshold - minimul level of detection for each component [m]                 %
 %           = [ ee nn uu ]       (1*3)                                          %
+% sitenum   - number of sites that detect the signal                            %
 % area      - area of each patch [m^2]           (scalar or vector)             %
 %    if area = [], M0 & Mw are not calculated                                   %
 %                                                                               %
@@ -37,7 +38,9 @@ function [ limits ] = GTdef_detect_greensfns(fgrnName,threshold,area)
 % added thres3 lfeng Fri Jun 12 14:26:30 SGT 2015                               %
 % added and removed fsiteName lfeng Fri Jun 12 19:25:35 SGT 2015                %
 % area can be scalar or vector lfeng Wed Aug  5 17:47:47 SGT 2015               %
-% last modified by Lujia Feng Wed Aug  5 17:47:55 SGT 2015                      %
+% added threshold for number of stations lfeng Wed Aug 12 13:18:49 SGT 2015     %
+% added rigidity mu lfeng Thu Aug 27 15:19:08 SGT 2015                          %
+% last modified by Lujia Feng Thu Aug 27 15:20:44 SGT 2015                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(threshold)~=[1 3], error('GTdef_detect_greensfns ERROR: need a 1*3 vector for threshold as input!'); end
@@ -74,12 +77,22 @@ for ii=1:patchNum
     ss       = grnpatch(1,3);
     disps    = grnpatch(:,4:end);
     %slips    = abs(threshold./disps);
-    slips    = abs(bsxfun(@rdivide,thres3,disps)); % absolute values!!
-    slipmin  = min(slips); % detected by at least one site
-    % minimum slip
-    ssmin    = min(slipmin(1:3));
-    ddmin    = min(slipmin(4:6));
-    ttmin    = min(slipmin(7:9));
+    slips    = abs(bsxfun(@rdivide,thres3,disps)); % absolute values!! slips = matrix [siteNum 9]
+    sslist   = min(slips(:,1:3),[],2);
+    ddlist   = min(slips(:,4:6),[],2);
+    ttlist   = min(slips(:,7:9),[],2);
+    sslist   = sort(sslist);
+    ddlist   = sort(ddlist);
+    ttlist   = sort(ttlist);
+    ssmin    = sslist(sitenum);
+    ddmin    = ddlist(sitenum);
+    ttmin    = ttlist(sitenum);
+    %%-------- minimum --------
+    %slipmin  = min(slips); % detected by at least one site
+    %% minimum slip
+    %ssmin    = min(slipmin(1:3));
+    %ddmin    = min(slipmin(4:6));
+    %ttmin    = min(slipmin(7:9));
     if ~isempty(area)
         if ~isscalar(area)
            parea = area(ii);
@@ -87,9 +100,9 @@ for ii=1:patchNum
 	   parea = area;
 	end
         % minimum M0
-        [ ssM0,~,~ ] = EQS_M0AreaSlip([],[],parea,ssmin);
-        [ ddM0,~,~ ] = EQS_M0AreaSlip([],[],parea,ddmin);
-        [ ttM0,~,~ ] = EQS_M0AreaSlip([],[],parea,ttmin);
+        [ ssM0,~,~ ] = EQS_M0AreaSlip(mu,[],parea,ssmin);
+        [ ddM0,~,~ ] = EQS_M0AreaSlip(mu,[],parea,ddmin);
+        [ ttM0,~,~ ] = EQS_M0AreaSlip(mu,[],parea,ttmin);
         % minimum Mw
         [ ssMw,~ ]   = EQS_MwM([],ssM0);
         [ ddMw,~ ]   = EQS_MwM([],ddM0);
@@ -101,7 +114,7 @@ toc
 
 % output limits file
 [ ~,basename,~ ] = fileparts(fgrnName);
-foutName = [ basename '_disp' num2str(threshold*1e3,'%03.0f') 'mm.min' ];
+foutName = [ basename '_disp' num2str(threshold*1e3,'%03.0f') 'mm_' num2str(sitenum,'%d') 'sites.min' ];
 fout = fopen(foutName,'w');
 fprintf(fout,'# Output from GTdef_detect_greensfns.m\n');
 fprintf(fout,'# (1)ID (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1[m] (7)xbot1 (8)ybot1 (9)zbot1[m] (10)xbot2 (11)ybot2 (12)zbot2[m] (13)xtop2 (14)ytop2 (15)ztop2[m] (16)xctr (17)yctr (18)zcrt[m]\n');

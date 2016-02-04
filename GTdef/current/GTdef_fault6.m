@@ -50,6 +50,7 @@ function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault6(flt,subflt
 % first created by Lujia Feng Fri Dec 11 11:47:47 EST 2009		  %
 % changed from GTdef_fault5 to GTdef_fault6 lfeng Wed Jun 17 SGT 2015     %
 % last modified by Lujia Feng Wed Jun 17 11:04:57 SGT 2015                %
+% need to code for los Lgrn lfeng Tue Nov  3 14:32:13 SGT 2015            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 11], error('GTdef_fault6 ERROR: need a 1*11 fault vector as input!'); end

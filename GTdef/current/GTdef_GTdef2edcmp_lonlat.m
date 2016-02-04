@@ -23,7 +23,7 @@ fprintf(1,'.......... reading the input file ...........\t');
 tic
 [ coord,origin,~,~,~,~,~,~,~,~,~,...
   flt1,flt2,flt3,flt4,~,~,...
-  ~,subflt,dip,pnt,~,~,~,~,~,~ ] = GTdef_open(finName);
+  ~,subflt,dip,pnt,los,~,~,~,~,~,~ ] = GTdef_open(finName);
 toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% set origin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
