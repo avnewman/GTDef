@@ -8,8 +8,8 @@ function [] = GTdef(finName,wnum)
 % INPUT:                                                                               %
 % finName - input file name                                                            %
 % wnum    - num of matlab parallel workers to be used                                  %
+%   #: number of workers specified
 %   0: do not use parallel computing                                                   %
-%   8: up to 8 workers that can be specified                                           %
 %  -1: use parallel computing                                                          %
 %      but number of workers will be determined by the system                          %
 %                                                                                      %
@@ -53,24 +53,19 @@ function [] = GTdef(finName,wnum)
 % fixed greensfns for fault5 lfeng Wed Aug  5 15:57:54 SGT 2015                        %
 % added InSAR los lfeng Tue Nov  3 10:47:25 SGT 2015                                   %
 % added Matlab equivalent of edgrn lfeng Thu Feb  4 14:51:26 SGT 2016                  %
-% last modified Lujia Feng Thu Feb  4 14:52:08 SGT 2016                                %
+% replaced matlabpool with parpool for newer Matlab  Tue Apr 19 15:27:25 EDT 2016      %
+% updated weighting function Now: Wnew=Waprior/Err^2 Tue Apr 19 15:34:15 EDT 2016      %
+% last modified Andrew Newman  Tue Apr 19 15:28:11 EDT 2016                            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
-if wnum==0		% do not use parallel computing
-    if matlabpool('size')>0
-       matlabpool close
-    end
-elseif wnum<0		% use parallel computing, but do not specify num of workers
-    if matlabpool('size')==0
-       matlabpool
-    end
-elseif wnum<=8
-    if matlabpool('size')==0
-       matlabpool('open',int32(wnum));
-    end
+% updated for use by parpool. AVN 4/19/16
+if wnum>0
+      localpool=parpool(int32(wnum));
+elseif wnum<0
+      localpool=parpool;
 else
-    error('GTdef ERROR: matlabpool input is wrong!!!');
+    print('GTdef: parpool is not used.');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -161,7 +156,7 @@ tic
     pnt.obs = reshape(pnt.disp,[],1);               % (3*n)*1 observation vector [east;north;vertical]
     pnt.obs_err = reshape(pnt.err,[],1);            % (3*n)*1 error vector [east;north;vertical]
     pnt.obs_wgt = [pnt.wgt;pnt.wgt;pnt.wgt];        % (3*n)*1 weight vector [east;north;vertical]
-    pnt.coef = sqrt(pnt.obs_wgt)./pnt.obs_err;      % (3*n)*1 coefficient vector
+    pnt.coef = pnt.obs_wgt./pnt.obs_err.^2;         % (3*n)*1 coefficient vector
 toc
 end
 
@@ -185,7 +180,7 @@ tic
     los.obs     = los.disp;                         % (1*n)*1 observation vector [los]
     los.obs_err = los.err;                          % (1*n)*1 error vector [los]
     los.obs_wgt = los.wgt;                          % (1*n)*1 weight vector [los]
-    los.coef    = sqrt(los.obs_wgt)./los.obs_err;   % (1*n)*1 coefficient vector
+    los.coef    = los.obs_wgt./los.obs_err.^2;      % (1*n)*1 coefficient vector
 toc
 end
 
@@ -211,7 +206,7 @@ tic
     bsl.obs = reshape(bsl.disp,[],1);                   % (4*n)*1 observation vector [east;north;vertical:length]
     bsl.obs_err = reshape(bsl.err,[],1);                % (4*n)*1 error vector [east;north;vertical:length]
     bsl.obs_wgt = [bsl.wgt;bsl.wgt;bsl.wgt;bsl.wgt];	% (4*n)*1 weight vector [east;north;vertical:length]
-    bsl.coef = sqrt(bsl.obs_wgt)./bsl.obs_err;          % (4*n)*1 coefficient vector
+    bsl.coef = bsl.obs_wgt./bsl.obs_err.^2;             % (4*n)*1 coefficient vector
 toc
 end
 
@@ -603,7 +598,9 @@ fprintf(1,'\n............. doing inversion .............\t');
     GTdef_summary(fsumName,modspace);
 end
 
-% close up matlabpool for parallel computing
-if matlabpool('size')>0
-   matlabpool close
+% close up parpool for parallel computing
+if wnum>0    % update for parpool by AVN 4/19/16
+   delete(localpool);
+end
+
 end
