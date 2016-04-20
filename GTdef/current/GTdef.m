@@ -54,8 +54,7 @@ function [] = GTdef(finName,wnum)
 % added InSAR los lfeng Tue Nov  3 10:47:25 SGT 2015                                   %
 % added Matlab equivalent of edgrn lfeng Thu Feb  4 14:51:26 SGT 2016                  %
 % replaced matlabpool with parpool for newer Matlab  Tue Apr 19 15:27:25 EDT 2016      %
-% updated weighting function Now: Wnew=Waprior/Err^2 Tue Apr 19 15:34:15 EDT 2016      %
-% last modified Andrew Newman  Tue Apr 19 15:28:11 EDT 2016                            %
+% last modified Andrew Newman    Wed Apr 20 10:08:44 EDT 2016                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -156,7 +155,8 @@ tic
     pnt.obs = reshape(pnt.disp,[],1);               % (3*n)*1 observation vector [east;north;vertical]
     pnt.obs_err = reshape(pnt.err,[],1);            % (3*n)*1 error vector [east;north;vertical]
     pnt.obs_wgt = [pnt.wgt;pnt.wgt;pnt.wgt];        % (3*n)*1 weight vector [east;north;vertical]
-    pnt.coef = pnt.obs_wgt./pnt.obs_err.^2;         % (3*n)*1 coefficient vector
+    %pnt.coef = pnt.obs_wgt./pnt.obs_err.^2;         % (3*n)*1 coefficient vector
+    pnt.coef = sqrt(pnt.obs_wgt.)/pnt.obs_err.;     % (3*n)*1 coefficient vector
 toc
 end
 
@@ -180,7 +180,8 @@ tic
     los.obs     = los.disp;                         % (1*n)*1 observation vector [los]
     los.obs_err = los.err;                          % (1*n)*1 error vector [los]
     los.obs_wgt = los.wgt;                          % (1*n)*1 weight vector [los]
-    los.coef    = los.obs_wgt./los.obs_err.^2;      % (1*n)*1 coefficient vector
+    %los.coef    = los.obs_wgt./los.obs_err.^2;      % (1*n)*1 coefficient vector
+    los.coef    = sqrt(los.obs_wgt.)/los.obs_err.;  % (1*n)*1 coefficient vector
 toc
 end
 
@@ -206,7 +207,8 @@ tic
     bsl.obs = reshape(bsl.disp,[],1);                   % (4*n)*1 observation vector [east;north;vertical:length]
     bsl.obs_err = reshape(bsl.err,[],1);                % (4*n)*1 error vector [east;north;vertical:length]
     bsl.obs_wgt = [bsl.wgt;bsl.wgt;bsl.wgt;bsl.wgt];	% (4*n)*1 weight vector [east;north;vertical:length]
-    bsl.coef = bsl.obs_wgt./bsl.obs_err.^2;             % (4*n)*1 coefficient vector
+    %bsl.coef = bsl.obs_wgt./bsl.obs_err.^2;             % (4*n)*1 coefficient vector
+    bsl.coef = sqrt(bsl.obs_wgt.)/bsl.obs_err.;         % (4*n)*1 coefficient vector
 toc
 end
 
