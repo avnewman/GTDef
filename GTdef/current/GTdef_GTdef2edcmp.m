@@ -18,7 +18,8 @@ function [ ] = GTdef_GTdef2edcmp(finName)
 %                                                                         %
 % first created by Lujia Feng Tue Jun 12 15:54:16 SGT 2012                %
 % added origin lfeng Thu Dec  5 21:51:14 SGT 2013                         %
-% last modified by Lujia Feng Thu Dec  5 21:53:00 SGT 2013                %
+% modified outputs of GTdef_prjflt3dif.m lfeng Wed Apr 27 SGT 2016        %
+% last modified by Lujia Feng Wed Apr 27 23:13:36 SGT 2016                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -125,9 +126,10 @@ tic
        sub_ind = strcmpi(cflt_name,subflt.name);
        % find dips for the master fault
        dip_ind = strcmpi(cflt_name,dip.name);
-       [ newflt3,~,~,xyztop3 ] = GTdef_prjflt3dif(tmpflt3(ii,:),subflt.flt(sub_ind,:),dip.dip(dip_ind,:));
+       [ newflt3,~,xyzflt3 ] = GTdef_prjflt3dif(tmpflt3(ii,:),subflt.flt(sub_ind,:),dip.dip(dip_ind,:));
+       xyztop3  = xyzflt3.xyztop1;
        newflt34 = [ newflt34; newflt3 ];
-       xyztop34 = [ xyztop34 xyztop3 ];
+       xyztop34 = [ xyztop34  xyztop3 ];
     end
 toc
 end

@@ -8,7 +8,7 @@ function [] = GTdef(finName,wnum)
 % INPUT:                                                                               %
 % finName - input file name                                                            %
 % wnum    - num of matlab parallel workers to be used                                  %
-%   #: number of workers specified
+%   #: number of workers specified                                                     %
 %   0: do not use parallel computing                                                   %
 %  -1: use parallel computing                                                          %
 %      but number of workers will be determined by the system                          %
@@ -53,18 +53,19 @@ function [] = GTdef(finName,wnum)
 % fixed greensfns for fault5 lfeng Wed Aug  5 15:57:54 SGT 2015                        %
 % added InSAR los lfeng Tue Nov  3 10:47:25 SGT 2015                                   %
 % added Matlab equivalent of edgrn lfeng Thu Feb  4 14:51:26 SGT 2016                  %
-% replaced matlabpool with parpool for newer Matlab  Tue Apr 19 15:27:25 EDT 2016      %
+% replaced matlabpool with parpool for newer Matlab AVN Tue Apr 19 15:27:25 EDT 2016   %
+% added external geometry to fault3 for fault5, rename old fault6 to fault7 lfeng 2016 %
 % last modified Andrew Newman    Wed Apr 20 10:08:44 EDT 2016                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % updated for use by parpool. AVN 4/19/16
 if wnum>0
-      localpool=parpool(int32(wnum));
+   localpool = parpool(int32(wnum));
 elseif wnum<0
-      localpool=parpool;
+   localpool = parpool;
 else
-    print('GTdef: parpool is not used.');
+   disp('GTdef WARNING: parpool is not used.');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,8 +156,8 @@ tic
     pnt.obs = reshape(pnt.disp,[],1);               % (3*n)*1 observation vector [east;north;vertical]
     pnt.obs_err = reshape(pnt.err,[],1);            % (3*n)*1 error vector [east;north;vertical]
     pnt.obs_wgt = [pnt.wgt;pnt.wgt;pnt.wgt];        % (3*n)*1 weight vector [east;north;vertical]
-    %pnt.coef = pnt.obs_wgt./pnt.obs_err.^2;         % (3*n)*1 coefficient vector
-    pnt.coef = sqrt(pnt.obs_wgt.)/pnt.obs_err.;     % (3*n)*1 coefficient vector
+    %pnt.coef = pnt.obs_wgt./pnt.obs_err.^2;        % (3*n)*1 coefficient vector
+    pnt.coef = sqrt(pnt.obs_wgt)./pnt.obs_err;      % (3*n)*1 coefficient vector
 toc
 end
 
@@ -180,8 +181,8 @@ tic
     los.obs     = los.disp;                         % (1*n)*1 observation vector [los]
     los.obs_err = los.err;                          % (1*n)*1 error vector [los]
     los.obs_wgt = los.wgt;                          % (1*n)*1 weight vector [los]
-    %los.coef    = los.obs_wgt./los.obs_err.^2;      % (1*n)*1 coefficient vector
-    los.coef    = sqrt(los.obs_wgt.)/los.obs_err.;  % (1*n)*1 coefficient vector
+    %los.coef    = los.obs_wgt./los.obs_err.^2;     % (1*n)*1 coefficient vector
+    los.coef    = sqrt(los.obs_wgt)./los.obs_err;   % (1*n)*1 coefficient vector
 toc
 end
 
@@ -207,8 +208,8 @@ tic
     bsl.obs = reshape(bsl.disp,[],1);                   % (4*n)*1 observation vector [east;north;vertical:length]
     bsl.obs_err = reshape(bsl.err,[],1);                % (4*n)*1 error vector [east;north;vertical:length]
     bsl.obs_wgt = [bsl.wgt;bsl.wgt;bsl.wgt;bsl.wgt];	% (4*n)*1 weight vector [east;north;vertical:length]
-    %bsl.coef = bsl.obs_wgt./bsl.obs_err.^2;             % (4*n)*1 coefficient vector
-    bsl.coef = sqrt(bsl.obs_wgt.)/bsl.obs_err.;         % (4*n)*1 coefficient vector
+    %bsl.coef = bsl.obs_wgt./bsl.obs_err.^2;            % (4*n)*1 coefficient vector
+    bsl.coef = sqrt(bsl.obs_wgt)./bsl.obs_err;          % (4*n)*1 coefficient vector
 toc
 end
 
@@ -517,18 +518,45 @@ if flt6.num~=0
 fprintf(1,'\n.......... processing fault type-6 ..........\t');
 tic
     for ii = 1:flt6.num
-       cfname = flt6.name{ii};
+        cfname = flt6.name{ii};
+        cflt   = flt6.flt(ii,:);
+        % find geometry file for the fault
+        geoname = flt6.geoname{ii};
+        % find column names for the fault
+        colname = flt6.colname{ii};
+        % find subfaults for the master fault
+        subInd = strcmpi(cfname,subflt.name);
+
+        [ modspace,xyzflt,Xgrn6,newflt ] = GTdef_fault6(modspace,geoname,colname,cflt,subflt.flt(subInd,:),pnt.crt,los.crt,bsl.crt,nod.crt,earth);
+
+        flt6.out(ii,:)  = newflt; % update Nd & Ns if not provided
+        flt6.xyzflt{ii} = xyzflt; 
+        % save green's functions
+        if strcmpi(modspace.grnflag,'on')
+            [ ~,prjflt6,~ ] = GTdef_prjflt6(modspace,geoname,colname,cflt,subflt.flt(subInd,:));
+            GTdef_save_greensfns(cfname,pnt,prjflt6,Xgrn6,modspace.coord,lon0,lat0,0);
+        end
+    end
+toc
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault7 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flt6.num~=0
+fprintf(1,'\n.......... processing fault type-7 ..........\t');
+tic
+    for ii = 1:flt7.num
+       cfname = flt7.name{ii};
        % find subfaults for the master fault
        subInd = strcmpi(cfname,subflt.name);
        % find green functions for the fault
-       cgrname = flt6.grname{ii};
+       cgrname = flt7.grname{ii};
        % read greens functions
        [ siteList,siteloc,vertices,grnList,grnfns ] = PyLith_read_greensfns(cgrname);
        % trim greens functions
        [ siteloc,grnList,grnfns ] = PyLith_trim_greensfns(pnt.name,siteList,siteloc,grnList,grnfns);
-       [ Xgrn6,Bgrn6,Ngrn6,sm6,sm6_abs,Aeq6,beq6,lb6,ub6,x06 ] = ...
-       GTdef_fault6(flt6.flt(ii,:),subflt.flt(subInd,:),vertices,grnfns,modspace.smooth,modspace.surf);
-       [ modspace ] = GTdef_addall(modspace,Xgrn6,Bgrn6,Ngrn6,sm6,sm6_abs,Aeq6,beq6,lb6,ub6,x06);
+       [ Xgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aeq7,beq7,lb7,ub7,x07 ] = ...
+       GTdef_fault7(flt7.flt(ii,:),subflt.flt(subInd,:),vertices,grnfns,modspace.smooth,modspace.surf);
+       [ modspace ] = GTdef_addall(modspace,Xgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aeq7,beq7,lb7,ub7,x07);
     end
 toc
 end

@@ -220,3 +220,7 @@ ssflt? (structure)
    *ssflt?.shear  (nn*3)       - shear stress
    *ssflt?.normal (nn*3)       - normal stress
    *ssflt?.coulomb(nn*3)       - coulomb stress
+
+# (6) Outputs:                                                                             
+prjflt = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1 xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 
+           xctr yctr zctr ss ds ts rake rs ]

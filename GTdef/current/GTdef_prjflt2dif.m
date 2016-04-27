@@ -36,7 +36,8 @@ function [ newflt,prjflt,xyzflt ] = GTdef_prjflt2dif(flt,subflt,dipin,strin)
 % newflt - all fault patches                                              %
 %        = [ dnum snum x1 y1 x2 y2 z1 z2 dip slips ]                      %
 % prjflt = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1                %
-%            xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr ss ds ts ]%
+%            xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr           %
+%            ss ds ts rake rs ]                                           %
 %   [xtop1 ytop1],[xbot1 ybot1],[xbot2 ybot2],and [xtop2 ytop2]	are the   %
 %   surface projections of four points confining the fault interface      %
 %   They are in a counterclockwise sense looking from the RHS of endpoint %

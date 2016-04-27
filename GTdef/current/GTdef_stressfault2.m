@@ -20,7 +20,8 @@ function [ ssflt2 ] = GTdef_stressfault2(ssflt2,addon)
 %                                                                         %
 % first created by Lujia Feng Mon Jun 11 14:10:31 SGT 2012                %
 % changed dip_struct to addon lfeng Fri Oct 24 15:10:01 SGT 2014          %
-% last modified by Lujia Feng Fri Oct 24 15:15:09 SGT 2014                %
+% modified outputs of GTdef_prjflt2uni.m lfeng Wed Apr 27 SGT 2016        %
+% last modified by Lujia Feng Wed Apr 27 23:21:43 SGT 2016                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % initialization
@@ -76,8 +77,8 @@ for ii = 1:ssflt2.fltnum
     % calculate the center point
     % flt=[dnum snum xx yy z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX]
     newflt = [ dnum snum x1 y1 x2 y2 z1 z2 dip slips ];
-    [ ~,xyzctr ] = GTdef_prjflt2uni(newflt);
-
+    [ ~,xyzflt ] = GTdef_prjflt2uni(newflt);
+    xyzctr = xyzflt.xyzctr;
     
     ssflt2.name = [ ssflt2.name; cname ];   
     ssflt2.num  = ssflt2.num + subflt_num;

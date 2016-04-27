@@ -13,7 +13,7 @@ function [] = GTdef_project(finName)
 % OUTPUT								        %
 % (1)  create an output file that contains			                %
 %  [ flt_name dnum snum xtop1 ytop1 xbot1 ybot1 xbot2 ybot2 xtop2 ytop2         %
-%    xctr  yctr ss ds ts ]  					  	        %
+%    xctr yctr ss ds ts ]  					  	        %
 % PARAMETERS								        %
 %   flt_name - name of fault					  	        %
 %   dnum - row number for subfaults					        %
@@ -49,7 +49,8 @@ function [] = GTdef_project(finName)
 % fixed typos for fault3 fault4 with Paul M. lfeng Fri Dec 12 11:03:32 SGT 2014 %
 % added modspace structure lfeng Tue Mar 24 13:12:58 SGT 2015                   %
 % addef fault5 lfeng Tue Jun 23 18:47:29 SGT 2015                               %
-% last modified by Lujia Feng Tue Jun 23 19:48:49 SGT 2015                      %
+% output [ ss ds ts rake rs ] in *patches.out lfeng Wed Apr 27 18:45:29 SGT 2016%
+% last modified by Lujia Feng Wed Apr 27 23:28:32 SGT 2016                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,8 +141,8 @@ end
 
 
 xsect = []; xsectName = {};
-prjflt12 = []; flt12Name = {}; 
-prjflt34 = []; flt34Name = {};
+prjfltAll = []; 
+fltAllName = {}; 
 prjflt1  = []; prjflt2 = []; prjflt3 = []; prjflt4 = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault1 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if flt1.num~=0
@@ -175,10 +176,10 @@ tic
        xsectName = [ xsectName; xsect1Name ];   
        % surface projection
        [ ~,prjflt1,~ ] = GTdef_prjflt1dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
-       prjflt12 = [ prjflt12; prjflt1 ];
+       prjfltAll = [ prjfltAll; prjflt1 ];
        name1    = cell(fltNum,1);
        for ii = 1:fltNum, name1{ii} = cfname; end
-       flt12Name = [ flt12Name; name1 ];   
+       fltAllName = [ fltAllName; name1 ];   
     end
 toc
 end
@@ -220,10 +221,10 @@ tic
        xsectName = [ xsectName; xsect2Name ];   
        % surface projection
        [ ~,prjflt2,~ ] = GTdef_prjflt2dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
-       prjflt12 = [ prjflt12; prjflt2 ];
+       prjfltAll = [ prjfltAll; prjflt2 ];
        name2    = cell(fltNum,1);
        for ii = 1:fltNum, name2{ii} = cfname; end
-       flt12Name = [ flt12Name; name2 ];   
+       fltAllName = [ fltAllName; name2 ];   
     end
 toc
 end
@@ -261,10 +262,10 @@ tic
        xsectName = [ xsectName; xsect3Name ];   
        % surface projection
        [ ~,prjflt3,~ ] = GTdef_prjflt3dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
-       prjflt34 = [ prjflt34; prjflt3 ];
+       prjfltAll = [ prjfltAll; prjflt3 ];
        name3 = cell(fltNum,1);
        for ii = 1:fltNum, name3{ii} = cfname; end
-       flt34Name = [ flt34Name; name3 ];   
+       fltAllName = [ fltAllName; name3 ];   
     end
 toc
 end
@@ -306,10 +307,10 @@ tic
        xsectName = [ xsectName; xsect4Name ];   
        % surface projection
        [ ~,prjflt4,~ ] = GTdef_prjflt4dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
-       prjflt34 = [ prjflt34; prjflt4 ];
+       prjfltAll = [ prjfltAll; prjflt4 ];
        name4 = cell(fltNum,1);
        for ii = 1:fltNum, name4{ii} = cfname; end
-       flt34Name = [ flt34Name; name4 ];   
+       fltAllName = [ fltAllName; name4 ];   
     end
 toc
 end
@@ -332,11 +333,11 @@ tic
 
        % surface projection
        [ ~,prjflt5,~ ] = GTdef_prjflt5(modspace,geoname,colname,cflt,subflt.flt(subInd,:));
-       prjflt12 = [ prjflt12; prjflt5 ];
+       prjfltAll = [ prjfltAll; prjflt5 ];
        fltNum   = size(prjflt5,1);
        name5    = cell(fltNum,1);
        for ii = 1:fltNum, name5{ii} = cfname; end
-       flt12Name = [ flt12Name; name5 ];   
+       fltAllName = [ fltAllName; name5 ];   
     end
 toc
 end
@@ -350,65 +351,37 @@ end
 foutName = strcat(basename,'_patches.out');
 fout     = fopen(foutName,'w');
 
-if ~isempty(prjflt12)
-    %              (1)  (2)  (3)   (4)   (5)   (6)   (7)   (8)   (9)   (10)  (11)  (12)  (13)  (14)  (15) (16) (17) (18) (19) (20)
-    % prjflt12 = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1 xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr ss   ds   ts ]
+if ~isempty(prjfltAll)
+    %              (1)  (2)  (3)   (4)   (5)   (6)   (7)   (8)   (9)   (10)  (11)  (12)  (13)  (14)  (15) (16) (17) (18) (19) (20) (21)  (22)
+    % prjfltAll = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1 xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr ss   ds   ts  rake   rs]
     if strcmpi(coord,'geo')
-        xx = prjflt12(:,[3 6 9 12 15]);  yy = prjflt12(:,[4 7 10 13 16]);
+        xx = prjfltAll(:,[3 6 9 12 15]);  yy = prjfltAll(:,[4 7 10 13 16]);
         [lon,lat] = ckm2LLd(xx,yy,lon0,lat0,0);
-        newprjflt12 = [ prjflt12(:,1:2) lon(:,1) lat(:,1) prjflt12(:,5) lon(:,2) lat(:,2) prjflt12(:,8) lon(:,3) lat(:,3) prjflt12(:,11) ...
-	                lon(:,4) lat(:,4) prjflt12(:,14) lon(:,5) lat(:,5) prjflt12(:,17) prjflt12(:,18:20) ];
+        newprjfltAll = [ prjfltAll(:,1:2) lon(:,1) lat(:,1) prjfltAll(:,5) lon(:,2) lat(:,2) prjfltAll(:,8) lon(:,3) lat(:,3) prjfltAll(:,11) ...
+	                lon(:,4) lat(:,4) prjfltAll(:,14) lon(:,5) lat(:,5) prjfltAll(:,17) prjfltAll(:,18:22) ];
     end
     if strcmpi(coord,'geo_polyconic')
-        xx = prjflt12(:,[3 6 9 12 15]);  yy = prjflt12(:,[4 7 10 13 16]);
+        xx = prjfltAll(:,[3 6 9 12 15]);  yy = prjfltAll(:,[4 7 10 13 16]);
         lon = zeros(size(xx));         lat = zeros(size(yy));
         for ii=1:5
             [lon(:,ii),lat(:,ii)] = xy_to_latlon(xx(:,ii),yy(:,ii),lon0,lat0,0);
         end        
-        newprjflt12 = [ prjflt12(:,1:2) lon(:,1) lat(:,1) prjflt12(:,5) lon(:,2) lat(:,2) prjflt12(:,8) lon(:,3) lat(:,3) prjflt12(:,11) ...
-	                lon(:,4) lat(:,4) prjflt12(:,14) lon(:,5) lat(:,5) prjflt12(:,17) prjflt12(:,18:20) ];
+        newprjfltAll = [ prjfltAll(:,1:2) lon(:,1) lat(:,1) prjfltAll(:,5) lon(:,2) lat(:,2) prjfltAll(:,8) lon(:,3) lat(:,3) prjfltAll(:,11) ...
+	                lon(:,4) lat(:,4) prjfltAll(:,14) lon(:,5) lat(:,5) prjfltAll(:,17) prjfltAll(:,18:22) ];
     end
     if strcmpi(coord,'local')
-        newprjflt12 = prjflt12;
+        newprjfltAll = prjfltAll;
     end
-    fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zcrt (19)ss[m] (20)ds[m] (21)ts[m]\n'); 
-    [ row,col ] = size(newprjflt12);
+    fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zcrt (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m]\n');
+    [ row,col ] = size(newprjfltAll);
     for ii =1:row
-        name = flt12Name{ii};
-        flt  = newprjflt12(ii,:);
-        fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f\n',name,flt);
+        name = fltAllName{ii};
+        flt  = newprjfltAll(ii,:);
+        %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23	
+        fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f\n',name,flt);
     end
 end
 
-if ~isempty(prjflt34)
-    %              (1)  (2)  (3)   (4)   (5)   (6)   (7)   (8)   (9)   (10)  (11)  (12)  (13)  (14)  (15) (16) (17) (18) (19) (20)
-    % prjflt34 = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1 xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr rake rs   ts ]
-    if strcmpi(coord,'geo')
-        xx = prjflt34(:,[3 6 9 12 15]);  yy = prjflt34(:,[4 7 10 13 16]);
-        [lon,lat] = ckm2LLd(xx,yy,lon0,lat0,0);
-        newprjflt34 = [ prjflt34(:,1:2) lon(:,1) lat(:,1) prjflt34(:,5) lon(:,2) lat(:,2) prjflt34(:,8) lon(:,3) lat(:,3) prjflt34(:,11) ...
-	                lon(:,4) lat(:,4) prjflt34(:,14) lon(:,5) lat(:,5) prjflt34(:,17) prjflt34(:,18:20) ];
-    end
-    if strcmpi(coord,'geo_polyconic')
-        xx  = prjflt34(:,[3 6 9 12 15]); yy  = prjflt34(:,[4 7 10 13 16]);
-        lon = zeros(size(xx));           lat = zeros(size(yy));
-        for ii=1:5
-            [lon(:,ii),lat(:,ii)] = xy_to_latlon(xx(:,ii),yy(:,ii),lon0,lat0,0);
-        end         
-        newprjflt34 = [ prjflt34(:,1:2) lon(:,1) lat(:,1) prjflt34(:,5) lon(:,2) lat(:,2) prjflt34(:,8) lon(:,3) lat(:,3) prjflt34(:,11) ...
-	                lon(:,4) lat(:,4) prjflt34(:,14) lon(:,5) lat(:,5) prjflt34(:,17) prjflt34(:,18:20) ];
-    end
-    if strcmpi(coord,'local')
-        newprjflt34 = prjflt34;
-    end
-    fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zcrt (19)rake[deg] (20)rs[m] (21)ts[m]\n'); 
-    [ row,col ] = size(newprjflt34);
-    for ii =1:row
-        name = flt34Name{ii};
-        flt  = newprjflt34(ii,:);
-        fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f\n',name,flt);
-    end
-end
 fclose(fout);
 fprintf(1,'\nGTdef_project output %s\n',foutName); 
 

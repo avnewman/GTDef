@@ -26,7 +26,8 @@ function [ prjflt,xyzflt ] = GTdef_prjflt4uni(flt)
 %                                                                              %
 % OUTPUT:                                                                      %
 % prjflt = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1                     %
-%            xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr rake rs ts ]   %
+%            xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr                %
+%            ss ds ts rake rs ]                                                %
 %   [xtop1 ytop1], [xbot1 ybot1], [xbot2 ybot2], and [xtop2 ytop2]	       %
 %   are the surface projection of four points that confine 		       %
 %   the fault interface 						       %
@@ -51,7 +52,8 @@ function [ prjflt,xyzflt ] = GTdef_prjflt4uni(flt)
 % output xyzctr & xyztop1 lfeng Tue Jun 12 18:14:04 SGT 2012                   %
 % output depths lfeng Wed Nov 12 19:45:27 SGT 2014                             %
 % added xyzflt lfeng Tue Mar 24 11:21:45 SGT 2015                              %
-% last modified by Lujia Feng Tue Mar 24 13:01:18 SGT 2015                     %
+% added ss & ds to prjflt lfeng Wed Apr 27 18:00:37 SGT 2016                   %
+% last modified by Lujia Feng Wed Apr 27 18:18:46 SGT 2016                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt,2)~=18, error('GTdef_prjflt4uni ERROR: need a n*18 fault vector as input!'); end
@@ -67,7 +69,16 @@ z1   = flt(:,7);
 z2   = flt(:,8); 
 dip  = flt(:,9);
 str  = GTdef_strike(x1,y1,x2,y2);
-x0   = [ flt(:,10) flt(:,11) flt(:,12) ];  % [ss ds ts]
+
+% rake + rs (rake slip) + ts
+rake = flt(:,10);
+rs   = flt(:,11);
+ts   = flt(:,12);
+% ss + ds
+ss = rs.*cosd(rake);
+ds = rs.*sind(rake);
+
+x0 = [ ss ds ts rake rs ];
 
 if z1<z2	% burial depth must be smaller than locking depth
     if min(dip>=0)&&min(dip<=180)
