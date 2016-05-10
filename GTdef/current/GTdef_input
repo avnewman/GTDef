@@ -54,7 +54,9 @@ kappa 1  1 10 50 100 500 1000			# k1 k2 k3 ......
 kappa 2  0 1000 5				# k1 kn N
 greensfns  on
 stressdrop on
-
+resolution  1                                   # perform resolution analysis output only model and data resolution informatoin   
+resolution  2                                   # output resolution spread information for every model parameter *MESSY*
+resolution  2  1 8 65 68 72 100 120 128         # output only at subfaults defined increasing from the Nd then Ns (starting from 1st fault)
 #################################################################
 # EARTH STRUCTURE
 # earth	   - earth structure {homogeneous}

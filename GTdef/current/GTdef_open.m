@@ -5,18 +5,18 @@ function [ modspace,earth,...
            sspnt,ssflt1,ssflt2 ] = GTdef_open(filename)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                                  GTdef_open.m				                 %
-% The format of the input file could be very free  				         %
-% Just make sure the first term of each line is an identifiable flag 		         %
-% The program will ignore unidentifiable flags 					         %
+%                                  GTdef_open.m	                                         %
+% The format of the input file could be very free                                        %
+% Just make sure the first term of each line is an identifiable flag                     %
+% The program will ignore unidentifiable flags                                           %
 %                                                                                        %
-% Note: 									         %
-%   Parameter names are not case sensitive						 %
+% Note:                                                                                  %
+%   Parameter names are not case sensitive                                               %
 %   Longitude can be input as [0 360] or [-180 180]                                      %
 %   The program will convert [0 360] to [-180 180] internally                            %
 %   If weight is not assigned, default weight is 1 for all the data                      %
-%										         %
-% OUTPUT:  							                         %
+%                                                                                        %
+% OUTPUT:                                                                                %
 % modspace - model structure                                                             %
 % earth    - earth structure                                                             %
 % flt?     - fault structure                                                             %
@@ -32,16 +32,16 @@ function [ modspace,earth,...
 %                                                                                        %
 %                                                                                        %
 % first created by Lujia Feng Apr 2009                                                   %
-% added 'coord' flag for coordinate type lfeng Thu Nov  5 20:43:53 EST 2009	         %
-% added 'smooth' flag for smoothing lfeng Wed Dec  2 02:26:17 EST 2009 		         %
-% added 'beta' flag for smoothing lfeng Wed Dec  2 23:23:21 EST 2009		         %
-% added 'dip' flag for bended fault lfeng Mon Dec  7 00:53:06 EST 2009		         %
-% added 'freesurface' flag lfeng Wed Dec  9 17:06:48 EST 2009			         %
-% added 'fault5' lfeng Fri Dec 11 12:38:41 EST 2009				         %
+% added 'coord' flag for coordinate type lfeng Thu Nov  5 20:43:53 EST 2009              %
+% added 'smooth' flag for smoothing lfeng Wed Dec  2 02:26:17 EST 2009                   %
+% added 'beta' flag for smoothing lfeng Wed Dec  2 23:23:21 EST 2009                     %
+% added 'dip' flag for bended fault lfeng Mon Dec  7 00:53:06 EST 2009                   %
+% added 'freesurface' flag lfeng Wed Dec  9 17:06:48 EST 2009                            %
+% added 'fault5' lfeng Fri Dec 11 12:38:41 EST 2009                                      %
 % changed 'freesurface' to 'surface' flag lfeng Wed Feb 24 12:46:01 EST 2010	         %
-% changed 'coord' to string flag lfeng Wed Feb 24 13:40:01 EST 2010		         %
-% use cell array of strings for names lfeng Wed Dec  1 14:41:46 EST 2010	         %
-% commented out 'fault5' lfeng Wed Dec  1 14:42:53 EST 2010			         %
+% changed 'coord' to string flag lfeng Wed Feb 24 13:40:01 EST 2010                      %
+% use cell array of strings for names lfeng Wed Dec  1 14:41:46 EST 2010                 %
+% commented out 'fault5' lfeng Wed Dec  1 14:42:53 EST 2010                              %
 % added layered earth structure lfeng Mon Feb 20 17:16:32 SGT 2012                       %
 % used structures to simplify parameters lfeng Mon Feb 20 17:30:59 SGT 2012              %
 % merged fault1 & fault3 and fault2 & fault4 lfeng Tue May  8 16:20:25 SGT 2012          %
@@ -58,7 +58,8 @@ function [ modspace,earth,...
 % added modspace.sdropflag lfeng Thu Mar 26 17:27:41 SGT 2015                            %
 % added fault5 for external geometry with Paul Morgan lfeng Wed Jun 17 14:03:00 SGT 2015 %
 % added InSAR los lfeng Tue Nov  3 10:50:07 SGT 2015                                     %
-% last modified by Lujia Feng Mon Nov  9 14:14:49 SGT 2015                               %
+% added model resultion subfaults for output anewman Mon Tue May 10 11:55:42 EDT 2016    %
+% last modified by Andrew Newman   Tue May 10 11:55:42 EDT 2016                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -83,6 +84,7 @@ modspace.lb   = []; modspace.ub   = [];
 modspace.x0   = []; modspace.xx   = [];
 modspace.sm   = []; modspace.sm_abs = []; % sm_abs for calculate absolute 1st derivative (strain)
 modspace.modinfo = [];
+modspace.res = [];
 
 % earth structure defaults
 earth.type      = 'homogeneous';
@@ -236,6 +238,29 @@ while(1)
 	    continue
 	end
 	continue
+    end
+    %%%%% resolution %%%%%
+    if strcmpi(flag,'resolution')
+        [method,remain] = strtok(remain);
+	  %% method 1 %%
+	  if strcmp(method,'1')
+	    modspace.res='diags';
+	    continue
+	  %% method 2 %%
+	  elseif strcmp(method,'2')
+          rr = strtok(remain);
+          if (isempty(rr) || strncmpi(rr,'#',1) || strncmpi(rr,'%',1))   % process on all data (if empty, or starts with # or %)
+	      modspace.res='all';
+	      continue
+        else
+	      while (~isempty(remain))
+            [rr,remain] = strtok(remain);
+	        modspace.res=[modspace.res,str2num(rr)];
+            if (strncmpi(rr,'#',1) || strncmpi(rr,'%',1)) ; break ; end
+          end
+	      continue
+        end
+      end
     end
     %%%%% green's functions %%%%%
     if strcmpi(flag,'greensfns')

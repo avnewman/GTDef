@@ -12,6 +12,7 @@ function [] = GTdef(finName,wnum)
 %   0: do not use parallel computing                                                   %
 %  -1: use parallel computing                                                          %
 %      but number of workers will be determined by the system                          %
+%    : if option is excluded, will use open pool, if available                         %
 %                                                                                      %
 % v1:                                                                                  %
 % first created by Lujia Feng Mon Apr 20 14:15:52 EDT 2009                             %
@@ -55,17 +56,24 @@ function [] = GTdef(finName,wnum)
 % added Matlab equivalent of edgrn lfeng Thu Feb  4 14:51:26 SGT 2016                  %
 % replaced matlabpool with parpool for newer Matlab AVN Tue Apr 19 15:27:25 EDT 2016   %
 % added external geometry to fault3 for fault5, rename old fault6 to fault7 lfeng 2016 %
-% last modified Andrew Newman    Wed Apr 20 10:08:44 EDT 2016                          %
+% added output resolution matrix information (see GTdef_input) anewman May 10 2016     %
+% last modified Andrew Newman  Tue May 10 11:55:42 EDT 2016                            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
-% updated for use by parpool. AVN 4/19/16
-if wnum>0
-   localpool = parpool(int32(wnum));
-elseif wnum<0
-   localpool = parpool;
+% updated for use by parpool. AVN 5/3/16
+% depending on your local setup, parpool may be opened automatically due to
+% parfor loops within the code.
+if exist('wnum')
+   if wnum>0
+     localpool = parpool(int32(wnum));
+   elseif wnum<0
+     localpool = parpool;
+   else
+     disp('GTdef WARNING: parpool is not used.');
+   end
 else
-   disp('GTdef WARNING: parpool is not used.');
+    disp('GTdef WARNING: Will use parpool if already running.');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -622,14 +630,19 @@ fprintf(1,'\n............. doing inversion .............\t');
         end
         % output results
         GTdef_output(foutName,earth,modspace,bt,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl,prf,grd,nod);
+        if (~isempty(modspace.res))
+          GTdef_resolution(foutName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl);
+        end
         toc
     end
+
     fsumName = [ basename '_inv.out' ];
     GTdef_summary(fsumName,modspace);
+
 end
 
 % close up parpool for parallel computing
-if wnum>0    % update for parpool by AVN 4/19/16
+if exist('wnum')
    delete(localpool);
 end
 
