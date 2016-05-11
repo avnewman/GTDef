@@ -314,7 +314,7 @@ end
 
 if ~isempty(pnt.crt)  
     fclose(fpnt); 
-    fprintf(1,'\nGTdef_project output %s\n',fpntName); 
+    fprintf(1,'GTdef_project output %s\n',fpntName); 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -359,7 +359,7 @@ if ~isempty(prjfltAll)
 end
 
 fclose(fout);
-fprintf(1,'\nGTdef_resolution Model Resolution output %s\n',foutName); 
+fprintf(1,'GTdef_resolution Model Resolution output %s\n',foutName); 
 
 %   Data Resolution File 
 foutName = strcat(basename,'_data_R.out');
@@ -395,7 +395,7 @@ if ( ~ bsl.num == 0 )
     end
 end
 
-fprintf(1,'\nGTdef_resolution Data Resolution output %s\n',foutName); 
+fprintf(1,'GTdef_resolution Data Resolution output %s\n',foutName); 
 
 % Create a series of Resolution Spread files, showing the model-dependency
 % (row parameters of the Resolution Matrix, for a given model. Currently,
@@ -432,6 +432,6 @@ if (nres>0)
                fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f %6.4f\n',name,flt,full(Rd));
            end
            fclose(fout);
-           fprintf(1,'\nGTdef_resolution Model Resolution output %s\n',foutName); 
+           fprintf(1,'GTdef_resolution Model Resolution output %s\n',foutName); 
 	end
 end

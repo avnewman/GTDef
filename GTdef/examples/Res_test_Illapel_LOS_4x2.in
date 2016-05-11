@@ -1,8 +1,7 @@
 smooth 2d
 surface free
 kappa 2 200 10000 2
-%rigidity 30e9
-%poission 0.25
+earth homog 30e9 0.25
 resolution  2 1 2 5 8       % will only get 1 2 5 and 8
 
 fault 1 illapel -72.91 -32.83 0.00 56239.66 400000.00 5.00 16.33  0 0 0 0 0 0 30 0 0 2.0 4.0 

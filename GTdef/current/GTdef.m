@@ -602,7 +602,7 @@ fprintf(1,'\n............. doing inversion .............\t');
     betaNum = length(modspace.beta);
     for ii = 1:betaNum
         bt = modspace.beta(ii);
-        fprintf(1,'\n............. beta = %16.5f .............\t',bt);
+        fprintf(1,'\n............. beta = %10d .............\t',bt);
         tic
         if strcmp(modspace.smooth,'2d')
             kp = sqrt(bt);
