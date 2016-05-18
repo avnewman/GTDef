@@ -57,7 +57,8 @@ function [] = GTdef(finName,wnum)
 % replaced matlabpool with parpool for newer Matlab AVN Tue Apr 19 15:27:25 EDT 2016   %
 % added external geometry to fault3 for fault5, rename old fault6 to fault7 lfeng 2016 %
 % added output resolution matrix information (see GTdef_input) anewman May 10 2016     %
-% last modified Andrew Newman  Tue May 10 11:55:42 EDT 2016                            %
+% added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016   %
+% last modified Andrew Newman  Wed May 18 17:32:55 UTC 2016                            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -638,6 +639,11 @@ fprintf(1,'\n............. doing inversion .............\t');
 
     fsumName = [ basename '_inv.out' ];
     GTdef_summary(fsumName,modspace);
+
+    if (strcmpi(modspace.mat,'on'))
+            fmatName = [ basename '.mat' ];
+	    save(fmatName);
+    end
 
 end
 

@@ -62,7 +62,8 @@ function [ modspace,earth,...
 % modified code to remove 'continues'. now mostly works with 'elseif' as well as         %
 %   improving handling of unkown types/methods/flags.  Warnings report line# of input.   %
 %   Comments can now be UNIX or MATLAB style (# or %). anewman May 11 14:04:07 EDT 2016  %
-% last modified by Andrew Newman   Tue May 11 14:04:07 EDT 2016                          %
+% added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016     %
+% last modified Andrew Newman  Wed May 18 17:32:55 UTC 2016                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -88,6 +89,7 @@ modspace.x0   = []; modspace.xx   = [];
 modspace.sm   = []; modspace.sm_abs = []; % sm_abs for calculate absolute 1st derivative (strain)
 modspace.modinfo = [];
 modspace.res = [];
+modspace.mat = [];
 
 % earth structure defaults
 earth.type      = 'homogeneous';
@@ -257,6 +259,12 @@ while(1)
 	    warning('Line %d, of %s: Input resolution method "%s" not recognised. Continuing with resolution method = 1',ln,filename,method)
 	    modspace.res='diags';
         end
+    %%%%% resolution %%%%%
+    elseif strncmpi(flag,'mat',3)
+	[modspace.mat,remain] = strtok(remain);
+	if ~strcmpi(modspace.mat,'on') && ~strcmpi(modspace.mat,'off')
+            error('GTdef_open ERROR: matfile should be either on or off!');
+	end
     %%%%% green's functions %%%%%
     elseif strncmpi(flag,'green',5)
 	[modspace.grnflag,remain] = strtok(remain);

@@ -426,8 +426,10 @@ if (nres>0)
            for ii =1:row
                name = fltAllName{ii};
                flt  = newprjfltAll(ii,:);
-               Rd   = [R(pt,ii),R(pt+rd3rd,ii+rd3rd),R(pt+2*rd3rd,ii+2*rd3rd)];
-               %Rd   = [R(ii,pt),R(ii+rd3rd,pt+rd3rd),R(ii+2*rd3rd,pt+2*rd3rd)];
+               Rd   = [R(pt,ii),R(pt+rd3rd,ii+rd3rd),R(pt+2*rd3rd,ii+2*rd3rd)]; % version outputs only the spread of the resolution across like slip-direction (Rss only reports Rss, etc..)
+               Rd_ss   = [R(pt,ii),R(pt,ii+rd3rd),R(pt,ii+2*rd3rd)];  % full matrix spread relative to ss patch component.
+               Rd_ds   = [R(pt+rd3rd,ii),R(pt+rd3rd,ii+rd3rd),R(pt+rd3rd,ii+2*rd3rd)];  % full matrix spread relative to ds patch component.
+               Rd_ts   = [R(pt+2*rd3rd,ii),R(pt+2*rd3rd,ii+rd3rd),R(pt+2*rd3rd,ii+2*rd3rd)];  % full matrix spread relative to ts patch component.
                %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26	
                fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f %6.4f\n',name,flt,full(Rd));
            end
