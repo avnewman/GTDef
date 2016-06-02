@@ -22,10 +22,10 @@ function [Dnew,Dbox]=GTdef_quadtree(D,X,Y,ndown,dDmax,mpd,method,dimwgt,LOSd,out
 %   method - integer defining method for defining dDmax {1}                              %
 %       1 = difference                                                                   %
 %       2 = percent change (10=10% across entire range of D)                             %
-%   dimwgt - integer defining whether weight
-%	0 = set all to 1
-%       1 = use dimension of one side, normalized by min dimension  (2x2 = dim 2)
-%       2 = use power of dimension, normed by min power (2^pwr; 2x2 = pwr 1; 8x8 = pwr 3; 
+%   dimwgt - integer defining whether weight                                             %
+%	0 = set all to 1                                                                 %
+%       1 = use dimension of one side, normalized by min dimension  (2x2 = dim 2)        %
+%       2 = use power of dimension, normed by min power (2^pwr; 2x2 = pwr 1; 8x8 = pwr 3;%
 %   LOSd - (optional) unit vector giving look direction to satelite ([E N U]) {[0 0 1.]} %
 %   outfile - (optional) string definining outfile prefixes                              %
 % OUTPUT: (same info as in outfiles above)	  		  	                 %
@@ -37,11 +37,11 @@ function [Dnew,Dbox]=GTdef_quadtree(D,X,Y,ndown,dDmax,mpd,method,dimwgt,LOSd,out
      if (exist('method','var')==1)
 	     if(method>2)
 	             method =1;
-		     disp('quadtree WARNING: method only has option 1 or 2. setting to 1');
+		     disp('GTdef_quadtree WARNING: method only has option 1 or 2. setting to 1');
 	     elseif(method==2)
 		     Drange=max(max(D)')-min(min(D)');
 		     dDmax=dDmax/100.*Drange;   % rescale by range
-		     disp(['quadtree MESSAGE: new dDmax is ',num2str(dDmax),'. Scaled by range.']);
+		     disp(['GTdef_quadtree MESSAGE: new dDmax is ',num2str(dDmax),'. Scaled by range.']);
 	     end
      else
 	     method=1;

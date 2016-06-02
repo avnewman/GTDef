@@ -16,7 +16,7 @@ function [ ] = GTdef_prjpnt(fout,pnt,fltType,fltName,flt,strin)
 % flt4 = [x1 y1 x2 y2 z1 z2 dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]   %
 %    note: input coordinate is cartesian                                        %
 % strin - strike addon info for the master fault                                %
-%        = [ x1 y1 x2 y2 columns ]                                              %
+%        = [ x1 y1 x2 y2 columns sweepAngle ]                                   %
 %                                                                               %
 % OUTPUT: (output to a file, the format is)				        %
 % [ point 3 pnt.name lon lat z Ue Un Uv eUe eUn eUv weight 		        %

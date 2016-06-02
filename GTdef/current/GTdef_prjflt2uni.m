@@ -54,7 +54,8 @@ function [ prjflt,xyzflt ] = GTdef_prjflt2uni(flt)
 % output depths lfeng Wed Nov 12 18:23:24 SGT 2014                        %
 % added xyzflt lfeng Tue Mar 24 11:21:45 SGT 2015                         %
 % added rake & rs to prjflt lfeng Wed Apr 27 18:00:37 SGT 2016            %
-% last modified by Lujia Feng Wed Apr 27 18:03:42 SGT 2016                %
+% added es & ns to prjflt lfeng Thu Jun  2 16:38:40 SGT 2016              %
+% last modified by Lujia Feng Thu Jun  2 16:41:55 SGT 2016                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt,2)~=18  
@@ -76,8 +77,10 @@ ts   = flt(:,12);
 % rake + rs (rake slip)
 rake = atan2(ds,ss).*180/pi;
 rs   = sqrt(ss.^2+ds.^2);
+% slip in east + north directions
+[ es,ns ] = rotate_xy(ss,ds,str-360-90);
 
-x0   = [ ss ds ts rake rs ];
+x0   = [ ss ds ts rake rs es ns ];
 
 
 if z1<z2	% burial depth must be smaller than locking depth

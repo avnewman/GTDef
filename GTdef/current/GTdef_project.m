@@ -13,7 +13,7 @@ function [] = GTdef_project(finName)
 % OUTPUT								        %
 % (1)  create an output file that contains			                %
 %  [ flt_name dnum snum xtop1 ytop1 xbot1 ybot1 xbot2 ybot2 xtop2 ytop2         %
-%    xctr yctr ss ds ts ]  					  	        %
+%    xctr yctr ss ds ts rake ts es ns ]                                         %
 % PARAMETERS								        %
 %   flt_name - name of fault					  	        %
 %   dnum - row number for subfaults					        %
@@ -48,16 +48,18 @@ function [] = GTdef_project(finName)
 % changed output from *_surface.out to *_patches.out lfeng Wed Nov 12 2014      %
 % fixed typos for fault3 fault4 with Paul M. lfeng Fri Dec 12 11:03:32 SGT 2014 %
 % added modspace structure lfeng Tue Mar 24 13:12:58 SGT 2015                   %
-% addef fault5 lfeng Tue Jun 23 18:47:29 SGT 2015                               %
+% added fault5 lfeng Tue Jun 23 18:47:29 SGT 2015                               %
 % output [ ss ds ts rake rs ] in *patches.out lfeng Wed Apr 27 18:45:29 SGT 2016%
-% last modified by Lujia Feng Wed Apr 27 23:28:32 SGT 2016                      %
+% added fault6 lfeng Wed Jun  1 12:54:19 SGT 2016                               %
+% output [ ss ds ts rake rs es ns ] in *patches.out lfeng Wed Apr 27 SGT 2016   %
+% last modified by Lujia Feng Thu Jun  2 16:45:06 SGT 2016                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'.......... reading the input file ...........\t');
 tic
 [ modspace,~,...
-  flt1,flt2,flt3,flt4,flt5,flt6,...
+  flt1,flt2,flt3,flt4,flt5,flt6,flt7,...
   subflt,addon,...
   pnt,los,~,~,~,...
   ~,~,~ ] = GTdef_open(finName);
@@ -317,7 +319,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault5 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if flt5.num~=0
-fprintf(1,'\n.......... processing fault type-1 ..........\t');
+fprintf(1,'\n.......... processing fault type-5 ..........\t');
 tic
     for ii = 1:flt5.num
        cfname  = flt5.name{ii};
@@ -342,6 +344,33 @@ tic
 toc
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault6 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flt6.num~=0
+fprintf(1,'\n.......... processing fault type-6 ..........\t');
+tic
+    for ii = 1:flt6.num
+       cfname  = flt6.name{ii};
+       cflt    = flt6.flt(ii,:);
+       % find geometry file for the fault
+       geoname = flt6.geoname{ii};
+       % find column names for the fault
+       colname = flt6.colname{ii};
+       % find subfaults for the master fault
+       subInd = strcmpi(cfname,subflt.name);
+       
+       % point & cross-section projections do ont apply to fault6
+
+       % surface projection
+       [ ~,prjflt6,~ ] = GTdef_prjflt6(modspace,geoname,colname,cflt,subflt.flt(subInd,:));
+       prjfltAll = [ prjfltAll; prjflt6 ];
+       fltNum   = size(prjflt6,1);
+       name6    = cell(fltNum,1);
+       for ii = 1:fltNum, name6{ii} = cfname; end
+       fltAllName = [ fltAllName; name6 ];   
+    end
+toc
+end
+
 if ~isempty(pnt.crt)  
     fclose(fpnt); 
     fprintf(1,'\nGTdef_project output %s\n',fpntName); 
@@ -352,13 +381,13 @@ foutName = strcat(basename,'_patches.out');
 fout     = fopen(foutName,'w');
 
 if ~isempty(prjfltAll)
-    %              (1)  (2)  (3)   (4)   (5)   (6)   (7)   (8)   (9)   (10)  (11)  (12)  (13)  (14)  (15) (16) (17) (18) (19) (20) (21)  (22)
-    % prjfltAll = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1 xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr ss   ds   ts  rake   rs]
+    %              (1)  (2)  (3)   (4)   (5)   (6)   (7)   (8)   (9)   (10)  (11)  (12)  (13)  (14)  (15) (16) (17) (18) (19) (20) (21) (22) (23) (24)
+    % prjfltAll = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1 xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr ss   ds   ts  rake  rs   es   ns ]
     if strcmpi(coord,'geo')
         xx = prjfltAll(:,[3 6 9 12 15]);  yy = prjfltAll(:,[4 7 10 13 16]);
         [lon,lat] = ckm2LLd(xx,yy,lon0,lat0,0);
         newprjfltAll = [ prjfltAll(:,1:2) lon(:,1) lat(:,1) prjfltAll(:,5) lon(:,2) lat(:,2) prjfltAll(:,8) lon(:,3) lat(:,3) prjfltAll(:,11) ...
-	                lon(:,4) lat(:,4) prjfltAll(:,14) lon(:,5) lat(:,5) prjfltAll(:,17) prjfltAll(:,18:22) ];
+	                lon(:,4) lat(:,4) prjfltAll(:,14) lon(:,5) lat(:,5) prjfltAll(:,17) prjfltAll(:,18:24) ];
     end
     if strcmpi(coord,'geo_polyconic')
         xx = prjfltAll(:,[3 6 9 12 15]);  yy = prjfltAll(:,[4 7 10 13 16]);
@@ -367,18 +396,18 @@ if ~isempty(prjfltAll)
             [lon(:,ii),lat(:,ii)] = xy_to_latlon(xx(:,ii),yy(:,ii),lon0,lat0,0);
         end        
         newprjfltAll = [ prjfltAll(:,1:2) lon(:,1) lat(:,1) prjfltAll(:,5) lon(:,2) lat(:,2) prjfltAll(:,8) lon(:,3) lat(:,3) prjfltAll(:,11) ...
-	                lon(:,4) lat(:,4) prjfltAll(:,14) lon(:,5) lat(:,5) prjfltAll(:,17) prjfltAll(:,18:22) ];
+	                lon(:,4) lat(:,4) prjfltAll(:,14) lon(:,5) lat(:,5) prjfltAll(:,17) prjfltAll(:,18:24) ];
     end
     if strcmpi(coord,'local')
         newprjfltAll = prjfltAll;
     end
-    fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zcrt (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m]\n');
+    fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zcrt (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)es[m] (25)ns[m]\n');
     [ row,col ] = size(newprjfltAll);
     for ii =1:row
         name = fltAllName{ii};
         flt  = newprjfltAll(ii,:);
-        %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23	
-        fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f\n',name,flt);
+        %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23	24     25
+        fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f\n',name,flt);
     end
 end
 

@@ -1,5 +1,5 @@
 function [] = GTdef_output(filename,earth,modspace,beta,...
-           		   flt1,flt2,flt3,flt4,flt5,flt6,...   
+           		   flt1,flt2,flt3,flt4,flt5,flt6,flt7,...   
                            subflt,addon,...
           		   pnt,los,bsl,prf,grd,nod)
 
@@ -44,7 +44,8 @@ function [] = GTdef_output(filename,earth,modspace,beta,...
 % added fault5 external geometry lfeng Tue Jun 23 13:33:47 SGT 2015                      %
 % added output origin lfeng with Paul M.  Wed Jun 24 12:34:52 SGT 2015                   %
 % added InSAR los & Lgrn lfeng Tue Nov  3 23:17:37 SGT 2015                              %
-% last modified by Lujia Feng Tue Nov  3 23:24:32 SGT 2015                               %
+% added fault6, changed old fault6 to fault7 lfeng Thu Jun  2 10:38:24 SGT 2016          %
+% last modified by Lujia Feng Thu Jun  2 10:47:44 SGT 2016                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 etype     = earth.type;
@@ -118,7 +119,7 @@ for ii =1:flt1.num
     num = sum(ind);
     subflt1 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %10.5f %10.5f %10.5f  %8.4f %8.4f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt1(jj,:));
+        fprintf(fout,'     subfault %s  %5d %5d  %12.5f %12.5f %12.5f  %8.4f %8.4f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt1(jj,:));
     end
 end
 
@@ -134,7 +135,7 @@ for ii =1:flt2.num
     num = sum(ind);
     subflt2 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %10.5f %10.5f %10.5f  %8.4f %8.4f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt2(jj,:));
+        fprintf(fout,'     subfault %s  %5d %5d  %12.5f %12.5f %12.5f  %8.4f %8.4f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt2(jj,:));
     end
 end
 
@@ -149,7 +150,7 @@ for ii =1:flt3.num
     num = sum(ind);
     subflt3 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %10.2f %12.5f %12.5f  %7.2f %7.2f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt3(jj,:));
+        fprintf(fout,'     subfault %s  %5d %5d  %12.2f %12.5f %12.5f  %7.2f %7.2f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt3(jj,:));
     end
 end
 
@@ -164,7 +165,7 @@ for ii =1:flt4.num
     num = sum(ind);
     subflt4 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %10.2f %12.5f %12.5f  %7.2f %7.2f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt4(jj,:));
+        fprintf(fout,'     subfault %s  %5d %5d  %12.2f %12.5f %12.5f  %7.2f %7.2f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt4(jj,:));
     end
 end
 
@@ -173,7 +174,10 @@ for ii =1:flt5.num
     fltname = flt5.name{ii};
     geoname = flt5.geoname{ii};
     colname = flt5.colname{ii};
-    fprintf(fout,'fault 5   %s   %s   %s   %10.5f %10.5f %10.5f  %5.4f %5.4f  %5.4f %5.4f  %5.4f %5.4f    %d  %d \n',fltname,geoname,colname,flt5.out(ii,:));
+    if strcmp(sdropflag,'on')
+       fprintf(fout,'# stress drop %s %10.4f MPa\n',fltname,flt5.sdrop(ii)*1e-6);
+    end
+    fprintf(fout,'fault 5   %s   %s   %s   %10.5f %-8.5f %-8.5f  %-5.4f %-5.4f  %-5.4f %-5.4f  %-5.4f %-5.4f    %d  %d \n',fltname,geoname,colname,flt5.out(ii,:));
     ind = strcmpi(fltname,subflt.outname);
     num = sum(ind);
     subflt5 = subflt.out(ind,:);
@@ -185,13 +189,30 @@ end
 %%%%%%%%%%  fault 6  %%%%%%%%%%
 for ii =1:flt6.num
     fltname = flt6.name{ii};
-    grnname = flt6.grname{ii};
-    fprintf(fout,'fault 6   %s   %s   %10.5f %10.5f %10.5f  %5.4f %5.4f  %5.4f %5.4f  %5.4f %5.4f    %d  %d \n',fltname,grnname,flt6.out(ii,:));
+    geoname = flt6.geoname{ii};
+    colname = flt6.colname{ii};
+    if strcmp(sdropflag,'on')
+       fprintf(fout,'# stress drop %s %10.4f MPa\n',fltname,flt6.sdrop(ii)*1e-6);
+    end
+    fprintf(fout,'fault 6   %s   %s   %s   %10.2f %-8.5f %-8.5f  %-7.2f %-7.2f  %-5.4f %-5.4f  %-5.4f %-5.4f    %d  %d \n',fltname,geoname,colname,flt6.out(ii,:));
     ind = strcmpi(fltname,subflt.outname);
     num = sum(ind);
     subflt6 = subflt.out(ind,:);
     for jj = 1:num
-        fprintf(fout,'     subfault %s  %5d %5d  %12.5f %12.5f %12.5f  %8.4f %8.4f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt6(jj,:));
+        fprintf(fout,'     subfault %s  %5d %5d  %12.5f %12.5f %12.5f  %7.2f %7.2f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt6(jj,:));
+    end
+end
+
+%%%%%%%%%%  fault 7  %%%%%%%%%%
+for ii =1:flt7.num
+    fltname = flt7.name{ii};
+    grnname = flt7.grname{ii};
+    fprintf(fout,'fault 6   %s   %s   %10.5f %10.5f %10.5f  %5.4f %5.4f  %5.4f %5.4f  %5.4f %5.4f    %d  %d \n',fltname,grnname,flt7.out(ii,:));
+    ind = strcmpi(fltname,subflt.outname);
+    num = sum(ind);
+    subflt7 = subflt.out(ind,:);
+    for jj = 1:num
+        fprintf(fout,'     subfault %s  %5d %5d  %12.5f %12.5f %12.5f  %8.4f %8.4f  %8.4f %8.4f  %8.4f %8.4f\n',fltname,subflt7(jj,:));
     end
 end
 

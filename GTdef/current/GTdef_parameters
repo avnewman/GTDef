@@ -95,29 +95,59 @@ edgrnfcts (structure)
 flt? (structure) 
       flt?.num  (scalar)     - number of faults					          
       flt?.name (cell array) - fault names
-      flt?.flt  (flt_num*18) - fault parameters
+      flt?.sdrop (scalar)    - slip-averaged stress drop
+      flt?.flt  (flt_num*18/11) - fault parameters
 										          
       flt1.flt = [lon1 lat1 z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]         
       flt2.flt = [lon1 lat1 lon2 lat2 z1 z2 dip ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]       
       flt3.flt = [lon1 lat1 z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]   
       flt4.flt = [lon1 lat1 lon2 lat2 z1 z2 dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns] 
+      flt5.flt = [ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]         
+      flt6.flt = [rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns] 
+
+     *flt?.out              - similar to flt?.flt
+     *flt?.Min (matrix)     - subflt info in cartesian coordinate
+               (flt_num*10) - Okada   = [len width depth dip str east north ss ds ts]
+               (flt_num*9)  - layered = [slip north east depth length width str dip rake] 
+     *flt?.xyzflt (structure) - fault patch info in cartesian coordinate
+           xyzflt.xyzctr (flt_num*3)  - location of center points in cartesian coordinate     = [xx yy zz]                                
+           xyzflt.xyztop1 (flt_num*3) - location of top upper corners in cartesian coordinate = [xx yy zz]
+           xyzflt.suv (flt_num*3)     - unit vector in the strike direction                   = [xx yy zz]
+           xyzflt.duv(flt_num*3)      - unit vector in the dip direction                      = [xx yy zz]
+           xyzflt.nuv(flt_num*3)      - normal unit vector                                    = [xx yy zz]
+      Note: zz elevation positive upward
+
+      # below only for fault type 5 & 6
+      flt?.geoname (cell array) - geometry file names
+      flt?.colname (cell array) - column descriptions
+
+      # below only for fault type 7
+      flt?.grname (cell array)  - green function file names 
 
 # subfault:
 subflt (structure)
       subflt.num  (scalar)        - number of subfaults
       subflt.name (cell array)    - main fault names 
       subflt.flt  (subflt_num*11) - subfault parameters       		          
-      # flt1 & flt2
-      subflt.flt = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]		          
-      # flt3 & flt4
-      subflt.flt = [ dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]                  
+      # flt1 & flt2 & flt5
+      subflt.flt = [dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX]		          
+      # flt3 & flt4 & flt6
+      subflt.flt = [dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX]                  
 
-# variation in dip 
-dip (structure) 
-      dip.num  (scalar)     - number of dips
-      dip.name (cell array) - main fault names      
-      dip.dip  (dip_num*4)  - dip parameters
-      dip.dip = [ dip z1 z2 rows ]
+# addon features variation in dip 
+addon (structure) 
+      addon.dipnum  (scalar)     - number of dips
+      addon.dipname (cell array) - main fault names      
+      addon.dip     (dip_num*4)  - dip parameters     = [dip z1 z2 rows]
+            rows    (scalar)     - number of layers for each dip
+
+      addon.strnum  (scalar)     - number of strikes
+      addon.strname (cell array) - main fault names      
+      addon.str     (str_num*5)  - strike parameters  = [x1 y1 x2 y2 columns sweepAngle]
+            columns (scalar)     - number of layers for each strike
+	    sweepAngle (scalar)  - angle between normal direction of fault trace and east (E=0 N=90 W=180 S=270 [deg])
+
+     *addon.crt (matrix)         = [sx1 sy1 sx2 sy2 addon.str(:,[5 6])]
 
 # to be modified
 bndry structure: bndry.name bndry.num & bndry.bd				          

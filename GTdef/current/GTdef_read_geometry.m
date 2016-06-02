@@ -1,8 +1,8 @@
-function [ newflt1,Nd,Ns ] = GTdef_read_geometry(finName,colName,origin,coord,outFlag,varargin)
+function [ newflt1,newflt3,Nd,Ns ] = GTdef_read_geometry(finName,colName,origin,coord,outFlag,varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                             GTdef_read_geometry                               %
-% convert any fault geometry or model to GTdef fault type 1                     %
+% convert any fault geometry or model to GTdef fault type 1 and/or fault type 3 %
 %                                                                               %
 % INPUT:                                                                        %
 % (1) finName - external fault geometry file                                    %
@@ -68,7 +68,10 @@ function [ newflt1,Nd,Ns ] = GTdef_read_geometry(finName,colName,origin,coord,ou
 %                                    _______________|_______________            %
 %                                    |                             |            %
 % newflt1 = [ x1 y1 z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX ]        %
-% ?newflt3 = [ x1 y1 z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX ] %
+% newflt3 = [ x1 y1 z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]  %
+%                                    |_____________________________________|    %
+%                                                   |                           %
+%                                                 slips                         %
 %                                                                               %
 % Note: x1 & y1 for newflt1 need to be projected back to surface!!!!            %
 %   but x1 & y1 for out should not be projected!!!!!                            %
@@ -82,7 +85,8 @@ function [ newflt1,Nd,Ns ] = GTdef_read_geometry(finName,colName,origin,coord,ou
 % corrected x1 & y1 error lfeng with pmorgan lfeng Wed Jun 24 14:53:13 SGT 2015 %
 % corrected negative depth error with pmorgan lfeng Thu Jul  2 11:06:52 SGT 2015%
 % added dnum & snum to read in GTdef own geometry output lfeng Aug  5 SGT 2015  %
-% last modified by Lujia Feng Wed Aug  5 14:03:53 SGT 2015                      %
+% added converting to fault type 3 lfeng Wed Jun  1 12:12:43 SGT 2016           %
+% last modified by Lujia Feng Wed Jun  1 12:28:44 SGT 2016                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~isempty(varargin)
@@ -402,8 +406,9 @@ else
    surf_y1 = y1 - dy;
 end
 
-slips0X = zeros(fltnum,6); % ss0 ssX ds0 dsX ts0 tsX
-newflt1 = [ surf_x1 surf_y1 z1 z2 len str dip ss ds ts slips0X ];
+slips0X = zeros(fltnum,6); % [ss0 ssX ds0 dsX ts0 tsX] or [rake0 rakeX rs0 rsX ts0 tsX]
+newflt1 = [ surf_x1 surf_y1 z1 z2 len str dip ss    ds  ts slips0X ];
+newflt3 = [ surf_x1 surf_y1 z1 z2 len str dip rake slip ts slips0X ];
 
 %plot3(cx,cy,cz,'ko'); hold on;
 
@@ -496,6 +501,7 @@ if exist('dnum')==0 && exist('snum')==0
          indmat = indmat(:,end:-1:1);                             
          ind = reshape(indmat,[],1);                              
          newflt1 = newflt1(ind,:);                                
+         newflt3 = newflt3(ind,:);                                
          if ~isempty(out)                                         
              out = out(ind,:);                                    
          end
@@ -530,6 +536,7 @@ if exist('dnum')==0 && exist('snum')==0
          indmat  = indmat';
          ind     = reshape(indmat,[],1);
          newflt1 = newflt1(ind,:);
+         newflt3 = newflt3(ind,:);
          if ~isempty(out)
             out = out(ind,:);
          end
@@ -549,6 +556,7 @@ if exist('dnum')==0 && exist('snum')==0
          indmat  = indmat(:,end:-1:1);                            
          ind     = reshape(indmat,[],1);                          
          newflt1 = newflt1(ind,:);                                
+         newflt3 = newflt3(ind,:);                                
          if ~isempty(out)
             out = out(ind,:);
          end

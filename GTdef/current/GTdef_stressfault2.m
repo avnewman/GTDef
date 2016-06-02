@@ -12,7 +12,7 @@ function [ ssflt2 ] = GTdef_stressfault2(ssflt2,addon)
 % addon.dipname addon.dipnum & addon.dip                                  %
 % addon.dip - [ dip z1 z2 rows ]                                          %
 % addon.strname addon.strnum & addon.str                                  %
-% addon.str - [ lon1 lat1 lon2 lat2 columns ]                             %
+% addon.str - [ lon1 lat1 lon2 lat2 columns sweepAngle ]                  %
 %                                                                         % 
 % OUTPUT:                                                                 %
 % ssflt2.crt  ssflt2.str  ssflt2.dip  ssflt2.rake ssflt2.fric             %

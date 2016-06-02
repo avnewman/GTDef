@@ -84,7 +84,7 @@ function [ modspace,xyzflt,Xgrn,flt ] = GTdef_fault5(modspace,...
 % first created by Lujia Feng & Paul Morgan Wed Jun 17 15:26:59 SGT 2015  %
 % output flt for updating Nd & Ns lfeng Tue Jun 23 17:42:15 SGT 2015      %
 % added InSAR los Lin & Lgrn lfeng Tue Nov  3 11:46:52 SGT 2015           %
-% last modified by Lujia Feng Wed Nov 11 14:30:38 SGT 2015                %
+% last modified by Lujia Feng Wed Jun  1 12:14:53 SGT 2016                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 11], error('GTdef_fault5 ERROR: need a 1*11 fault vector as input!'); end
@@ -96,11 +96,12 @@ Nd = flt(10);
 Ns = flt(11);
 
 % read geometry file
+%             1  2  3  4  5   6   7   8  9  10 11  12  13  14  15  16
 % newflt1 = [ x1 y1 z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX ]
 if ~isnan(Nd) && ~isnan(Ns)
-    [ newflt1,Nd,Ns ] = GTdef_read_geometry(geoname,colname,modspace.origin,modspace.coord,'GTdef_topleft',Nd,Ns);
+    [ newflt1,~,Nd,Ns ] = GTdef_read_geometry(geoname,colname,modspace.origin,modspace.coord,'GTdef_topleft',Nd,Ns);
 else
-    [ newflt1,Nd,Ns ] = GTdef_read_geometry(geoname,colname,modspace.origin,modspace.coord,'GTdef_topleft');
+    [ newflt1,~,Nd,Ns ] = GTdef_read_geometry(geoname,colname,modspace.origin,modspace.coord,'GTdef_topleft');
     flt(10) = Nd;
     flt(11) = Ns;
 end
@@ -146,7 +147,7 @@ if ~any(slips)
         for ii = 1:num
             dnum = round(subflt(ii,1)); snum = round(subflt(ii,2));
             jj = sub2ind(mat,dnum,snum);
-    	slips(jj,:) = subflt(ii,3:11);
+            slips(jj,:) = subflt(ii,3:11);
         end
     end
     newflt = [ newflt1(:,1:7) slips ];

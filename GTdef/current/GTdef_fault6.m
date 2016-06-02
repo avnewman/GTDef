@@ -1,133 +1,181 @@
-function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault6(flt,subflt,vertices,grnfns,smooth,surf)
+function [ modspace,xyzflt,Xgrn,flt ] = GTdef_fault6(modspace,...
+           geoname,colname,flt,subflt,Xin,Lin,Bin,Nin,earth)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            GTdef_fault6				  %
-% Fault type 6 is irregular surface discretized into small patches        %
-% with different local strike and dip                                     %
-% Greens functions are calculated by FEM tools e.g. PyLith                %
+% Process type-6 fault                                                    %
+% Convert type-6 fault to type-3 fault                                    %
+% call GTdef_fault3uni to prepare for the inputs to Matlab function 	  %
 % x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)					  %
 % Here we have no inequalities, so set A=[];b=[]			  %
 % Additionally, determine the smoothing matrix for the subfaults	  %
 %									  %
 % INPUT:					  		  	  %
-%  flt = [ ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns ]		          %
-%    ss  - master-fault strike-slip (left-lateral +)                      %
-%    ds  - master-fault dip-slip (thrust +)                               %
-%    ts  - master-fault tensile-slip (opening +)                          %
-%    ss0,ds0,ts0 - lower bounds for master-fault slips			  %
-%    ssX,dsX,tsX - upper bounds for master-fault slips			  %
-%    Nd  - number of rows defining the subfaults along dip 	          %
-%    Ns  - number of rows defining the subfaults along strike 		  %
-%    ddip - average length along dip					  %
-%    dlen - average length laong strike					  %
-%  subflt = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]		  %
-%    dnum - row number for subfaults					  %
-%    snum - column number for subfaults				  	  %
-%    ss,ds,ts - subfault slips						  %
-%    ss0,ds0,ts0,ssX,dsX,tsX - subfault slip bounds			  %
-%vertices - subfault/vertices location                                    %
-%         = [ id dnum snum xx yy zz ]                                     %
-% grnfns  - array of size                        (vertexNum*pntNum*9)     %
-%         for each patch-site pair                                        % 
-%         = [ ss_dx ss_dy ss_dz ds_dx ds_dy ds_dz ts_dx ts_dy ts_dz ]     %
-%  smooth - smoothing method						  %
-%  surf   - surface smoothing setting					  %
+% geoname - geometry file name                                            %
+% colName - name of each column                                           %
+% flt = [ rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns ]                  %
+% subflt = [ dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]           %
+%   dnum - row number for subfaults					  %
+%   snum - column number for subfaults				  	  %
+%   rake - rake direction                                                 %
+%  rs,ts - subfault slips						  %
+%      rake0,rakeX - rake is usually fixed, currently dummy parameters    %
+%  rs0,ts0,rsX,tsX - subfault slip bounds			          %
+% Xin - point site locations in the local cartesian system 	  	  %
+%       [n*3] [ xx yy zz ]						  %
+% Lin - los point locations in the local cartesian system + los direction %
+%       [n*6] [xx yy zz dirE dirN dirV]                                   %
+% Bin - baseline site locations in the local cartesian system 	  	  %
+%       [n*6] [ x1 y1 z1 x2 y2 z2 ]					  %
+% Nin - grid and profile node locations in the local cartesian system     %
+%       [n*3] [ xx yy zz ]						  %
+% Note: z1,z2 depth positive downward                                     %
+%       zz elevation positive upward                                      %
+% ----------------------------------------------------------------------- %
+% Earth Structure:							  %
+% Either of the two types of earth structure can be used 		  %
+% earth.type = 'homogeneous'                                              %
+%      earth.rigidity		        (scalar)	{30e9 Pa}         %
+%      earth.poisson		        (scalar)	{0.25}		  %
+% earth.type = 'layered'	        	        		  %
+%      earth.edgrn.nl        	        (scalar)                          %
+%      earth.edgrn.obsz     	        (scalar)                          %
+%      earth.edgrn.nr	                (scalar)                          %
+%      earth.edgrn.minr,edgrn.maxr      (scalar)                          %
+%      earth.edgrn.nz                   (scalar)                          %
+%      earth.edgrn.minz,edgrn.maxz      (scalar)                          %
+%      earth.edgrn.srate                (scalar)			  %
+%      earth.layer - [ id depth vp vs ro ]	(nn*5)			  %
+%      earth.edgrnfcts - green function library                           %
+% ----------------------------------------------------------------------- %
 %                                                                         %
 % OUTPUT:                                                                 %
+% ----------------------------------------------------------------------- %
+% modspace structure                                                      %
 % Each subfault has three (strike, dip, and tensile) components, so       %
-%  slip_num = subflt_num*3 = Nd*Ns*3                                      %
-%  Xgrn - displacements [east;north;vertical] for different sites   	  %
-%         from unit slips [(3*nn)*slip_num] 				  %
-%         (nn is the  number of sites)  				  %
-%  Aeq - left-hand side matrix for linear equalities  [slip_num*slip_num] %
-%  beq - right-hand side vector for linear equalities [slip_num*1]        %
-%  x0  - initial values for ss,ds,ts 	[slip_num*1]                      %
-%  lb  - lower bounds for ss,ds,ts 	[slip_num*1]                      %
-%  ub  - upper bounds for ss,ds,ts	[slip_num*1]			  %
-%  sm  - smoothing matrix for slips     [slip_num*slip_num]		  %
-%  sm_abs - matrix for calculating the absolute 1st derivative		  %
+% slip_num = subflt_num*3 = Nd*Ns*3                                       %
+% Xgrn - displacements [east;north;vertical] for different sites   	  %
+%        from unit slips [(3*nn)*slip_num] 				  %
+%        (nn is the  number of sites)                                     %
+% Lgrn - los displacements [los] for different sites   	                  %
+%        from unit slips [(1*nn)*slip_num] 				  %
+%        (nn is the number of los points)                                 %
+% Bgrn - length changes [east;north;vertical;length] for 	  	  %
+%        different baselines from unit slips [(4*nn)*slip_num] 	          %
+%        (nn is the  number of baselines)  				  %
+% Ngrn - displacements [east;north;vertical] for different nodes   	  %
+%        from unit slips [(3*nn)*slip_num] 				  %
+%        (nn is the  number of nodes)                                     %
+% Aeq  - left-hand side matrix for linear equalities  [slip_num*slip_num] %
+% beq  - right-hand side vector for linear equalities [slip_num*1]        %
+% x0   - initial values for ss,ds,ts 	[slip_num*1]                      %
+% xx   - final values for ss,ds,ts 	[slip_num*1]                      %
+% lb   - lower bounds for ss,ds,ts 	[slip_num*1]                      %
+% ub   - upper bounds for ss,ds,ts	[slip_num*1]			  %
+% sm   - smoothing matrix for slips    [slip_num*slip_num]		  %
+% sm_abs - matrix for calculating the absolute 1st derivative		  %
+% smooth - smoothing method						  %
+% surf   - surface smoothing setting					  %
+% coord  - coordnate system                                               %
+% origin = [ lon0 lat0 ]                                                  %
+% ----------------------------------------------------------------------- %
+% xyzflt structure                                                        %
+% ----------------------------------------------------------------------- %
+% Xgrn - specifically for this fault only                                 %
 %                                                                         %
-% first created by Lujia Feng Fri Dec 11 11:47:47 EST 2009		  %
-% changed from GTdef_fault5 to GTdef_fault6 lfeng Wed Jun 17 SGT 2015     %
-% last modified by Lujia Feng Wed Jun 17 11:04:57 SGT 2015                %
-% need to code for los Lgrn lfeng Tue Nov  3 14:32:13 SGT 2015            %
+% first created by Lujia Feng based on GTdef_fault5.m Apr 20  SGT 2016    %
+% allowed rake to be not 0 in external geometry lfeng Wed Jun 1 SGT 2016  %
+% last modified by Lujia Feng Wed Jun  1 18:30:47 SGT 2016                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 11], error('GTdef_fault6 ERROR: need a 1*11 fault vector as input!'); end
 
-% initialization
-Xgrn = []; Bgrn = []; Ngrn = [];
+smooth = modspace.smooth;
+surf   = modspace.surf;
 
-% Note: flt is a 1-row vector for the master fault
-mslips = flt(1:9);				% slip block
-Nd = round(flt(10)); Ns = round(flt(11));	% number of rows and columns
-subflt_num = Nd*Ns;				% subfault num
+Nd = flt(10);
+Ns = flt(11);
+
+% read geometry file
+%             1  2  3  4  5   6   7   8    9  10 11    12    13  14  15  16
+% newflt3 = [ xx yy z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]
+if ~isnan(Nd) && ~isnan(Ns)
+    [ ~,newflt3,Nd,Ns ] = GTdef_read_geometry(geoname,colname,modspace.origin,modspace.coord,'GTdef_topleft',Nd,Ns);
+else
+    [ ~,newflt3,Nd,Ns ] = GTdef_read_geometry(geoname,colname,modspace.origin,modspace.coord,'GTdef_topleft');
+    flt(10) = Nd;
+    flt(11) = Ns;
+end
+
+% initialization
+% Note: flt is a row vector for the master fault
+x1    = newflt3(:,1); y1  = newflt3(:,2); 
+z1    = newflt3(:,3); z2  = newflt3(:,4); 
+len   = newflt3(:,5); str = newflt3(:,6);  
+dip   = newflt3(:,7);
+slips = newflt3(:,8:end);                      % slip block
+subflt_num = Nd*Ns;                            % subfault num
 unit = ones(subflt_num,1);
-slips = mslips(unit,:);				% duplicate slips of master-fault
 
-% form subfaults
-if ~isempty(subflt)
-    num = size(subflt,1); mat = [Nd Ns];
-    for ii = 1:num
-        dnum = round(subflt(ii,1)); snum = round(subflt(ii,2));
-        jj = sub2ind(mat,dnum,snum);
-	slips(jj,:) = subflt(ii,3:11);
+% if uniform slip == only one patch
+if subflt_num==1
+    % if slips are not specified in the external file, use GTdef input file
+    if ~any(slips(:,2:end)) % excluding rake, so allow rake to be non-zero
+        slips  = flt(1:end-2); 
+        newflt = [ newflt3(:,1:7) slips ];
     end
+    % prjflt=[dnum snum xx yy z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX]
+    prjflt = [ 1 1 newflt ];
+    [ ~,xyzflt ] = GTdef_prjflt3uni(prjflt);
+
+    [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
+    sm_abs = [];
+    sm     = [];
+    [ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);
+    return
 end
 
-% check if GTdef input Nd & Ns == Greens functions Nd & Ns
-vertNd = max(vertices(:,2));
-vertNs = max(vertices(:,3));
-if vertNd ~= Nd
-    error('GTdef_fault6 ERROR: GTdef input Nd is inconsistent with greens function database Nd!');
-end
-if vertNs ~= Ns
-    error('GTdef_fault6 ERROR: GTdef input Ns is inconsistent with greens function database Ns!');
-end
+% only when slips from geometry file are zero (not specified), slips from GTdef input will be used
+if ~any(slips(:,2:end)) % excluding rake, so allow rake to be non-zero
+    fprintf(1,'slips in GTdef input are used for modeling\n');
+    % master fault
+    mslips = flt(1:end-2);
+    slips  = mslips(unit,:);
 
-% initialization
-x0 = [ slips(:,1); slips(:,2); slips(:,3) ];	% [ss;ds;ts]
-lb = [ slips(:,4); slips(:,6); slips(:,8) ];	% [ss0;ds0;ts0]
-ub = [ slips(:,5); slips(:,7); slips(:,9) ];	% [ssX;dsX;tsX]
-
-comp_num = 3;                                   % component number = 3 (strike, dip, tensile)
-slip_num = subflt_num*comp_num;			% slip num
-Aeq = zeros(slip_num,slip_num); beq = zeros(slip_num,1);
-
-% fix slips that are not free
-for ii = 1:slip_num
-    if lb(ii)==ub(ii)			        % lb==ub means the slip is fixed
-    	lb(ii) = -Inf; ub(ii) = Inf;	        % relax lb==ub; lsqlin() has a probl with lb==ub
-	Aeq(ii,ii) = 1; 		        % use equalities instead of lb==ub
-	beq(ii) = x0(ii);
+    % subflt = [ dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]
+    if ~isempty(subflt)
+        num = size(subflt,1); mat = [Nd Ns];
+        for ii = 1:num
+            dnum = round(subflt(ii,1)); snum = round(subflt(ii,2));
+            jj = sub2ind(mat,dnum,snum);
+            slips(jj,:) = subflt(ii,3:11);
+        end
     end
+    newflt = [ newflt3(:,1:7) slips ];
+else
+    fprintf(1,'slips in %s are used for modeling\n',geoname);
+    newflt = newflt3;
 end
 
-% form Xgrn
-if ~isempty(grnfns)
-    % strike-slip
-    cgrn = grnfns(:,:,1:3);
-    cgrn = permute(cgrn,[2 3 1]);
-    cgrn = reshape(cgrn,[],subflt_num);
-    Xgrn = [ Xgrn cgrn ];
-    % dip-slip
-    cgrn = grnfns(:,:,4:6);
-    cgrn = permute(cgrn,[2 3 1]);
-    cgrn = reshape(cgrn,[],subflt_num);
-    Xgrn = [ Xgrn cgrn ];
-    % opening
-    cgrn = grnfns(:,:,7:9);
-    cgrn = permute(cgrn,[2 3 1]);
-    cgrn = reshape(cgrn,[],subflt_num);
-    Xgrn = [ Xgrn cgrn ];
-end
+% create dnum & snum
+dlin = round(linspace(1,Nd,Nd)'); slin = round(linspace(1,Ns,Ns));
+dmat = dlin(1:end,ones(1,Ns));    smat = slin(ones(Nd,1),1:end);
+dnum = reshape(dmat,[],1);        snum = reshape(smat,[],1);
+
+% prjflt=[dnum snum xx yy z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX]
+prjflt = [ dnum snum x1 y1 z1 z2 len str dip slips ];
+[ ~,xyzflt ] = GTdef_prjflt3uni(prjflt);
+
+[ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
 
 % create smoothing matrices
-[ ddip,dlen ] = PyLith_dist_greensfns(vertices);
+width = (z2-z1)./abs(sind(dip));
+ddip  = sum(width)/subflt_num;
+dlen  = sum(len)/subflt_num;
 if strcmp(surf,'free')
-    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_free_3slips(ddip,dlen,Nd,Ns);
+    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_free_2slips(ddip,dlen,Nd,Ns);
 elseif strcmp(surf,'fixed')
-    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_fixed_3slips(ddip,dlen,Nd,Ns);
+    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_fixed_2slips(ddip,dlen,Nd,Ns);
 else
     error('GTdef_fault6 ERROR: surface smoothing is wrong!!!');
 end
@@ -144,3 +192,5 @@ end
 
 ind_fixed = find(lb==-Inf);	% index for fixed slips 
 sm(ind_fixed) = 0;		% don't do smoothing for them
+
+[ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);

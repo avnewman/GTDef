@@ -36,7 +36,7 @@ function [ newflt,prjflt,xyzflt ] = GTdef_prjflt1dif(flt,subflt,dipin)
 %        = [ dnum snum x1 y1 z1 z2 len str dip slips ]                    %
 % prjflt = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1                %
 %            xbot2 ybot2 zbot2 xtop2 ytop2 ztop2 xctr yctr zctr           %
-%            ss ds ts rake ts ]                                           %
+%            ss ds ts rake ts es ns ]                                     %
 %   [xtop1 ytop1], [xbot1 ybot1], [xbot2 ybot2], and [xtop2 ytop2]	  %
 %   are the surface projection of four points that confine 		  %
 %   the fault interface 						  %

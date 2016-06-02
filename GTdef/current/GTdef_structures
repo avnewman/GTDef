@@ -142,13 +142,17 @@ flt2.flt       = [lon1 lat1 lon2 lat2 z1 z2 dip ss ds ts ss0 ssX ds0 dsX ts0 tsX
    subflt.flt  = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]		  	              
 flt3.flt       = [lon1 lat1 z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]    
 flt4.flt       = [lon1 lat1 lon2 lat2 z1 z2 dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]  
-   subflt.flt  = [ dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]                          
+   subflt.flt  = [dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX]                          
 flt5.flt       = [ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]                                      
 flt5.geoname   - geometry file name
 flt5.colname   - column names for geometry file
-   subflt.flt  = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]		  	              
-flt6.flt       = [ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]                                      
-flt6.grname    - file name for green functions
+   subflt.flt  = [dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX]		  	              
+flt6.flt       = [rake rs ts rake0 rakeX rs0 rsX ts0 tsX]
+flt6.geoname   - geometry file name
+flt6.colname   - column names for geometry file
+   subflt.flt  = [dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX]                          
+flt7.flt       = [ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]                                      
+flt7.grname    - file name for green functions
 
 # - built up before running a model
 flt?.xyzflt stucture for fault patch info in cartesian coordinate
@@ -203,6 +207,8 @@ addon.strname  - name of master faults
 addon.strnum   - number of dips 
 addon.str      - strike parameters
                = [ lon1 lat1 lon2 lat2 columns sweepAngle ] need to be used with addon.strname
+# - built up after running a model
+addon.crt      = [sx1 sy1 sx2 sy2 addon.str(:,[5 6])]
 
 ##############################################################################################
 #                                    Point Structure                                         #

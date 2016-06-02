@@ -26,6 +26,7 @@ function [] = GTdef_resolution(finName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,su
 %   same as GTdef_project (but also looks for info in modspace.res              %
 %                                                                               %
 % first created by Andrew Newman Thu May  5 09:21:55 AST 2016                   %
+% added fault6 lfeng Thu Jun  2 10:50:44 SGT 2016                               %
 % last modified by Andrew Newman Thu May  5 09:21:55 AST 2016                   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -312,6 +313,32 @@ tic
 toc
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault6 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flt6.num~=0
+fprintf(1,'\n.......... processing fault type-1 ..........\t');
+tic
+    for ii = 1:flt6.num
+       cfname  = flt6.name{ii};
+       cflt    = flt6.flt(ii,:);
+       % find geometry file for the fault
+       geoname = flt6.geoname{ii};
+       % find column names for the fault
+       colname = flt6.colname{ii};
+       % find subfaults for the master fault
+       subInd = strcmpi(cfname,subflt.name);
+       
+       % point & cross-section projections do ont apply to fault6
+
+       % surface projection
+       [ ~,prjflt6,~ ] = GTdef_prjflt6(modspace,geoname,colname,cflt,subflt.flt(subInd,:));
+       prjfltAll = [ prjfltAll; prjflt6 ];
+       fltNum   = size(prjflt6,1);
+       name6    = cell(fltNum,1);
+       for ii = 1:fltNum, name6{ii} = cfname; end
+       fltAllName = [ fltAllName; name6 ];   
+    end
+toc
+end
 if ~isempty(pnt.crt)  
     fclose(fpnt); 
     fprintf(1,'GTdef_project output %s\n',fpntName); 

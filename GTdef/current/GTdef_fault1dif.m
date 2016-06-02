@@ -10,8 +10,8 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault1dif(modspace,...
 % Additionally, determine the smoothing matrix for the subfaults	  %
 %									  %
 % INPUT:					  		  	  %
-% flt = [ x1 y1 z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns] %
-%   x1,y1 - one endpoint among the two endpoints of the master fault      %
+% flt = [ xx yy z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns] %
+%   xx,yy - one endpoint among the two endpoints of the master fault      %
 %           in the local cartesian coordinate system	  		  %
 %   z1  - vertical burial depth (top of fault) >=0                        %  
 %   z2  - vertical locking depth (bottom of fault) >=0                    %

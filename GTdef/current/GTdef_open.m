@@ -1,5 +1,5 @@
 function [ modspace,earth,...
-           flt1,flt2,flt3,flt4,flt5,flt6,...
+           flt1,flt2,flt3,flt4,flt5,flt6,flt7,...
            subflt,addon,...
            pnt,los,bsl,prf,grd,...
            sspnt,ssflt1,ssflt2 ] = GTdef_open(filename)
@@ -63,7 +63,8 @@ function [ modspace,earth,...
 %   improving handling of unkown types/methods/flags.  Warnings report line# of input.   %
 %   Comments can now be UNIX or MATLAB style (# or %). anewman May 11 14:04:07 EDT 2016  %
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016     %
-% last modified Andrew Newman  Wed May 18 17:32:55 UTC 2016                              %
+% added fault6 for external geometry, changed old fault6 to fault7 lfeng Jun 1 SGT 2016  %
+% last modified Lujia Feng Wed Jun  1 17:18:32 SGT 2016                                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -106,8 +107,9 @@ flt1.num = 0;  	 flt1.name = {};    flt1.flt = [];    flt1.sdrop = [];
 flt2.num = 0;    flt2.name = {};    flt2.flt = [];    flt2.sdrop = []; 
 flt3.num = 0;    flt3.name = {};    flt3.flt = [];    flt3.sdrop = []; 
 flt4.num = 0;    flt4.name = {};    flt4.flt = [];    flt4.sdrop = []; 
-flt5.num = 0;    flt5.name = {};    flt5.flt = [];    flt5.geoname = {};    flt5.colname = {};
-flt6.num = 0;    flt6.name = {};    flt6.flt = [];    flt6.grname  = {};
+flt5.num = 0;    flt5.name = {};    flt5.flt = [];    flt5.sdrop = [];    flt5.geoname = {};    flt5.colname = {};
+flt6.num = 0;    flt6.name = {};    flt6.flt = [];    flt6.sdrop = [];    flt6.geoname = {};    flt6.colname = {};
+flt7.num = 0;    flt7.name = {};    flt7.flt = [];    flt7.sdrop = [];    flt7.grname  = {};
 % - to built up later
 % ordered along dip first, then along strike
 flt1.Min = {}; flt1.xyzflt = {};
@@ -116,6 +118,7 @@ flt3.Min = {}; flt3.xyzflt = {};
 flt4.Min = {}; flt4.xyzflt = {};
 flt5.Min = {}; flt5.xyzflt = {};
 flt6.Min = {}; flt6.xyzflt = {};
+flt7.Min = {}; flt7.xyzflt = {};
 
 % subfault structure
 subflt.num   = 0;  subflt.name   = {};  subflt.flt = []; 
@@ -146,7 +149,7 @@ ssflt2.fltnum = 0;  ssflt2.num = 0;  ssflt2.fltname = {};  ssflt2.flt = [];
 kappa_num = 0;
 beta_num  = 0;
 layer_num = 0;
-ln=0; % line number
+ln = 0; % line number
 while(1)   
     % read in one line
     tline = fgetl(fin);
@@ -360,10 +363,21 @@ while(1)
         elseif strcmp(method,'6')
             [name,remain] = strtok(remain);
 	    flt6.num = flt6.num+1; flt6.name = [ flt6.name; name ];
-            [grname,remain] = strtok(remain);
-            flt6.grname = [ flt6.grname; grname ];
+            [geoname,remain] = strtok(remain);
+            flt6.geoname = [ flt6.geoname; geoname ];
+            [colname,remain] = strtok(remain);
+            flt6.colname = [ flt6.colname; colname ];
 	    for ii = 1:11
  		[ flt6.flt(flt6.num,ii),remain ] = GTdef_read1double(remain);
+	    end
+	%%% fault 7 %%
+        elseif strcmp(method,'7')
+            [name,remain] = strtok(remain);
+	    flt7.num = flt7.num+1; flt7.name = [ flt7.name; name ];
+            [grname,remain] = strtok(remain);
+            flt7.grname = [ flt7.grname; grname ];
+	    for ii = 1:11
+ 		[ flt7.flt(flt7.num,ii),remain ] = GTdef_read1double(remain);
 	    end
         else
 	    warning('Line %d, of %s: Input fault type "%s" not recognised. Ignoring this fault.',ln,filename,method)
@@ -680,7 +694,8 @@ flt2.out = flt2.flt;
 flt3.out = flt3.flt; 
 flt4.out = flt4.flt; 
 flt5.out = flt5.flt;
-flt6.out = flt5.flt;
+flt6.out = flt6.flt;
+flt7.out = flt7.flt;
 subflt.out     = subflt.flt; 
 subflt.outname = subflt.name;
 
@@ -701,7 +716,7 @@ function [ value,remain ] = GTdef_read1double(str)
 
 [str1,remain] = strtok(str);
 if GTdef_skip(str1)
-    error('GTdef_open ERROR: the input file is wrong!');
+   error('GTdef_open ERROR: the input file is wrong!');
 end
 value = str2double(str1);
 
@@ -725,8 +740,8 @@ lon(ind) = lon(ind)-360;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [ out ] = GTdef_skip(str)
-    if (strncmpi(str,'#',1)||strncmpi(str,'%',1)||isempty(str)) 
-	     out=true(); 
-    else
-             out=false();
-   end
+if (strncmpi(str,'#',1)||strncmpi(str,'%',1)||isempty(str)) 
+   out = true(); 
+else
+   out = false();
+end

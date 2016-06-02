@@ -54,6 +54,7 @@ function [ prjflt,xyzflt ] = GTdef_prjflt3uni(flt)
 % output depths lfeng Wed Nov 12 19:39:45 SGT 2014                                 %
 % added xyzflt lfeng Tue Mar 24 11:21:45 SGT 2015                                  %
 % added ss & ds to prjflt lfeng Wed Apr 27 18:00:37 SGT 2016                       %
+% added es & ns to prjflt lfeng Thu Jun  2 16:38:40 SGT 2016                       %
 % last modified by Lujia Feng Wed Apr 27 18:16:57 SGT 2016                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -78,8 +79,10 @@ ts   = flt(:,12);
 % ss + ds
 ss = rs.*cosd(rake);
 ds = rs.*sind(rake);
+% slip in east + north directions
+[ es,ns ] = rotate_xy(ss,ds,str-360-90);
 
-x0 = [ ss ds ts rake rs ];
+x0 = [ ss ds ts rake rs es ns ];
 
 if z1<z2	% burial depth must be smaller than locking depth
     if min(dip>=0)&&min(dip<=180)

@@ -58,7 +58,7 @@ function [] = GTdef(finName,wnum)
 % added external geometry to fault3 for fault5, rename old fault6 to fault7 lfeng 2016 %
 % added output resolution matrix information (see GTdef_input) anewman May 10 2016     %
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016   %
-% last modified Andrew Newman  Wed May 18 17:32:55 UTC 2016                            %
+% last modified Lujia Feng Thu Jun  2 10:57:31 SGT 2016                                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,17 +71,17 @@ if exist('wnum')
    elseif wnum<0
      localpool = parpool;
    else
-     disp('GTdef WARNING: parpool is not used.');
+     fprintf(1,'GTdef WARNING: parpool is not used.');
    end
 else
-    disp('GTdef WARNING: Will use parpool if already running.');
+   fprintf(1,'GTdef WARNING: Will use parpool if already running.');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'\n.......... reading the input file ...........\t');
 tic
 [ modspace,earth,...
-  flt1,flt2,flt3,flt4,flt5,flt6,...
+  flt1,flt2,flt3,flt4,flt5,flt6,flt7,...
   subflt,addon,...
   pnt,los,bsl,prf,grd,...
   sspnt,ssflt1,ssflt2 ] = GTdef_open(finName);
@@ -550,7 +550,7 @@ toc
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault7 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if flt6.num~=0
+if flt7.num~=0
 fprintf(1,'\n.......... processing fault type-7 ..........\t');
 tic
     for ii = 1:flt7.num
@@ -624,15 +624,16 @@ fprintf(1,'\n............. doing inversion .............\t');
         % forward calculation
         [ modspace,pnt,los,bsl,nod ] = GTdef_forward(modspace,pnt,los,bsl,nod);
         % update fault slips
-        [ flt1,flt2,flt3,flt4,flt5,flt6,subflt ] = GTdef_update_slips(earth,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt);
+        [ flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt ] = GTdef_update_slips(earth,modspace,flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt);
         if strcmp(modspace.sdropflag,'on')
             % calculate stress drop
-            [ flt1,flt2,flt3,flt4,flt5 ] = GTdef_calc_stressdrop(earth,flt1,flt2,flt3,flt4,flt5);
+            [ flt1,flt2,flt3,flt4,flt5,flt6 ] = GTdef_calc_stressdrop(earth,flt1,flt2,flt3,flt4,flt5,flt6);
         end
         % output results
-        GTdef_output(foutName,earth,modspace,bt,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl,prf,grd,nod);
-        if (~isempty(modspace.res))
-          GTdef_resolution(foutName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl);
+        GTdef_output(foutName,earth,modspace,bt,flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt,addon,pnt,los,bsl,prf,grd,nod);
+	% output resolution matrix
+        if ~isempty(modspace.res)
+            GTdef_resolution(foutName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl);
         end
         toc
     end
@@ -641,14 +642,14 @@ fprintf(1,'\n............. doing inversion .............\t');
     GTdef_summary(fsumName,modspace);
 
     if (strcmpi(modspace.mat,'on'))
-            fmatName = [ basename '.mat' ];
-	    save(fmatName);
+        fmatName = [ basename '.mat' ];
+	save(fmatName);
     end
 
 end
 
 % close up parpool for parallel computing
-if exist('wnum')
+if exist('wnum') && wnum~=0
    delete(localpool);
 end
 

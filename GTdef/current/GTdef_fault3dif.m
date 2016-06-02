@@ -11,7 +11,7 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
 %									         %
 % INPUT:					  		  	         %
 % flt = [ xx yy z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns ] %
-%    x1,y1 - one endpoint among the two endpoints of the master fault            %
+%    xx,yy - one endpoint among the two endpoints of the master fault            %
 %            in the local cartesian coordinate system	  		         %
 %    z1  - vertical burial depth (top of fault) >=0                              %  
 %    z2  - vertical locking depth (bottom of fault) >=0                          %

@@ -1,4 +1,4 @@
-function [ flt1,flt2,flt3,flt4,flt5 ] = GTdef_calc_stressdrop(earth,flt1,flt2,flt3,flt4,flt5) 
+function [ flt1,flt2,flt3,flt4,flt5,flt6 ] = GTdef_calc_stressdrop(earth,flt1,flt2,flt3,flt4,flt5,flt6) 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                          GTdef_cal_stressdrop                           %
@@ -50,7 +50,8 @@ function [ flt1,flt2,flt3,flt4,flt5 ] = GTdef_calc_stressdrop(earth,flt1,flt2,fl
 % first created by Lujia Feng Fri Mar 20 10:44:10 SGT 2015                %
 % added Min, SSgrn, DSgrn, and TSgrn to xyzflt lfeng Thu Mar 26 SGT 2015  %
 % added fault5 lfeng Tue Jun 23 17:20:20 SGT 2015                         %
-% last modified by Lujia Feng Tue Jun 23 17:26:12 SGT 2015                %
+% added fault6 lfeng Thu Jun  2 10:31:29 SGT 2016                         %
+% last modified by Lujia Feng Thu Jun  2 10:36:20 SGT 2016                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 etype = earth.type;
@@ -285,5 +286,47 @@ if flt5.num~=0
           sliptsSum = sliptsSum + sqrt(sum(slipV.*slipV))*sqrt(sum(tsV.*tsV)); 
       end
       flt5.sdrop(ii) = sliptsSum/slipSum;
+   end
+end
+
+% fault type 6 is the same as fault type 3
+if flt6.num~=0
+   for ii=1:flt6.num
+      Min  = flt6.xyzflt{ii}.Min;
+      Xin  = flt6.xyzflt{ii}.xyzctr;
+      nuv  = flt6.xyzflt{ii}.nuv;
+      suv  = flt6.xyzflt{ii}.suv;
+      duv  = flt6.xyzflt{ii}.duv;
+
+      %                1   2     3     4   5   6    7     8  9  10
+      % Okada   Min = [len width depth dip str east north ss ds ts]     [flt_num*10]
+      %                1    2     3    4     5      6     7   8   9
+      % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
+      if strcmpi(etype,'homogeneous')
+         ss = Min(:,8);
+         ds = Min(:,9);
+      else
+         slip = Min(:,1);
+         rake = Min(:,9);
+         ss   = slip.*cosd(rake); 
+         ds   = slip.*sind(rake);
+      end
+
+      [ disp,strain,stress,tilt ] = GTdef_calc(earth,Min,Xin);
+      patchnum = size(stress,1);
+      slipSum   = 0;
+      sliptsSum = 0;
+      for jj=1:patchnum
+          slipV = suv(jj,:).*ss(jj,:) + duv(jj,:).*ds(jj,:);
+          ss6 = stress(jj,:);
+          ssT = diag(ss6(1:3))+diag(ss6([6 4]),-1)+diag(ss6([6 4]),1)+diag(ss6(5),-2)+diag(ss6(5),2);       
+          nnV = nuv(jj,:); 
+          ttV = nnV*ssT;
+          tnV = sum(ttV.*nnV)*nnV;
+          tsV = ttV - tnV;
+          slipSum   = slipSum   + sqrt(sum(slipV.*slipV));
+          sliptsSum = sliptsSum + sqrt(sum(slipV.*slipV))*sqrt(sum(tsV.*tsV)); 
+      end
+      flt6.sdrop(ii) = sliptsSum/slipSum;
    end
 end
