@@ -58,7 +58,7 @@ function [] = GTdef(finName,wnum)
 % added external geometry to fault3 for fault5, rename old fault6 to fault7 lfeng 2016 %
 % added output resolution matrix information (see GTdef_input) anewman May 10 2016     %
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016   %
-% last modified Lujia Feng Thu Jun  2 10:57:31 SGT 2016                                %
+% last modified Lujia Feng Fri Jun  3 15:42:54 SGT 2016                                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -595,7 +595,7 @@ if modspace.lb==-Inf
 %        GTdef_output_stress(fstressName,sspnt,ssflt1,ssflt2);
 %    end
     foutName = [ basename '_fwd.out' ];
-    GTdef_output(foutName,earth,modspace,0,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl,prf,grd,nod);
+    GTdef_output(foutName,earth,modspace,0,flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt,addon,pnt,los,bsl,prf,grd,nod);
 else
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% inversion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'\n............. doing inversion .............\t');
