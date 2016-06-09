@@ -58,6 +58,7 @@ function [] = GTdef(finName,wnum)
 % added external geometry to fault3 for fault5, rename old fault6 to fault7 lfeng 2016 %
 % added output resolution matrix information (see GTdef_input) anewman May 10 2016     %
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016   %
+% corrected fault type 7 bugs lfeng Fri Jun 10 01:04:06 SGT 2016                       %
 % last modified Lujia Feng Fri Jun  3 15:42:54 SGT 2016                                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -563,9 +564,9 @@ tic
        [ siteList,siteloc,vertices,grnList,grnfns ] = PyLith_read_greensfns(cgrname);
        % trim greens functions
        [ siteloc,grnList,grnfns ] = PyLith_trim_greensfns(pnt.name,siteList,siteloc,grnList,grnfns);
-       [ Xgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aeq7,beq7,lb7,ub7,x07 ] = ...
+       [ Xgrn7,Lgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aeq7,beq7,lb7,ub7,x07 ] = ...
        GTdef_fault7(flt7.flt(ii,:),subflt.flt(subInd,:),vertices,grnfns,modspace.smooth,modspace.surf);
-       [ modspace ] = GTdef_addall(modspace,Xgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aeq7,beq7,lb7,ub7,x07);
+       [ modspace ] = GTdef_addall(modspace,Xgrn7,Lgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aeq7,beq7,lb7,ub7,x07);
     end
 toc
 end

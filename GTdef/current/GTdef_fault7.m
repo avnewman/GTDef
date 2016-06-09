@@ -1,10 +1,10 @@
-function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault7(flt,subflt,vertices,grnfns,smooth,surf)
+function [ Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault7(flt,subflt,vertices,grnfns,smooth,surf)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            GTdef_fault7				  %
-% Fault type 6 is irregular surface discretized into small patches        %
+% Fault type 7 takes external Greens functions from FEM tools e.g. PyLith %
+% for irregular surface discretized into small patches                    %
 % with different local strike and dip                                     %
-% Greens functions are calculated by FEM tools e.g. PyLith                %
 % x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)					  %
 % Here we have no inequalities, so set A=[];b=[]			  %
 % Additionally, determine the smoothing matrix for the subfaults	  %
@@ -48,16 +48,17 @@ function [ Xgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault7(flt,subflt
 %  sm_abs - matrix for calculating the absolute 1st derivative		  %
 %                                                                         %
 % first created by Lujia Feng Fri Dec 11 11:47:47 EST 2009		  %
-% changed from GTdef_fault5 to GTdef_fault7 lfeng Wed Jun 17 SGT 2015     %
+% changed from GTdef_fault5 to GTdef_fault6 lfeng Wed Jun 17 SGT 2015     %
 % last modified by Lujia Feng Wed Jun 17 11:04:57 SGT 2015                %
 % renamed from GTdef_fault6 to GTdef_fault7 lfeng Apr 20 11:59:26 SGT 2016%
+% added Lgrn = [] lfeng Fri Jun 10 01:01:28 SGT 2016                      %
 % need to code for los Lgrn lfeng Tue Nov  3 14:32:13 SGT 2015            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 11], error('GTdef_fault7 ERROR: need a 1*11 fault vector as input!'); end
 
 % initialization
-Xgrn = []; Bgrn = []; Ngrn = [];
+Xgrn = []; Lgrn = []; Bgrn = []; Ngrn = [];
 
 % Note: flt is a 1-row vector for the master fault
 mslips = flt(1:9);				% slip block
