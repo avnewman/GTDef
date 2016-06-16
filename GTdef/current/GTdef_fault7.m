@@ -1,59 +1,62 @@
-function [ Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0 ] = GTdef_fault7(flt,subflt,vertices,grnfns,smooth,surf)
+function [ Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aineq,bineq,Aeq,beq,lb,ub,x0 ] = GTdef_fault7(flt,subflt,vertices,grnfns,smooth,surf)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                            GTdef_fault7				  %
-% Fault type 7 takes external Greens functions from FEM tools e.g. PyLith %
-% for irregular surface discretized into small patches                    %
-% with different local strike and dip                                     %
-% x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)					  %
-% Here we have no inequalities, so set A=[];b=[]			  %
-% Additionally, determine the smoothing matrix for the subfaults	  %
-%									  %
-% INPUT:					  		  	  %
-%  flt = [ ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns ]		          %
-%    ss  - master-fault strike-slip (left-lateral +)                      %
-%    ds  - master-fault dip-slip (thrust +)                               %
-%    ts  - master-fault tensile-slip (opening +)                          %
-%    ss0,ds0,ts0 - lower bounds for master-fault slips			  %
-%    ssX,dsX,tsX - upper bounds for master-fault slips			  %
-%    Nd  - number of rows defining the subfaults along dip 	          %
-%    Ns  - number of rows defining the subfaults along strike 		  %
-%    ddip - average length along dip					  %
-%    dlen - average length laong strike					  %
-%  subflt = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]		  %
-%    dnum - row number for subfaults					  %
-%    snum - column number for subfaults				  	  %
-%    ss,ds,ts - subfault slips						  %
-%    ss0,ds0,ts0,ssX,dsX,tsX - subfault slip bounds			  %
-%vertices - subfault/vertices location                                    %
-%         = [ id dnum snum xx yy zz ]                                     %
-% grnfns  - array of size                        (vertexNum*pntNum*9)     %
-%         for each patch-site pair                                        % 
-%         = [ ss_dx ss_dy ss_dz ds_dx ds_dy ds_dz ts_dx ts_dy ts_dz ]     %
-%  smooth - smoothing method						  %
-%  surf   - surface smoothing setting					  %
-%                                                                         %
-% OUTPUT:                                                                 %
-% Each subfault has three (strike, dip, and tensile) components, so       %
-%  slip_num = subflt_num*3 = Nd*Ns*3                                      %
-%  Xgrn - displacements [east;north;vertical] for different sites   	  %
-%         from unit slips [(3*nn)*slip_num] 				  %
-%         (nn is the  number of sites)  				  %
-%  Aeq - left-hand side matrix for linear equalities  [slip_num*slip_num] %
-%  beq - right-hand side vector for linear equalities [slip_num*1]        %
-%  x0  - initial values for ss,ds,ts 	[slip_num*1]                      %
-%  lb  - lower bounds for ss,ds,ts 	[slip_num*1]                      %
-%  ub  - upper bounds for ss,ds,ts	[slip_num*1]			  %
-%  sm  - smoothing matrix for slips     [slip_num*slip_num]		  %
-%  sm_abs - matrix for calculating the absolute 1st derivative		  %
-%                                                                         %
-% first created by Lujia Feng Fri Dec 11 11:47:47 EST 2009		  %
-% changed from GTdef_fault5 to GTdef_fault6 lfeng Wed Jun 17 SGT 2015     %
-% last modified by Lujia Feng Wed Jun 17 11:04:57 SGT 2015                %
-% renamed from GTdef_fault6 to GTdef_fault7 lfeng Apr 20 11:59:26 SGT 2016%
-% added Lgrn = [] lfeng Fri Jun 10 01:01:28 SGT 2016                      %
-% need to code for los Lgrn lfeng Tue Nov  3 14:32:13 SGT 2015            %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 GTdef_fault7				         %
+% Fault type 7 takes external Greens functions from FEM tools e.g. PyLith        %
+% for irregular surface discretized into small patches                           %
+% with different local strike and dip                                            %
+% x = lsqlin(C,d,Aineq,bineq,Aeq,beq,lb,ub,x0)                                   %
+% Additionally, determine the smoothing matrix for the subfaults	         %
+%									         %
+% INPUT:					  		  	         %
+%  flt = [ ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns ]		                 %
+%    ss  - master-fault strike-slip (left-lateral +)                             %
+%    ds  - master-fault dip-slip (thrust +)                                      %
+%    ts  - master-fault tensile-slip (opening +)                                 %
+%    ss0,ds0,ts0 - lower bounds for master-fault slips			         %
+%    ssX,dsX,tsX - upper bounds for master-fault slips			         %
+%    Nd  - number of rows defining the subfaults along dip 	                 %
+%    Ns  - number of rows defining the subfaults along strike 		         %
+%    ddip - average length along dip					         %
+%    dlen - average length laong strike					         %
+%  subflt = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]		         %
+%    dnum - row number for subfaults					         %
+%    snum - column number for subfaults				  	         %
+%    ss,ds,ts - subfault slips						         %
+%    ss0,ds0,ts0,ssX,dsX,tsX - subfault slip bounds			         %
+%vertices - subfault/vertices location                                           %
+%         = [ id dnum snum xx yy zz ]                                            %
+% grnfns  - array of size                        (vertexNum*pntNum*9)            %
+%         for each patch-site pair                                               % 
+%         = [ ss_dx ss_dy ss_dz ds_dx ds_dy ds_dz ts_dx ts_dy ts_dz ]            %
+%  smooth - smoothing method						         %
+%  surf   - surface smoothing setting					         %
+%                                                                                %
+% OUTPUT:                                                                        %
+% Each subfault has three (strike, dip, and tensile) components, so              %
+%  slip_num = subflt_num*3 = Nd*Ns*3                                             %
+%  Xgrn - displacements [east;north;vertical] for different sites   	         %
+%         from unit slips [(3*nn)*slip_num] 				         %
+%         (nn is the  number of sites)  				         %
+%  Aineq  - left-hand  side matrix for linear inequalities [(flt_num*2)*slip_num]%
+%  bineq  - right-hand side vector for linear inequalities [flt_num*2]           %
+%  Aeq    - left-hand side matrix for linear equalities    [slip_num*slip_num]   %
+%  beq    - right-hand side vector for linear equalities   [slip_num*1]          %
+%  x0     - initial values for ss,ds,ts    [slip_num*1]                          %
+%  lb     - lower bounds for ss,ds,ts      [slip_num*1]                          %
+%  ub     - upper bounds for ss,ds,ts      [slip_num*1]			         %
+%  sm     - smoothing matrix for slips     [slip_num*slip_num]		         %
+%  sm_abs - matrix for calculating the absolute 1st derivative		         %
+%                                                                                %
+% first created by Lujia Feng Fri Dec 11 11:47:47 EST 2009		         %
+% changed from GTdef_fault5 to GTdef_fault6 lfeng Wed Jun 17 SGT 2015            %
+% last modified by Lujia Feng Wed Jun 17 11:04:57 SGT 2015                       %
+% renamed from GTdef_fault6 to GTdef_fault7 lfeng Apr 20 11:59:26 SGT 2016       %
+% added Lgrn = [] lfeng Fri Jun 10 01:01:28 SGT 2016                             %
+% added Aineq & bineq to modspace lfeng Mon Jun 13 17:05:53 SGT 2016             %
+% need to code for los Lgrn lfeng Tue Nov  3 14:32:13 SGT 2015                   %
+% last modified by Lujia Feng Thu Jun 16 00:57:37 SGT 2016                       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 11], error('GTdef_fault7 ERROR: need a 1*11 fault vector as input!'); end
 
@@ -94,7 +97,8 @@ ub = [ slips(:,5); slips(:,7); slips(:,9) ];	% [ssX;dsX;tsX]
 
 comp_num = 3;                                   % component number = 3 (strike, dip, tensile)
 slip_num = subflt_num*comp_num;			% slip num
-Aeq = zeros(slip_num,slip_num); beq = zeros(slip_num,1);
+Aineq = zeros(subflt_num*2,slip_num); bineq = zeros(subflt_num*2,1);  % useful only for fault type 3 & 4
+Aeq   = zeros(slip_num,slip_num);     beq   = zeros(slip_num,1);
 
 % fix slips that are not free
 for ii = 1:slip_num

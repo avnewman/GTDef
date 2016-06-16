@@ -43,6 +43,13 @@
 # stressdrop - flag if stress drop is calculated {off}
 #               on  = calculate
 #               off = do not calculate
+# resolution - flag if resolution matrix is calculated {off}
+#               off = do not calculate
+#          1: diags = save only model and data resolution information
+#          2: all   = save resolution for every model parameter
+# matfile    - flag if workspace is saved {off}
+#               on  = save
+#               off = do not save
 #################################################################
 coord geo
 origin 99 2

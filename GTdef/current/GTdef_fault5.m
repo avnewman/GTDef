@@ -1,91 +1,93 @@
 function [ modspace,xyzflt,Xgrn,flt ] = GTdef_fault5(modspace,...
            geoname,colname,flt,subflt,Xin,Lin,Bin,Nin,earth)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                          GTdef_fault5				          %
-% Process type-5 fault                                                    %
-% Convert type-5 fault to type-1 fault                                    %
-% call GTdef_fault1uni to prepare for the inputs to Matlab function 	  %
-% x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)					  %
-% Here we have no inequalities, so set A=[];b=[]			  %
-% Additionally, determine the smoothing matrix for the subfaults	  %
-%									  %
-% INPUT:					  		  	  %
-% geoname - geometry file name                                            %
-% colName - name of each column                                           %
-% flt    = [ ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns ]                     %
-% subflt = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]		  %
-%   dnum - row number for subfaults					  %
-%   snum - column number for subfaults				  	  %
-%   ss,ds,ts - subfault slips						  %
-%   ss0,ds0,ts0,ssX,dsX,tsX - subfault slip bounds			  %
-% Xin - point site locations in the local cartesian system 	  	  %
-%       [n*3] [ xx yy zz ]						  %
-% Lin - los point locations in the local cartesian system + los direction %
-%       [n*6] [xx yy zz dirE dirN dirV]                                   %
-% Bin - baseline site locations in the local cartesian system 	  	  %
-%       [n*6] [ x1 y1 z1 x2 y2 z2 ]					  %
-% Nin - grid and profile node locations in the local cartesian system     %
-%       [n*3] [ xx yy zz ]						  %
-% Note: z1,z2 depth positive downward                                     %
-%       zz elevation positive upward                                      %
-% ----------------------------------------------------------------------- %
-% Earth Structure:							  %
-% Either of the two types of earth structure can be used 		  %
-% earth.type = 'homogeneous'                                              %
-%      earth.rigidity		        (scalar)	{30e9 Pa}         %
-%      earth.poisson		        (scalar)	{0.25}		  %
-% earth.type = 'layered'	        	        		  %
-%      earth.edgrn.nl        	        (scalar)                          %
-%      earth.edgrn.obsz     	        (scalar)                          %
-%      earth.edgrn.nr	                (scalar)                          %
-%      earth.edgrn.minr,edgrn.maxr      (scalar)                          %
-%      earth.edgrn.nz                   (scalar)                          %
-%      earth.edgrn.minz,edgrn.maxz      (scalar)                          %
-%      earth.edgrn.srate                (scalar)			  %
-%      earth.layer - [ id depth vp vs ro ]	(nn*5)			  %
-%      earth.edgrnfcts - green function library                           %
-% ----------------------------------------------------------------------- %
-%                                                                         %
-% OUTPUT:                                                                 %
-% ----------------------------------------------------------------------- %
-% modspace structure                                                      %
-% Each subfault has three (strike, dip, and tensile) components, so       %
-% slip_num = subflt_num*3 = Nd*Ns*3                                       %
-% Xgrn - displacements [east;north;vertical] for different sites   	  %
-%        from unit slips [(3*nn)*slip_num] 				  %
-%        (nn is the  number of sites)                                     %
-% Lgrn - los displacements [los] for different sites   	                  %
-%        from unit slips [(1*nn)*slip_num] 				  %
-%        (nn is the number of los points)                                 %
-% Bgrn - length changes [east;north;vertical;length] for 	  	  %
-%        different baselines from unit slips [(4*nn)*slip_num] 	          %
-%        (nn is the  number of baselines)  				  %
-% Ngrn - displacements [east;north;vertical] for different nodes   	  %
-%        from unit slips [(3*nn)*slip_num] 				  %
-%        (nn is the  number of nodes)                                     %
-% Aeq  - left-hand side matrix for linear equalities  [slip_num*slip_num] %
-% beq  - right-hand side vector for linear equalities [slip_num*1]        %
-% x0   - initial values for ss,ds,ts 	[slip_num*1]                      %
-% xx   - final values for ss,ds,ts 	[slip_num*1]                      %
-% lb   - lower bounds for ss,ds,ts 	[slip_num*1]                      %
-% ub   - upper bounds for ss,ds,ts	[slip_num*1]			  %
-% sm   - smoothing matrix for slips    [slip_num*slip_num]		  %
-% sm_abs - matrix for calculating the absolute 1st derivative		  %
-% smooth - smoothing method						  %
-% surf   - surface smoothing setting					  %
-% coord  - coordnate system                                               %
-% origin = [ lon0 lat0 ]                                                  %
-% ----------------------------------------------------------------------- %
-% xyzflt structure                                                        %
-% ----------------------------------------------------------------------- %
-% Xgrn - specifically for this fault only                                 %
-%                                                                         %
-% first created by Lujia Feng & Paul Morgan Wed Jun 17 15:26:59 SGT 2015  %
-% output flt for updating Nd & Ns lfeng Tue Jun 23 17:42:15 SGT 2015      %
-% added InSAR los Lin & Lgrn lfeng Tue Nov  3 11:46:52 SGT 2015           %
-% last modified by Lujia Feng Wed Jun  1 12:14:53 SGT 2016                %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                GTdef_fault5				         %
+% Fault type 5 uses external geometry with rake+rs                               %
+% Convert type-5 fault to type-1 fault                                           %
+% call GTdef_fault1uni to prepare for the inputs to Matlab function 	         %
+% x = lsqlin(C,d,Aineq,bineq,Aeq,beq,lb,ub,x0)                                   %
+% Additionally, determine the smoothing matrix for the subfaults	         %
+%									         %
+% INPUT:					  		  	         %
+% geoname - geometry file name                                                   %
+% colName - name of each column                                                  %
+% flt    = [ ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns ]                            %
+% subflt = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]		         %
+%   dnum - row number for subfaults					         %
+%   snum - column number for subfaults				  	         %
+%   ss,ds,ts - subfault slips						         %
+%   ss0,ds0,ts0,ssX,dsX,tsX - subfault slip bounds			         %
+% Xin - point site locations in the local cartesian system 	  	         %
+%       [n*3] [ xx yy zz ]						         %
+% Lin - los point locations in the local cartesian system + los direction        %
+%       [n*6] [xx yy zz dirE dirN dirV]                                          %
+% Bin - baseline site locations in the local cartesian system 	  	         %
+%       [n*6] [ x1 y1 z1 x2 y2 z2 ]					         %
+% Nin - grid and profile node locations in the local cartesian system            %
+%       [n*3] [ xx yy zz ]						         %
+% Note: z1,z2 depth positive downward                                            %
+%       zz elevation positive upward                                             %
+% ------------------------------------------------------------------------------ %
+% Earth Structure:							         %
+% Either of the two types of earth structure can be used 		         %
+% earth.type = 'homogeneous'                                                     %
+%      earth.rigidity		        (scalar)	{30e9 Pa}                %
+%      earth.poisson		        (scalar)	{0.25}		         %
+% earth.type = 'layered'	        	        		         %
+%      earth.edgrn.nl        	        (scalar)                                 %
+%      earth.edgrn.obsz     	        (scalar)                                 %
+%      earth.edgrn.nr	                (scalar)                                 %
+%      earth.edgrn.minr,edgrn.maxr      (scalar)                                 %
+%      earth.edgrn.nz                   (scalar)                                 %
+%      earth.edgrn.minz,edgrn.maxz      (scalar)                                 %
+%      earth.edgrn.srate                (scalar)			         %
+%      earth.layer - [ id depth vp vs ro ]	(nn*5)			         %
+%      earth.edgrnfcts - green function library                                  %
+% ------------------------------------------------------------------------------ %
+%                                                                                %
+% OUTPUT:                                                                        %
+% ------------------------------------------------------------------------------ %
+% modspace structure                                                             %
+% Each subfault has three (strike, dip, and tensile) components, so              %
+% slip_num = subflt_num*3 = Nd*Ns*3                                              %
+% Xgrn - displacements [east;north;vertical] for different sites   	         %
+%        from unit slips [(3*nn)*slip_num] 				         %
+%        (nn is the  number of sites)                                            %
+% Lgrn - los displacements [los] for different sites   	                         %
+%        from unit slips [(1*nn)*slip_num] 				         %
+%        (nn is the number of los points)                                        %
+% Bgrn - length changes [east;north;vertical;length] for 	  	         %
+%        different baselines from unit slips [(4*nn)*slip_num] 	                 %
+%        (nn is the  number of baselines)  				         %
+% Ngrn - displacements [east;north;vertical] for different nodes   	         %
+%        from unit slips [(3*nn)*slip_num] 				         %
+%        (nn is the  number of nodes)                                            %
+% Aineq  - left-hand  side matrix for linear inequalities  [(flt_num*2)*slip_num]%
+% bineq  - right-hand side vector for linear inequalities  [flt_num*2]           % 
+% Aeq    - left-hand  side matrix for linear equalities    [slip_num*slip_num]   %
+% beq    - right-hand side vector for linear equalities    [slip_num*1]          %
+% x0     - initial values for ss,ds,ts 	[slip_num*1]                             %
+% xx     - final values for ss,ds,ts 	[slip_num*1]                             %
+% lb     - lower bounds for ss,ds,ts 	[slip_num*1]                             %
+% ub     - upper bounds for ss,ds,ts	[slip_num*1]			         %
+% sm     - smoothing matrix for slips     [slip_num*slip_num]		         %
+% sm_abs - matrix for calculating the absolute 1st derivative		         %
+% smooth - smoothing method						         %
+% surf   - surface smoothing setting					         %
+% coord  - coordnate system                                                      %
+% origin = [ lon0 lat0 ]                                                         %
+% ------------------------------------------------------------------------------ %
+% xyzflt structure                                                               %
+% ------------------------------------------------------------------------------ %
+% Xgrn - specifically for this fault only                                        %
+%                                                                                %
+% first created by Lujia Feng & Paul Morgan Wed Jun 17 15:26:59 SGT 2015         %
+% output flt for updating Nd & Ns lfeng Tue Jun 23 17:42:15 SGT 2015             %
+% added InSAR los Lin & Lgrn lfeng Tue Nov  3 11:46:52 SGT 2015                  %
+% added Aineq & bineq to modspace lfeng Mon Jun  6 15:46:35 SGT 2016             %
+% last modified by Lujia Feng Mon Jun 13 16:49:07 SGT 2016                       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 11], error('GTdef_fault5 ERROR: need a 1*11 fault vector as input!'); end
 
@@ -127,10 +129,10 @@ if subflt_num==1
     prjflt = [ 1 1 newflt ];
     [ ~,xyzflt ] = GTdef_prjflt1uni(prjflt);
 
-    [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault1uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
+    [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aineq,bineq,Aeq,beq,lb,ub,x0 ] = GTdef_fault1uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
     sm_abs = [];
     sm     = [];
-    [ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);
+    [ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aineq,bineq,Aeq,beq,lb,ub,x0);
     return
 end
 
@@ -165,7 +167,7 @@ dnum = reshape(dmat,[],1);        snum = reshape(smat,[],1);
 prjflt = [ dnum snum x1 y1 z1 z2 len str dip slips ];
 [ ~,xyzflt ] = GTdef_prjflt1uni(prjflt);
 
-[ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault1uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
+[ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aineq,bineq,Aeq,beq,lb,ub,x0 ] = GTdef_fault1uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
 
 % create smoothing matrices
 width = (z2-z1)./abs(sind(dip));
@@ -192,4 +194,4 @@ end
 ind_fixed = find(lb==-Inf);	% index for fixed slips 
 sm(ind_fixed) = 0;		% don't do smoothing for them
 
-[ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);
+[ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aineq,bineq,Aeq,beq,lb,ub,x0);

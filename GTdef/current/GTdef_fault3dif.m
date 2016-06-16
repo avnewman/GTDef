@@ -5,25 +5,25 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
 %                              GTdef_fault3dif				         %
 % Process one distributed-slip type-3 fault, generate its subfaults, and         %
 % call GTdef_fault3uni to prepare for the inputs to Matlab function 	         %
-% x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)					         %
-% Here we have no inequalities, so set A=[];b=[]			         %
+% x = lsqlin(C,d,Aineq,bineq,Aeq,beq,lb,ub,x0)                                   %
 % Additionally, determine the smoothing matrix for the subfaults	         %
 %									         %
 % INPUT:					  		  	         %
 % flt = [ xx yy z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns ] %
-%    xx,yy - one endpoint among the two endpoints of the master fault            %
+%   xx,yy - one endpoint among the two endpoints of the master fault             %
 %            in the local cartesian coordinate system	  		         %
-%    z1  - vertical burial depth (top of fault) >=0                              %  
-%    z2  - vertical locking depth (bottom of fault) >=0                          %
-%    len - fault length                                                          %
-%    str - strike from the endpoint (degree CW from N) [0-360]                   %
-%    dip - down from Horiz, right looking from the endpoint [0 180]              %
-%   rake - Aki-Richards convention                                               %
-%    rs  - rake-slip (rake direction +)                                          %
-%    ts  - tensile-slip (opening +)                                              %
-%  rake0,rakeX - rake is usually fixed, currently dummy parameters               %
-%      rs0,ts0 - lower bounds for slips				                 %
-%      rsX,tsX - upper bounds for slips				                 %
+%   z1  - vertical burial depth (top of fault) >=0                               %  
+%   z2  - vertical locking depth (bottom of fault) >=0                           %
+%   len - fault length                                                           %
+%   str - strike from the endpoint (degree CW from N) [0-360]                    %
+%   dip - down from Horiz, right looking from the endpoint [0 180]               %
+%  rake - Aki-Richards convention                                                %
+%   rs  - rake-slip (rake direction +)                                           %
+%   ts  - tensile-slip (opening +)                                               %
+% rake0 - lower bounds for rake [rake-90 rake+90]                                %
+% rakeX - upper bounds for rake [rake-90 rake+90]                                %
+% rs0,ts0 - lower bounds for slips				                 %
+% rsX,tsX - upper bounds for slips				                 %
 %    Nd  - number of rows defining the subfaults along dip 	                 %
 %    Ns  - number of rows defining the subfaults along strike 		         %
 % subflt = [ dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]                  %
@@ -31,7 +31,8 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
 %   snum - column number for subfaults				  	         %
 %   rake - rake direction                                                        %
 %  rs,ts - subfault slips						         %
-%      rake0,rakeX - rake is usually fixed, currently dummy parameters           %
+%  rake0 - lower bounds for rake [rake-90 rake+90]                               %
+%  rakeX - upper bounds for rake [rake-90 rake+90]                               %
 %  rs0,ts0,rsX,tsX - subfault slip bounds			                 %
 %  dipin - dip addon info for the master fault                                   %
 %        = [ dip z1 z2 rows ]                                                    %
@@ -66,8 +67,9 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
 % OUTPUT:                                                                        %
 % ------------------------------------------------------------------------------ %
 % modspace structure                                                             %
-% Each fault has two (rake and tensile) components, so                           %
-% slip_num = subflt_num*2 = Nd*Ns*2                                              %
+% slip_num = subflt_num*comp_num = Nd*Ns*comp_num                                %
+%    comp_num = 2: two (rake, tensile) components                                %
+%    comp_num = 3: three (strike, dip, tensile) components                       %
 % Xgrn - displacements [east;north;vertical] for different sites   	         %
 %        from unit slips [(3*nn)*slip_num] 				         %
 %        (nn is the  number of sites)                                            %
@@ -80,13 +82,15 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
 % Ngrn - displacements [east;north;vertical] for different nodes   	         %
 %        from unit slips [(3*nn)*slip_num] 				         %
 %        (nn is the  number of nodes)                                            %
-% Aeq  - left-hand side matrix for linear equalities  [slip_num*slip_num]        %
-% beq  - right-hand side vector for linear equalities [slip_num*1]               %
-% x0   - initial values for ss,ds,ts 	[slip_num*1]                             %
-% xx   - final values for ss,ds,ts 	[slip_num*1]                             %
-% lb   - lower bounds for ss,ds,ts 	[slip_num*1]                             %
-% ub   - upper bounds for ss,ds,ts	[slip_num*1]			         %
-% sm   - smoothing matrix for slips    [slip_num*slip_num]		         %
+% Aineq  - left-hand  side matrix for linear inequalities  [(flt_num*2)*slip_num]%
+% bineq  - right-hand side vector for linear inequalities  [flt_num*2]           %
+% Aeq    - left-hand  side matrix for linear equalities    [slip_num*slip_num]   %
+% beq    - right-hand side vector for linear equalities    [slip_num*1]          %
+% x0     - initial values for ss,ds,ts 	[slip_num*1]                             %
+% xx     - final values for ss,ds,ts 	[slip_num*1]                             %
+% lb     - lower bounds for ss,ds,ts 	[slip_num*1]                             %
+% ub     - upper bounds for ss,ds,ts	[slip_num*1]			         %
+% sm     - smoothing matrix for slips   [slip_num*slip_num]		         %
 % sm_abs - matrix for calculating the absolute 1st derivative		         %
 % smooth - smoothing method						         %
 % surf   - surface smoothing setting					         %
@@ -108,7 +112,9 @@ function [ modspace,xyzflt,Xgrn ] = GTdef_fault3dif(modspace,...
 % added output Xgrn lfeng Fri Jun 12 12:12:10 SGT 2015                           %
 % removed smooth & surf from input lfeng Tue Jun 23 13:02:35 SGT 2015            %
 % added InSAR los Lin & Lgrn lfeng Tue Nov  3 11:46:52 SGT 2015                  %
-% last modified by Lujia Feng Tue Nov  3 14:25:38 SGT 2015                       %
+% added Aineq & bineq to modspace lfeng Mon Jun  6 15:46:35 SGT 2016             %
+% added xyzflt.compnum for generating sm lfeng Thu Jun 16 15:54:58 SGT 2016      %
+% last modified by Lujia Feng Thu Jun 16 15:55:10 SGT 2016                       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt)~=[1 18], error('GTdef_fault3dif ERROR: need a 1*18 fault vector as input!'); end
@@ -132,10 +138,10 @@ if subflt_num==1
     prjflt = [ 1 1 mx1 my1 mz1 mz2 mlen mstr mdip mslips ];
     [ ~,xyzflt ] = GTdef_prjflt3uni(prjflt);
 
-    [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,[flt(:,1:end-2)],xyzflt,Xin,Lin,Bin,Nin);
+    [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aineq,bineq,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,[flt(:,1:end-2)],xyzflt,Xin,Lin,Bin,Nin);
     sm_abs = [];
     sm     = [];
-    [ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);
+    [ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aineq,bineq,Aeq,beq,lb,ub,x0);
     return
 end
 
@@ -160,7 +166,7 @@ end
 dlen = mlen/Ns;	len = dlen*unit; str = mstr*unit; 
 slips = mslips(unit,:);	
 
-%  subflt = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]
+% subflt = [ dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX ]
 if ~isempty(subflt)
     num = size(subflt,1); mat = [Nd Ns];
     for ii = 1:num
@@ -181,13 +187,21 @@ dnum = reshape(dmat,[],1);        snum = reshape(smat,[],1);
 prjflt = [ dnum snum x1 y1 z1 z2 len str dip slips ];
 [ ~,xyzflt ] = GTdef_prjflt3uni(prjflt);
 
-[ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
+[ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aineq,bineq,Aeq,beq,lb,ub,x0 ] = GTdef_fault3uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
 
 % create smoothing matrices
 if strcmp(surf,'free')
-    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_free_2slips(ddip,dlen,Nd,Ns);
+    if xyzflt.compnum == 2
+        [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_free_2slips(ddip,dlen,Nd,Ns);
+    elseif xyzflt.compnum == 3
+        [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_free_3slips(ddip,dlen,Nd,Ns);
+    end
 elseif strcmp(surf,'fixed')
-    [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_fixed_2slips(ddip,dlen,Nd,Ns);
+    if xyzflt.compnum == 2
+        [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_fixed_2slips(ddip,dlen,Nd,Ns);
+    elseif xyzflt.compnum == 3
+        [ sm_1d3pf,sm_1d3pb,sm_2d,sm_abs ] = GTdef_sm_fixed_3slips(ddip,dlen,Nd,Ns);
+    end
 else
     error('GTdef_fault3dif ERROR: surface smoothing is wrong!!!');
 end
@@ -205,4 +219,4 @@ end
 ind_fixed = find(lb==-Inf);	% index for fixed slips 
 sm(ind_fixed) = 0;		% don't do smoothing for them
 
-[ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aeq,beq,lb,ub,x0);
+[ modspace ] = GTdef_addall(modspace,Xgrn,Lgrn,Bgrn,Ngrn,sm,sm_abs,Aineq,bineq,Aeq,beq,lb,ub,x0);

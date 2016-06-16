@@ -1,4 +1,4 @@
 function [ version, versiondate, wholast ] = GTdef_version()
-version = '3.1.5';
-versiondate = ['Thu Jun  2 17:08:08 SGT 2016']; 
+version = '3.2.0';
+versiondate = ['Fri Jun 17 01:30:52 SGT 2016']; 
 wholast='lfeng';
