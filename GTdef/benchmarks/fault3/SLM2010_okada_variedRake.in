@@ -12,17 +12,17 @@ kappa 1 2000
 fault   3   slm_TsE    157.09896181   -8.69203979  0e3   5.20e+03   5.00e+04  125.0  158.0  90    1.0   0     80    100     0    100   0    0      2   7
 
 # point
-point 1  Rendova-Rendova_Harbor	          157.33602	-8.40359   0.0	-0.15   1.0	
-point 1  Rendova-Epata_Creek	          157.30622	-8.43730   0.0	0	1.0
-point 1  Rendova-Mbaniata	          157.26260	-8.63325   0.0	-0.70	1.0
-point 1  Rendova-Hofofo_Pt	          157.19633	-8.56530   0.0	0	1.0
-point 1  Rendova-Habila	                  157.22920	-8.60414   0.0	-0.60	1.0
-point 1  Rendova-Rava_Pt	          157.40336	-8.72264   0.0	-0.60	1.0
-point 1  Tetepare-Tofa	                  157.53432	-8.75576   0.0	-0.40	1.0
-point 1  Tetepare-Jetty_near_Ecolodge	  157.44286	-8.72234   0.0	-0.25	1.0
-point 1  Tetepare-Ecolodge_boat_ramp	  157.44321	-8.72120   0.0	-0.30	1.0
-point 1  Rendova-Rano	                  157.32886 	-8.62969   0.0	-0.50	1.0
-point 1  Rendova-Vankuva	          157.33953	-8.60934   0.0	0	1.0
-point 1  Rendova-Kofi_Bay_village	  157.33874	-8.6039	   0.0	-0.40	1.0
-point 1  Rendova-Mauru_Loging_Camp	  157.39881	-8.5137	   0.0	-0.30	1.0
-point 1  Rendova-Ugele	                  157.39921	-8.44959   0.0	0	1.0
+point 1  Rendova_Harbor	          157.33602	-8.40359   0.0	-0.15   1.0	
+point 1  Epata_Creek	          157.30622	-8.43730   0.0	0	1.0
+point 1  Mbaniata	          157.26260	-8.63325   0.0	-0.70	1.0
+point 1  Hofofo_Pt	          157.19633	-8.56530   0.0	0	1.0
+point 1  Habila	                  157.22920	-8.60414   0.0	-0.60	1.0
+point 1  Rava_Pt	          157.40336	-8.72264   0.0	-0.60	1.0
+point 1  Tofa	                  157.53432	-8.75576   0.0	-0.40	1.0
+point 1  Jetty_near_Ecolodge	  157.44286	-8.72234   0.0	-0.25	1.0
+point 1  Ecolodge_boat_ramp	  157.44321	-8.72120   0.0	-0.30	1.0
+point 1  Rano	                  157.32886 	-8.62969   0.0	-0.50	1.0
+point 1  Vankuva	          157.33953	-8.60934   0.0	0	1.0
+point 1  Kofi_Bay_village	  157.33874	-8.6039	   0.0	-0.40	1.0
+point 1  Mauru_Loging_Camp	  157.39881	-8.5137	   0.0	-0.30	1.0
+point 1  Ugele	                  157.39921	-8.44959   0.0	0	1.0
