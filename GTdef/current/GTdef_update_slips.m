@@ -38,7 +38,9 @@ function [ flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt ] = GTdef_update_slips(eart
 % used xyzflt.compnum for fault type 3 & 4 lfeng Mon Jun 13 17:42:52 SGT 2016                %
 % changed flt?.Min to flt?.xyzflt.Min lfeng Wed Jun 15 00:47:05 SGT 2016                     %
 % modified fault3, fault4, fault6 for varying rake lfeng Thu Jun 16 17:23:39 SGT 2016        %
-% last modified by Lujia Feng Thu Jun 16 22:49:13 SGT 2016                                   %
+% fixed a bug, xyzflt.Min{ii} should be xyzflt{ii}.Min lfeng Tue Jul  5 16:41:31 SGT 2016    %
+% fixed a bug that had ii loop inside another ii loop lfeng Tue Jul  5 17:05:44 SGT 2016     %
+% last modified by Lujia Feng Tue Jul  5 17:10:38 SGT 2016                                   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 lb    = modspace.lb;
@@ -79,7 +81,7 @@ if flt1.num~=0
 
             fltName = flt1.name{ii};
             name     = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
+            for jj = 1:fltNum, name{jj} = fltName; end
             subflt.outname = [ subflt.outname; name ];   
         end
 
@@ -97,10 +99,10 @@ if flt1.num~=0
         %                1    2     3    4     5      6     7   8   9
         % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
         if strcmpi(etype,'homogeneous')
-            flt1.xyzflt.Min{ii}(:,8:10) = slp1;
+            flt1.xyzflt{ii}.Min(:,8:10) = slp1;
         else
-            flt1.xyzflt.Min{ii}(:,1)   = slip;
-            flt1.xyzflt.Min{ii}(:,end) = rake;
+            flt1.xyzflt{ii}.Min(:,1)   = slip;
+            flt1.xyzflt{ii}.Min(:,end) = rake;
         end
     end
 end
@@ -130,7 +132,7 @@ if flt2.num~=0
 
 	    fltName = flt2.name{ii};
             name = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
+            for jj = 1:fltNum, name{jj} = fltName; end
 	    subflt.outname = [ subflt.outname; name ];   
 	end
 
@@ -148,10 +150,10 @@ if flt2.num~=0
         %                1    2     3    4     5      6     7   8   9
         % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
         if strcmpi(etype,'homogeneous')
-            flt2.xyzflt.Min{ii}(:,8:10) = slp2;
-        else
-            flt2.xyzflt.Min{ii}(:,1)   = slip;
-            flt2.xyzflt.Min{ii}(:,end) = rake;
+            flt2.xyzflt{ii}.Min(:,8:10) = slp2;
+        else               
+            flt2.xyzflt{ii}.Min(:,1)    = slip;
+            flt2.xyzflt{ii}.Min(:,end)  = rake;
         end
     end
 end
@@ -185,16 +187,16 @@ if flt3.num~=0
                 % subfault names
                 fltName = flt3.name{ii};
                 name = cell(fltNum,1);
-                for ii = 1:fltNum, name{ii} = fltName; end
+                for jj = 1:fltNum, name{jj} = fltName; end
                 subflt.outname = [ subflt.outname; name ];   
     	        % rake of subfaults
     	        sub_ind  = strcmpi(fltName,subflt.name);
                 subflt3  = subflt.flt(sub_ind,:);
                 numT = size(subflt3,1);
-                for ii=1:numT
-                    dd  = subflt3(ii,1); ss = subflt3(ii,2);
+                for jj=1:numT
+                    dd  = subflt3(jj,1); ss = subflt3(jj,2);
                     ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
-                    newsubflt(ind,[3 6 7])  = subflt3(ii,[3 6 7]);
+                    newsubflt(ind,[3 6 7])  = subflt3(jj,[3 6 7]);
                 end
                 subflt.out = [ subflt.out; newsubflt ];
             end
@@ -214,9 +216,9 @@ if flt3.num~=0
             if strcmpi(etype,'homogeneous')
                 ss = rs.*cosd(rake); 
                 ds = rs.*sind(rake);
-                flt3.xyzflt.Min{ii}(:,8:10) = [ss ds ts];
+                flt3.xyzflt{ii}.Min(:,8:10) = [ss ds ts];
             else
-                flt3.xyzflt.Min{ii}(:,1) = rs;
+                flt3.xyzflt{ii}.Min(:,1)    = rs;
                 % rake cannot be changed
             end
         elseif compNum == 3
@@ -255,16 +257,16 @@ if flt3.num~=0
                 % subfault names
                 fltName = flt3.name{ii};
                 name = cell(fltNum,1);
-                for ii = 1:fltNum, name{ii} = fltName; end
+                for jj = 1:fltNum, name{jj} = fltName; end
                 subflt.outname = [ subflt.outname; name ];   
                 % find rake, rs, ts of subfaults
                 sub_ind  = strcmpi(fltName,subflt.name);
                 subflt3  = subflt.flt(sub_ind,:);
                 numT = size(subflt3,1);
-                for ii=1:numT
-                    dd  = subflt3(ii,1); ss = subflt3(ii,2);
+                for jj=1:numT
+                    dd  = subflt3(jj,1); ss = subflt3(jj,2);
                     ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
-                    newsubflt(ind,[3 4 6:11])  = subflt3(ii,[3 4 6:11]);
+                    newsubflt(ind,[3 4 6:11])  = subflt3(jj,[3 4 6:11]);
                 end
                 % convert rs,rs90 to rake,rs
 		rake = newsubflt(:,3);
@@ -283,9 +285,9 @@ if flt3.num~=0
             %                1    2     3    4     5      6     7   8   9
             % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
             if strcmpi(etype,'homogeneous')
-                flt3.xyzflt.Min{ii}(:,8:10)  = [ss ds ts];
+                flt3.xyzflt{ii}.Min(:,8:10)  = [ss ds ts];
             else
-                flt3.xyzflt.Min{ii}(:,[1 9]) = [slip rake];
+                flt3.xyzflt{ii}.Min(:,[1 9]) = [slip rake];
             end
 	end
     end
@@ -320,16 +322,16 @@ if flt4.num~=0
 	        % subfault names
 	        fltName = flt4.name{ii};
                 name = cell(fltNum,1);
-                for ii = 1:fltNum, name{ii} = fltName; end
+                for jj = 1:fltNum, name{jj} = fltName; end
 	        subflt.outname = [ subflt.outname; name ];   
     	        % rake of subfaults
     	        sub_ind  = strcmpi(fltName,subflt.name);
 	        subflt4  = subflt.flt(sub_ind,:);
 	        numT = size(subflt4,1);
-	        for ii=1:numT
-	            dd = subflt4(ii,1); ss = subflt4(ii,2);
-	    	ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
-	    	newsubflt(ind,[3 6 7])  = subflt4(ii,[3 6 7]);
+	        for jj=1:numT
+                   dd = subflt4(jj,1); ss = subflt4(jj,2);
+                   ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
+                   newsubflt(ind,[3 6 7])  = subflt4(jj,[3 6 7]);
 	        end
 	        subflt.out = [ subflt.out; newsubflt ];
 	    end
@@ -349,9 +351,9 @@ if flt4.num~=0
             if strcmpi(etype,'homogeneous')
                 ss = rs.*cosd(rake); 
                 ds = rs.*sind(rake);
-                flt4.xyzflt.Min{ii}(:,8:10) = [ss ds ts];
+                flt4.xyzflt{ii}.Min(:,8:10) = [ss ds ts];
             else
-                flt4.xyzflt.Min{ii}(:,1) = rs;
+                flt4.xyzflt{ii}.Min(:,1) = rs;
                 % rake cannot be changed
             end
         elseif compNum == 3
@@ -390,16 +392,16 @@ if flt4.num~=0
                 % subfault names
                 fltName = flt4.name{ii};
                 name = cell(fltNum,1);
-                for ii = 1:fltNum, name{ii} = fltName; end
+                for jj = 1:fltNum, name{jj} = fltName; end
                 subflt.outname = [ subflt.outname; name ];   
                 % find rake, rs, ts of subfaults
                 sub_ind  = strcmpi(fltName,subflt.name);
                 subflt4  = subflt.flt(sub_ind,:);
                 numT = size(subflt4,1);
-                for ii=1:numT
-                    dd = subflt4(ii,1); ss = subflt4(ii,2);
+                for jj=1:numT
+                    dd = subflt4(jj,1); ss = subflt4(jj,2);
                     ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
-                    newsubflt(ind,[3 4 6:11])  = subflt4(ii,[3 4 6:11]);
+                    newsubflt(ind,[3 4 6:11])  = subflt4(jj,[3 4 6:11]);
                 end
                 % convert rs,rs90 to rake,rs
 		rake = newsubflt(:,3);
@@ -418,9 +420,9 @@ if flt4.num~=0
             %                1    2     3    4     5      6     7   8   9
             % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
             if strcmpi(etype,'homogeneous')
-                flt4.xyzflt.Min{ii}(:,8:10)  = [ss ds ts];
+                flt4.xyzflt{ii}.Min(:,8:10)  = [ss ds ts];
             else
-                flt4.xyzflt.Min{ii}(:,[1 9]) = [slip rake];
+                flt4.xyzflt{ii}.Min(:,[1 9]) = [slip rake];
             end
         end
     end
@@ -448,7 +450,7 @@ if flt5.num~=0
 
             fltName = flt5.name{ii};
             name     = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
+            for jj = 1:fltNum, name{jj} = fltName; end
             subflt.outname = [ subflt.outname; name ];   
 	end
 
@@ -466,10 +468,10 @@ if flt5.num~=0
         %                1    2     3    4     5      6     7   8   9
         % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
         if strcmpi(etype,'homogeneous')
-            flt5.xyzflt.Min{ii}(:,8:10) = slp5;
-        else
-            flt5.xyzflt.Min{ii}(:,1)   = slip;
-            flt5.xyzflt.Min{ii}(:,end) = rake;
+            flt5.xyzflt{ii}.Min(:,8:10) = slp5;
+        else               
+            flt5.xyzflt{ii}.Min(:,1)   = slip;
+            flt5.xyzflt{ii}.Min(:,end) = rake;
         end
     end
 end
@@ -502,16 +504,16 @@ if flt6.num~=0
                 % subfault names
                 fltName = flt6.name{ii};
                 name = cell(fltNum,1);
-                for ii = 1:fltNum, name{ii} = fltName; end
+                for jj = 1:fltNum, name{jj} = fltName; end
                 subflt.outname = [ subflt.outname; name ];   
     	        % rake of subfaults
     	        sub_ind  = strcmpi(fltName,subflt.name);
                 subflt6  = subflt.flt(sub_ind,:);
                 numT = size(subflt6,1);
-                for ii=1:numT
-                    dd  = subflt6(ii,1); ss = subflt6(ii,2);
+                for jj=1:numT
+                    dd  = subflt6(jj,1); ss = subflt6(jj,2);
                     ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
-                    newsubflt(ind,[3 6 7])  = subflt6(ii,[3 6 7]);
+                    newsubflt(ind,[3 6 7])  = subflt6(jj,[3 6 7]);
                 end
                 subflt.out = [ subflt.out; newsubflt ];
             end
@@ -531,9 +533,9 @@ if flt6.num~=0
             if strcmpi(etype,'homogeneous')
                 ss = rs.*cosd(rake); 
                 ds = rs.*sind(rake);
-                flt6.xyzflt.Min{ii}(:,8:10) = [ss ds ts];
-            else
-                flt6.xyzflt.Min{ii}(:,1) = rs;
+                flt6.xyzflt{ii}.Min(:,8:10) = [ss ds ts];
+            else               
+                flt6.xyzflt{ii}.Min(:,1) = rs;
                 % rake cannot be changed
             end
         elseif compNum == 3
@@ -570,16 +572,16 @@ if flt6.num~=0
                 % subfault names
                 fltName = flt6.name{ii};
                 name = cell(fltNum,1);
-                for ii = 1:fltNum, name{ii} = fltName; end
+                for jj = 1:fltNum, name{jj} = fltName; end
                 subflt.outname = [ subflt.outname; name ];   
                 % find rake, rs, ts of subfaults
     	        sub_ind  = strcmpi(fltName,subflt.name);
                 subflt6  = subflt.flt(sub_ind,:);
                 numT = size(subflt6,1);
-                for ii=1:numT
-                    dd  = subflt6(ii,1); ss = subflt6(ii,2);
+                for jj=1:numT
+                    dd  = subflt6(jj,1); ss = subflt6(jj,2);
                     ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
-                    newsubflt(ind,[3 4 6:11])  = subflt6(ii,[3 4 6:11]);
+                    newsubflt(ind,[3 4 6:11])  = subflt6(jj,[3 4 6:11]);
                 end
                 % convert rs,rs90 to rake,rs
 		rake = newsubflt(:,3);
@@ -598,9 +600,9 @@ if flt6.num~=0
             %                1    2     3    4     5      6     7   8   9
             % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
             if strcmpi(etype,'homogeneous')
-                flt6.xyzflt.Min{ii}(:,8:10)  = [ss ds ts];
-            else
-                flt6.xyzflt.Min{ii}(:,[1 9]) = [slip rake];
+                flt6.xyzflt{ii}.Min(:,8:10)  = [ss ds ts];
+            else               
+                flt6.xyzflt{ii}.Min(:,[1 9]) = [slip rake];
             end
 	end
     end
@@ -628,7 +630,7 @@ if flt7.num~=0
 
 	    fltName = flt7.name{ii};
             name     = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
+            for jj = 1:fltNum, name{jj} = fltName; end
 	    subflt.outname = [ subflt.outname; name ];   
 	end
     end

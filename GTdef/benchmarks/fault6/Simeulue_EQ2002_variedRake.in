@@ -1,4 +1,4 @@
-# GTdef input file for banyak islands earthquake 2002 11 02
+# GTdef input file for Simeulue earthquake 2002 11 02
 coord geo_polyconic
 origin  96.000000 1.000000
 smooth 2d
@@ -7,7 +7,7 @@ greensfns off
 surface free
 
 #fault type name     geometry_filename                         colnmaes                                                   rake   rs   ts   rake0 rakeX  rs0 rsX    ts0  tsX   Nd  Ns 
-fault 6 banyakthrust geometry/SMT_10km2_3D_0slip_subfaults.out no,dnum,snum,llon,llat,depm,len,wid,str,dip,rake,slipm     79     1    0    0     169    0   20     0    0     23  23
+fault 6 simeulue2002 geometry/SMT_10km2_3D_0slip_subfaults.out no,dnum,snum,llon,llat,depm,len,wid,str,dip,rake,slipm     79     1    0    0     169    0   20     0    0     23  23
 
 point  1  LNGA     95.7213      2.8259      0.0000      0.0000      0.0800      1.0000 
 point  1  LKPA     95.7632      2.8616      0.0000      0.0010      0.0800      1.0000 
