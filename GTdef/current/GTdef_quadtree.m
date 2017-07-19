@@ -27,6 +27,9 @@ function [Dnew,Dbox]=GTdef_quadtree(D,X,Y,ndown,dDmax,mpd,method,dimwgt,LOSd,out
 %       1 = use dimension of one side, normalized by min dimension  (2x2 = dim 2)        %
 %       2 = use power of dimension, normed by min power (2^pwr; 2x2 = pwr 1; 8x8 = pwr 3;%
 %   LOSd - (optional) unit vector giving look direction to satelite ([E N U]) {[0 0 1.]} %
+%     (An optimal solution would show the per pixel LOSd which would vary from highest   %
+%        angle nearest the satellite to lowest angle most distal.  May affect 1-sided    %
+%        problems.)                                                                      %
 %   outfile - (optional) string definining outfile prefixes                              %
 % OUTPUT: (same info as in outfiles above)	  		  	                 %
 %   Dnew structure                                                                       %

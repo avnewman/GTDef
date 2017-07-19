@@ -27,6 +27,13 @@
        OFpre='20150824_20150917';
 	grdwrite2(X,Y,flipud(D),strcat(OFpre,'.grd'))
 
-[Dnew,Dbox]=GTdef_quadtree(D,X,Y,ndown,dDmax,mpd,method,dimwgt,LOSd,OFpre);
+%[Dnew,Dbox]=GTdef_quadtree(D,X,Y,ndown,dDmax,mpd,method,dimwgt,LOSd,OFpre);
+LOStops.UR1p= [-69.09465 -29.26375]; % lon lat  (Digitized)
+LOStops.UR3p= [-70.65689 -28.81895]; % lon lat  (Digitized)
+LOStops.azim= [15.0]; % for descending orbit (at least in Chile)
+%LOStops.alt= [693]; % altitude in km (at epogee)
+LOStops.IW1inc=[30.86]; LOStops.IW3inc=[41.75];  % values used are for lowest altitude
+[Dnew,Dbox]=GTdef_quadtree_vLOS(D,X,Y,ndown,dDmax,mpd,method,dimwgt,LOStops,OFpre);
+
 
 % should write a wrapper to recalculate the LOS that corrects for SAT position

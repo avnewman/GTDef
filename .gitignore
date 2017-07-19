@@ -1,0 +1,6 @@
+
+*.m~
+
+GTdef/.DS_Store
+
+GTdef/examples/QuadTree_example/.DS_Store

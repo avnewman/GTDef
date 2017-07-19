@@ -88,6 +88,7 @@ tic
   sspnt,ssflt1,ssflt2 ] = GTdef_open(finName);
 toc
 
+lat0=0; lon0=0;   % needs to be defined even if using local coords. AVN 7/13/17
 %basename = strtok(finName,'.');	% noly works for names without "."
 %cellname = regexp(finname,'\.(in|out)','split');
 %basename = char(cellname(1));
@@ -654,4 +655,3 @@ if exist('wnum') && wnum~=0
    delete(localpool);
 end
 
-end

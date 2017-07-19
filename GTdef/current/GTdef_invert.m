@@ -97,7 +97,11 @@ modspace.xx = xx;
 %% New for model resolution matrix
 
 ix=find(isfinite(lb));
-id=[[1:nrealdata]';ix+nrealdata];
+if isempty(sm)
+  id=[[1:nrealdata]'];  % replace prior (test AVN for 3D GPS data)
+else
+  id=[[1:nrealdata]';ix+nrealdata];
+end
 %C0=C(id,ix);  % operator matrix removing non-inverted data (includes smoothing)
 C0=C(id,:);  % operator matrix (includes smoothing)
 d=d(1:nrealdata);
@@ -106,9 +110,15 @@ x0=x0(ix);
 % Develop weighted and damped over-determined generalized inverse matrix, Gg
 % for the model resolution matrix  (See Menke, 2012 -- Chapter 4)
 G=C0(1:nrealdata,:);    % strip off the smoothing part of the matrix
-                %e2I=sm(ix,ix).^2; (version that ignored non-inverted data)      
-e2I=sm.^2;     % weighted smoothing matrix
-Gg=inv(G'*G+e2I)*G'; % overdetermined.
+
+if isempty(sm)
+    e2I=[];
+    Gg=inv(G'*G)*G' ;  % no smoothing and unweighted
+else
+    e2I=sm.^2;     % weighted smoothing matrix
+   %e2I=sm(ix,ix).^2; (version that ignored non-inverted data)      
+    Gg=inv(G'*G+e2I)*G'; % overdetermined.
+end
     %Gg = G'*inv(G*G'+e2I);  % same thing, but for underdetermined 
 R=Gg*G ;            % Model Resolution Matrix 
 N=G*Gg ;            % Data Resolution Matrix
