@@ -46,7 +46,7 @@ function [ ] = GTdef_ckbd_subflt(subflt_name,Nd,Ns,dd,ss,p1,p0)
 
 % default output file name
 filename = 'GTdef_ckbd_subflt.out';
-fout = fopen(filename,'w');
+fout = fopen(filename,'wt');
 
 for jj = 1:Ns 
    is = ceil(jj/ss);

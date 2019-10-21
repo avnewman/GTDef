@@ -10,10 +10,14 @@ function [] = GTdef_project(finName)
 %									        %
 % INPUT									        %
 %   finName - input file name                                                   %
-% OUTPUT								        %
-% (1)  create an output file that contains			                %
+% OUTPUTS								        %
+% (1) _patches.out is created and contains                                      %
 %  [ flt_name dnum snum xtop1 ytop1 xbot1 ybot1 xbot2 ybot2 xtop2 ytop2         %
 %    xctr  yctr ss ds ts ]  					  	        %
+% (2) _point.out is created and contains                                        %
+%    .....                                                                      %
+% (3) _xsection.out is created and contains                                     %
+%    .....                                                                      %
 % PARAMETERS								        %
 %   flt_name - name of fault					  	        %
 %   dnum - row number for subfaults					        %
@@ -50,6 +54,7 @@ function [] = GTdef_project(finName)
 % added modspace structure lfeng Tue Mar 24 13:12:58 SGT 2015                   %
 % addef fault5 lfeng Tue Jun 23 18:47:29 SGT 2015                               %
 % last modified by Lujia Feng Tue Jun 23 19:48:49 SGT 2015                      %
+% last modified by AVN Thu Sep 21 10:32:43 EDT 2017                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% read in %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -107,7 +107,7 @@ C0=C(id,:);  % operator matrix (includes smoothing)
 d=d(1:nrealdata);
 x0=x0(ix);
 
-% Develop weighted and damped over-determined generalized inverse matrix, Gg
+% Develop damped over-determined generalized inverse matrix, Gg
 % for the model resolution matrix  (See Menke, 2012 -- Chapter 4)
 G=C0(1:nrealdata,:);    % strip off the smoothing part of the matrix
 
