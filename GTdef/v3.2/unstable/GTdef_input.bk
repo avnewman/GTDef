@@ -1,0 +1,299 @@
+#################################################################
+# 			INPUT FILE FOR GTdef 
+#----------------------------------------------------------------
+# (1) Model parameters and data are combined in one input file
+# (2) Forward and inverse models are mixed and distinguished by the range [min max]
+#     If parameter min == max (e.g. 0 == 0), then the parameter is fixed
+# (3) No specific order is required for specifying parameters
+#     The first column is important to identify the data type. Flag is not case sensitive
+# (4) Units in [] and default values in {}
+# (5) length & slip units in [m]
+# (6) angles in degree
+# (7) depth positive points down
+#################################################################
+
+#################################################################
+# CONTROLLING VARIABLES
+# coord	   - coordinate system {geo}
+# 		geo   = geographic
+# 		geo_polyconic = geographic using polyconic projection
+#             	local = cartesian
+# origin   - origin of local coordinate [lon0 lat0]
+# smooth   - smoothing algorithm {2d}
+#         	1d2pc = 1st derivative using 2-point central finite-difference approximation
+#         	1d3pf = 1st derivative using 3-point forward finite-difference approximation   
+#         	1d3pb = 1st derivative using 3-point backward finite-difference approximation   
+#            	2d = 2nd derivative using 3-point central finite-difference approximation   
+#	        none  = used in forward modeling
+# surf     - surface smoothing algorithm {free}
+#             	fixed = no free-surface
+#             	free  = assume free-surface
+# beta     - smoothing parameter, usually for 1st derivative (unitless) {0}
+#         	beta is used to weight the smoothing matrix
+# kappa    - smoothing parameter, usually for 2nd derivative (unitless) {0}
+#         	kappa^2 is used to weight the smoothing matrix
+#   Note: beta = kappa*kappa
+# method   - method used to describe kappa [12]
+#  	      	1 = by individual values (k1 k2 k3...)
+#  	      	2 = by min,max, and number of kappas (k1 kn N)
+#   Note: the two methods can be used together
+# greensfns  - flag if output green's functions {off}
+#               on  = output
+#               off = do not output
+# stressdrop - flag if stress drop is calculated {off}
+#               on  = calculate
+#               off = do not calculate
+#################################################################
+coord geo
+origin 99 2
+smooth 2d
+surface free
+beta 1  1 2 3 4 5 10				# k1 k2 k3 ......
+beta 2  0 20 5					# k1 kn N
+kappa 1  1 10 50 100 500 1000			# k1 k2 k3 ......
+kappa 2  0 1000 5				# k1 kn N
+greensfns  on
+stressdrop on
+resolution  1                                   # perform resolution analysis output only model and data resolution informatoin   
+resolution  2                                   # output resolution spread information for every model parameter *MESSY*
+resolution  2  1 8 65 68 72 100 120 128         # output only at subfaults defined increasing from the Nd then Ns (starting from 1st fault)
+matfile     on                                  # save a matlab file of all model paremters sent to GTdef.m (save as 'fin'.mat)
+#################################################################
+# EARTH STRUCTURE
+# earth	   - earth structure {homogeneous}
+########### homogeneous = homogeneous Okada earth model #########
+# rigidity - shear modulus (does not effect displacement results) [Pa] {30e9}
+# poisson  - poisson's ratio (unitless) {0.25}
+########### layered   = layered EDGRN/EDCMP earth model #########
+# nl       - number of lines of layers != number of layers
+#            each layer except the top layer (interface of halfspace) has two lines of records
+#            if upper & lower values are different, layers will be treated as constant gradient
+# obsz     - uniform depth of observation points [m]
+# nr       - number of radial points for green functions 
+# minr     - minimum radial distance [m]
+# maxr     - maximum radial distance [m]
+# nz       - number of depth points for green functions
+# minz     - minimum depth (positive points down) [m]
+# maxz     - maximum depth (positive points down) [m]
+# srate    - sampling rate for wavenumber integration  
+#            the ratio between the Nyquist wavenumber and the really used wavenumber
+#            suggested value 10-128 {12}  
+#            the larger the value is, the more accurate the results are, more time required
+#----------------------------------------------------------------
+# layer    - flag parameters for each layer
+# id       - id number for each layer increasing with depth
+#	     layer is ordered according to the ascending id
+# depth    - layer depth [m]
+# vp, vs   - P & S wave velocities [m/s]
+# ro       - density	[kg/m^3]
+#################################################################
+#earth 	homogeneous 	rigidity 	poisson
+earth  	homogeneous 	30e9		0.25					
+#earth  layered  nl obsz 	nr 	minr	maxr 	nz 	minz	maxz	srate
+earth   layered  3  15.0e3	501	0.0	1e7	201	0.0	40e3    12	
+#layer id  depth 	vp 	vs 	ro
+layer  1   0.0e3	4.5e3	2.4e3	2.7e3
+layer  2   1.0e3	4.5e3	2.4e3	2.7e3
+layer  3   1.0e3	4.5e3	2.4e3	2.7e3
+layer  4   15.0e3	4.5e3	2.4e3	2.7e3
+layer  5   15.0e3	4.5e3	2.4e3	2.7e3
+
+
+#################################################################
+# FAULT PARAMETERS
+# method      - method used to describe fault [1234]
+#                1 = uniformly or distributed slipping fault defined by one endpoint, fault length, and strike (ss ds ts)
+#                2 = uniformly or distributed slipping fault defined by two endpoints (ss ds ts)
+#                3 = uniformly or distributed slipping fault defined by one endpoint, fault length, and strike (rake rs ts)
+#                4 = uniformly or distributed slipping fault defined by two endpoints (rake rs ts) 
+#                5 = external geometry with (ss ds ts)
+#                6 = external geometry with (rake rs ts)
+#                7 = external green functions
+# Note: distributed slipping faults are followed by subfault definitions; slip values for the main fault are used for unspecified subfaults
+#----------------------------------------------------------------
+# name 	      - name of fault (keep it short and with no special characters or spaces)
+# lon/lat     - horizontal location for one endpoint [0 360] or [-180 180]
+# lon1/lat1   - horizontal location for endpoint 1 (left/right) [0 360] or [-180 180]
+# lon2/lat2   - horizontal location for endpoint 2 (right/left) [0 360] or [-180 180]
+# z1          - vertical burial depth (top of fault) [m] >=0
+# z2          - vertical locking depth (bottom of fault) [m] >=0
+# len         - fault length [m]
+# str	      - strike from endpoint 1 to endpoint 2 (degree CW from N) [0-360]
+# dip         - dipping angle (degree down from Horiz, right looking at fault from endpoint 1) [0 180]  
+#                        2 /
+#                         /__  dip
+#                        /
+#                     1 /
+#----------------------------------------------------------------
+# ss,ds,ts    - fault displacements (strike-slip, dip-slip, and tensile-slip) [m]
+#                  + ss: left-lateral
+#                  + ds: thrust
+#                  + ts: opening
+# ss0,ds0,ts0 - minimum values for slips [m]
+# ssX,dsX,tsX - maximum values for slips [m]
+#----------------------------------------------------------------
+# rake        - rake definition follows Aki-Richards convention [0 360] or [-180 180]
+#                0 = left-lateral
+#               90 = reverse
+#              180 = right-lateral
+#              -90 = normal
+# rs,ts       - fault displacements (rake-slip and tensile-slip) [m]
+#                  + rs: rake direction
+#                  + ts: opening
+# rake0,rakeX - rake is usually fixed, currently dummy parameters
+# rs0,ts0 - minimum values for slips [m]
+# rsX,tsX - maximum values for slips [m]
+#----------------------------------------------------------------
+# Nd,Ns	      - number of rows and columns defining the subfaults along the dip and strike directions, respectively
+# dnum,snum   - Row and column number corresponding to a specific subfault
+# ddip,dlen   - subfault patch length along dip and strike
+#################################################################
+#fault type name        lon       lat     z1  z2   len   str   dip     ss     ds   ts     ss0  ssX      ds0  dsX      ts0  tsX    Nd  Ns
+fault  1    gnrc-1      -120.2000 38.0000 3e3 15e3 100e3 170.0 25.0    2.5e-3 1.2  0      0    0        1    1.5      0    0      1   1   # inverted only on dip-slip between 1 and 1.5 m
+fault  1    gnrc-1a     -120.2000 38.0000 3e3 15e3 100e3 170.0 25.0    2.5e-3 1.5  0      0    0        0    0        0    0      1   1   # forward solution only is determined for this fault
+fault  1    gnrc-1b     -120.2000 38.0000 3e3 15e3 100e3 170.0 25.0    2.5e-3 1.5  0     -1    1       -2    2        0    0.5    1   1   # invert for 3 components of dislocation between bounds
+fault  1    gnrc-1_3by5 -120.2000 38.0000 3e3 15e3 100e3 170.0 25.0    2.5e-3 1.2  0      0    0        1    1.5      0    0      3   5   # fault like gnrc-1 but with 15 subfaults (separated by 3 segments along dip and 5 along strike)
+     #subfault name   dnum snum ss     ds   ts       ss0  ssX      ds0  dsX      ts0  tsX    # name is the name of the main fault
+     # if subfaults not defined, the default values for main fault and inverted range are used
+     subfault  gnrc-1_3by5   1    1    0      0    0        0    0        0    0        0    0   # the 1st subfault (top of fault, nearest endpoint 1) is constrained to zero slip
+     subfault  gnrc-1_3by5   2    1    0      0.5  0        0    0        0    0        0    0   # 2nd row, 1st column (beneath 1-1) is constrained to 0.5 m dip-slip
+     subfault  gnrc-1_3by5   3    1    0      0    0        -1   1        0    0        0    0   # 1st column, last row (beneath 2-1) is inverted between -1 and 1 m of strike-slip
+     subfault  gnrc-1_3by5   4    2    0      0    0        0    0        0    0        0    1   # 4th row, 2nd column is inverted between 0 and 1 m of opening
+
+#fault type name        lon1      lat1     lon2      lat2    z1  z2   dip     ss     ds   ts   ss0  ssX      ds0  dsX   ts0  tsX   Nd  Ns
+fault  2    gnrc-2      -120.2000 34.5000  -118.2000 38.0000 3e3 15e3 25.0    2.5e-3 1.5  0    0    1.0      0    0     0    0     1   1  # inverted only on strike-slip between 0 and 1 m
+fault  2    gnrc-2a     -120.2000 34.5000  -118.2000 38.0000 3e3 15e3 25.0    2.5e-3 1.5  0    0    0        0    0     0    0     1   1  # forward solution only is determined for this fault
+fault  2    gnrc-2_1by2 -120.2000 34.5000  -118.2000 38.0000 3e3 15e3 25.0    2.5e-3 1.5  0    0    1.0      0    0     0    0     1   2  # fault like gnrc-2 but with two lateral subfaults; subfaults are undefined they will BOTH be inverted for 0-1 m of dextral slip
+
+#fault type name        lon       lat      z1  z2   len   str   dip     rake   rs   ts     rake0 rakeX  rs0  rsX   ts0  tsX    Nd  Ns
+fault  3    gnrc-3_2by3    -120.2000 38.0000  3e3 15e3 100e3 170.0 25.0    135    1.2  0      0     0      0    10    0    0      2   3   # rake is constrained at 135 (half reverse+half right-lateral)
+     #subfault name          dnum snum  rake   rs   ts     rake0 rakeX    rs0  rsX      ts0  tsX                                          # name is the name of the main fault
+     subfault  gnrc-3_2by3   2    2     90     0    0      0     0        0    0        0    0   
+
+#fault type name      lon1      lat1     lon2      lat2    z1  z2    dip    rake   rs    ts  rake0 rakeX  rs0  rsX   ts0  tsX   Nd  Ns
+fault  4    gnrc-4    -120.2000 34.5000  -118.2000 38.0000 3e3 15e3  25.0   -90    1.00  0   0     0      0    0     0    0     1   1     # normal fault
+
+# external geometry
+#fault type name         geometry_filename         colnmaes                                                    ss   ds   ts     ss0  ssX   ds0  dsX   ts0  tsX   Nd  Ns 
+# for fault5, Nd or Ns could be NaN; slips are only used when the external file does not provide slips
+fault  5    2010banyak   20100406_static_out.txt   len=12000,wid=12000,clat,clon,depkm,slipcm,rake,str,dip     0    1     0     0     0    0    20    0    0     24  53
+     #subfault name      dnum snum   ss    ds   ts     ss0  ssX      ds0  dsX      ts0  tsX
+     subfault  2010banyak   2    2     0     0    0      0     0        0    0        0    0   
+
+#fault type name         geometry_filename         colnmaes                                                          rake   rs   ts  rake0 rakeX  rs0  rsX   ts0  tsX   Nd  Ns
+# for fault5, Nd or Ns could be NaN; slips are only used when the external file does not provide slips
+fault  6    banyakthrust SMT_10km2_3D_0slip_subfaults.out no,dnum,snum,llon,llat,depm,len,wid,str,dip,rake,slipm     79     1    0   79    79      0   20      0    0   23  23
+
+     #subfault name          dnum snum  rake   rs   ts    rake0  rakeX   rs0  rsX     ts0  tsX                                          # name is the name of the main fault
+     subfault  banyakthrust   1   2     79     0     0    79     79      0     0      0    0
+
+# external grnfns from other softwares
+#fault type name      greenfns_filename    ss   ds   ts     ss0  ssX   ds0  dsX   ts0  tsX   Nd  Ns
+fault  7    mentawai  MTW.grnfns           0    1     0     0     0    0    20    0    0     24  53
+     #subfault name      dnum snum   ss    ds   ts     ss0  ssX      ds0  dsX      ts0  tsX
+     subfault  mentawai   2    2     0     0    0      0     0        0    0        0    0   
+
+
+#################################################################
+# FAULT MODIFICATIONS
+#----------------------------------------------------------------
+# dip	      - dip used to exclusively specify dip for entire row when it is different from master fault
+# fault name  - name of fault (keep it short and with no special characters or spaces)
+# dip	      - the value
+# z1          - vertical burial depth for dip [m] >0
+# z2          - vertical locking depth for dip [m] >0
+# rows	      - number of rows using this dip (the sum of rows must equal Nd)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Strike modifications are only applied to fault type 2 & 4
+# strike      - strike used to exclusively specify strike for entire column when it is different from master fault
+# fault name  - name of fault (keep it short and with no special characters or spaces)
+# lon1/lat1   - horizontal location for endpoint 1 (left/right) [0 360] or [-180 180]
+# lon2/lat2   - horizontal location for endpoint 2 (right/left) [0 360] or [-180 180]
+# columns     - number of columns using this strike (the sum of columns must equal Ns)
+# sweepAngle  - angle between normal direction of fault trace and east (E=0 N=90 W=180 S=270 [deg])
+#################################################################
+#dip  fault_name  dip   z1    z2     rows
+dip   gnrc-3      30    30e3  50e3   5		# dip of 30 is specified between depth of 30km and 50km for 5 rows
+dip   gnrc-3	  50    10e3  20e3   4		# dip of 50 is specified betwwen depth of 10e3 and 20e3 for 4 rows
+
+#strike  fault_name  lon1       lat1      lon2      lat2      columns   sweepAngle
+strike   SMT         102.87464  -7.98062  93.51328  4.16457   2         35
+
+#################################################################
+# GEODETIC DATA
+# Methods to express data
+#   a. point	   - a data point
+#  	     	      1 = vertical component only
+#  	     	      2 = east, and north components
+#  	     	      3 = east, north, and vertical components
+#   b. los         - a 1-D data point of arbitrary orientation (e.g. LOS to SAR satellite)     	      
+#                     1 = displacement in direction of LOS (e.g. toward satellite)
+#                     2 = phase change in LOS direction (not implemented yet)
+#   c. baseline	   - a baseline defined by two sites
+#  	     	      1 = length change only
+#  	     	      2 = east, north, and vertical components
+#  	     	      3 = east, north, vertical,and length change components
+#   -------------------------------------------------------
+#   d. profile     - a line defined by two endpoints with evenly distributed data points
+#   e. grid        - a parallelogram defined by the lower-left (lon1,lat1) and upper-right (lon2,lat2) corners with data points parallel to the sides
+#   Note: profile and grid are generally used for displaying the results, but may be useful for spatially imaged data (e.g. InSAR)
+#----------------------------------------------------------------
+# lon,lat,z        - horiztonal location and elevation (depth is negative!!!) [m]
+# Erot,Nrot        - rotation angles for the East and North axis of grid [degree] (-90 90) 
+#                     + CW; - CCW
+# N,Ne,Nn          - number of data points, and number of columns and rows 
+# Ue,Un,Uv         - surface displacements in East, North, and Vertical directions [m]
+# Ul               - length change between two sites [m]
+# ULOS             - surface displacement in LOS direction [m] 
+# eUe,eUn,eUv,eUl  - standard error for displacements and length change [m]
+# eULOS            - standard error for surface displacement in LOS direction [m] 
+# LOSdirE -------|
+# LOSdirN        | - unit vector pointing from the ground toward the satellite (LOS direction)
+# LOSdirV -------|
+# wavelength       - wavelength of signal for LOS (1/2 the SAR satellite natural wavelength)
+# weight	   - weight for incorperating different type of data {1}
+#                    If weight is absent, use default value 1
+#   Note: nan is used for no data
+#################################################################
+#point type name    lon       lat     z            Uv     eUv 	weight
+point  1    casa    -118.8967 37.6446 2390.5351    15.0   5.0 	2		# vertical component only
+#point type name    lon       lat     z            Ue   Un   eUe  eUn  weight
+point  2    krak    -118.8811 37.7131 2367.7017    10   2    1.0  1.0  		# east, and north components only; default weight 1 is absent
+#point type name    lon       lat     z            Ue   Un   Uv      eUe  eUn  eUv	weight
+point  3    rdom    -118.8979 37.6770 2417.4049    9.6  1.1  36.1    1.0  1.0  1.3	1		# east, north, and vertical components
+
+#los type name    lon       lat     z            ULOS  eULOS LOSdirE  LOSdirN  LOSdirV  weight
+los  1    insar   -118.8979 37.6770 2417.4049    0.2    0.1  0.3      0.5      0.8124	1		# LOS component  
+#los type name    lon       lat     z            phase  ephase wavelength  LOSdirE  LOSdirN  LOSdirV      weight
+los  2    insar   -118.8979 37.6770 2417.4049    0.2    0.1    0.283       0.3      0.5      0.8124	  1		# LOS component  
+
+#baseline type name-name      lon1      lat1    z1         lon2      lat2    z2           Ul     eUl	 weight
+baseline  1    casa-krak_EDM  -118.8966 37.6446 2390.5351  -118.8811 37.7131 2367.7017    2.5    0.1 	 1		# data is only line-length change (e.g. EDM)
+#baseline type name-name     lon1      lat1    z1         lon2      lat2    z2           Ue    Un   Uv   Ul     eUe  eUn  eUv   eUl	 weight
+baseline  3    casa-krak_EDM -118.8966 37.6446 2390.5351  -118.8811 37.7131 2367.7017    nan   nan  nan  2.5    nan  nan  nan   0.1 	 1		# data is only line-length change (e.g. EDM)
+#baseline type name-name     lon1      lat1    z1         lon2      lat2    z2           Ue    Un   Uv   eUe  eUn  eUv   weight
+baseline  2    casa-krak_GPS -118.8966 37.6446 2390.5351  -118.8811 37.7131 2367.7017    14.2  5.8  0.9  4.5  6.5  20.0  1		# data is per-component baseline, but no line-length change (e.g. diff. GPS)
+#baseline type name-name     lon1      lat1    z1         lon2      lat2    z2           Ue    Un   Uv   Ul     eUe  eUn  eUv   eUl	 weight
+baseline  3    casa-krak_GPS -118.8966 37.6446 2390.5351  -118.8811 37.7131 2367.7017    14.2  5.8  0.9  nan    4.5  6.5  20.0  nan 	 1		# data is per-component baseline, but no line-length change (e.g. diff. GPS)
+#profile name         lon1      lat1    lon2      lat2       N
+profile  mono-inyo    -119.2000 37.6000 -119.2000 37.8500    10 
+#grid name    Erot Nrot lon1      lat1    lon2      lat2       Ne  Nn
+grid  lvc     20   -30  -119.2000 37.4000 -118.0000 38.2000    50  100    # rotate the E axis CW 20, and the N axis CCW 30; have 50 and 100 data points along E and N direction respectively
+
+
+#################################################################
+# STRESS CALCULATIONS
+# calculate normal, shear, and coulomb stresses at
+#   a. point	   - a data point
+#   b. fault       - a fault plane
+#      the center of subfault used for stress calculation
+# given strike, dip, rake and friction
+#----------------------------------------------------------------
+# lon,lat,z        - horiztonal location and elevation (depth is negative!!!) [m]
+#################################################################
+#stress point  name         lon         lat       z    strike  dip   rake   friction
+stress  point  stress-pnt   -118.8967   37.6446   0    15.0    5.0   0      0.4
+#stress fault type  name         lon    lat   z1     z2     len    str    dip   rake  friction Nd  Ns
+stress  fault  1    stress-flt1  -120.2 38.0  3e3    15e3   100e3  170.0  25.0  180   0.8      1   1
+#stress fault type  name         lon1   lat1  lon2   lat2   z1     z2     dip   rake  friction Nd  Ns
+stress  fault  2    stress-flt2  -120.2 34.5  -118.2 38.0   3e3    15e3   25.0  180   0.8      1   1
