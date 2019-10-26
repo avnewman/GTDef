@@ -1,86 +1,88 @@
-function [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = ...
+function [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aineq,bineq,Aeq,beq,lb,ub,x0 ] = ...
            GTdef_fault1uni(earth,flt,xyzflt,Xin,Lin,Bin,Nin)
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                            GTdef_fault1uni				  %
-% Process uniform-slip type-1 faults and                                  %
-% prepare for inputs to Matlab function                                   %
-% x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)					  %
-% Here we have no inequalities, so set A=[];b=[]			  %
-%									  %
-% INPUT:					  		  	  %
-% earth  structure                                                        %
-% xyzflt structure                                                        %
-% ----------------------------------------------------------------------- %
-% flt = [ xx yy z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX ]      %
-%   xx,yy - one endpoint among the two endpoints of the faults            %
-%           in the local cartesian coordinate system	  		  %
-%   z1  - vertical burial depth (top of fault) >=0                        %  
-%   z2  - vertical locking depth (bottom of fault) >=0                    %
-%   len - fault length                                                    %
-%   str - strike from the endpoint (degree CW from N) [0-360]       	  %
-%   dip - down from Horiz, right looking from the endpoint [0 180]        %
-%   ss  - strike-slip (left-lateral +)                                    %
-%   ds  - dip-slip (thrust +)                                             %
-%   ts  - tensile-slip (opening +)                                        %
-%   ss0,ds0,ts0 - lower bounds for slips				  %
-%   ssX,dsX,tsX - upper bounds for slips				  %
-% Xin - point site locations in the local cartesian system 	  	  %
-%       [n*3] [ xx yy zz ]						  %
-% Lin - los point locations in the local cartesian system + los direction %
-%       [n*6] [xx yy zz dirE dirN dirV]                                   %
-% Bin - baseline site locations in the local cartesian system 	  	  %
-%       [n*6] [ x1 y1 z1 x2 y2 z2 ]					  %
-% Nin - grid and profile node locations in the local cartesian system     %
-%       [n*3] [ xx yy zz ]						  %
-% Note: z1,z2 depth positive downward                                     %
-%       zz elevation positive upward                                      %
-%                                                                         %
-% OUTPUT:                                                                 %
-% Each fault has three (strike, dip, and tensile) components, so          %
-% slip_num = flt_num*3                                                    %
-% ----------------------------------------------------------------------- %
-% Add fields to xyzflt structure                                          %
-%                                          Cin     Min                    %
-% SSgrn - strike-slip stress kernels  [6*flt_num*flt_num]                 %
-% DSgrn - dip-slip stress kernels     [6*flt_num*flt_num]                 %
-% TSgrn - tensile-slip stress kernels [6*flt_num*flt_num]                 %
-% Min   - subflt info in cartesian coordinate                             %
-%   for  Okada                                                            %
-%       = [len width depth dip str east north ss ds ts]     [flt_num*10]  %
-%   for  layered model                                                    %
-%       = [slip north east depth length width str dip rake] [flt_num*9]   %
-% ----------------------------------------------------------------------- %
-% Xgrn  - displacements [east;north;vertical] for different sites   	  %
-%         from unit slips [(3*nn)*slip_num] 				  %
-%         (nn is the  number of sites)  				  %
-% Lgrn  - los displacements [los] for different sites   	          %
-%         from unit slips [(1*nn)*slip_num] 				  %
-%         (nn is the number of los points)                                %
-% Bgrn  - length changes [east;north;vertical;length] for 	  	  %
-%         different baselines from unit slips [(4*nn)*slip_num] 	  %
-%         (nn is the  number of baselines)  				  %
-% Ngrn  - displacements [east;north;vertical] for different nodes   	  %
-%         from unit slips [(3*nn)*slip_num] 				  %
-%         (nn is the  number of nodes)  				  %
-% Aeq   - left-hand side matrix for linear equalities  [slip_num*slip_num]%
-% beq   - right-hand side vector for linear equalities [slip_num*1]       %
-% x0    - initial values for ss,ds,ts 	[slip_num*1]                      %
-% lb    - lower bounds for ss,ds,ts 	[slip_num*1]                      %
-% ub    - upper bounds for ss,ds,ts	[slip_num*1]			  %
-%                                                                         %
-% related function GTdef_fault2uni.m					  %
-% first created by Lujia Feng Wed Apr 22 16:52:43 EDT 2009	   	  %
-% preallocate and do parfor lfeng Thu Nov 11 11:51:28 EST 2010 		  %
-% added layered model lfeng Mon Feb 27 19:18:01 SGT 2012		  %
-% renamed from GTdef_fault1.m to GTdef_fault1uni.m lfeng May  8 SGT 2012  %
-% added output Min0 for stress calculation lfeng Thu May 17 SGT 2012      %
-% added earth structure lfeng Fri Mar 20 11:39:54 SGT 2015                %
-% added Cin lfeng Wed Mar 25 19:01:06 SGT 2015                            %
-% added Min,SSgrn,DSgrn,TSgrn to xyzflt lfeng Thu Mar 26 15:54:56 SGT 2015%
-% added los Lin & Lgrn lfeng Tue Nov  3 11:46:52 SGT 2015                 %
-% last modified by Lujia Feng Tue Nov  3 14:10:04 SGT 2015                %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                               GTdef_fault1uni				         %
+% Process uniform-slip type-1 faults and                                         %
+% prepare for inputs to Matlab function                                          %
+% x = lsqlin(C,d,Aineq,bineq,Aeq,beq,lb,ub,x0)                                   %
+%									         %
+% INPUT:					  		  	         %
+% earth  structure                                                               %
+% xyzflt structure                                                               %
+% ------------------------------------------------------------------------------ %
+% flt = [ xx yy z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX ]             %
+%   xx,yy - one endpoint among the two endpoints of the faults                   %
+%           in the local cartesian coordinate system	  		         %
+%   z1  - vertical burial depth (top of fault) >=0                               %
+%   z2  - vertical locking depth (bottom of fault) >=0                           %
+%   len - fault length                                                           %
+%   str - strike from the endpoint (degree CW from N) [0-360]       	         %
+%   dip - down from Horiz, right looking from the endpoint [0 180]               %
+%   ss  - strike-slip (left-lateral +)                                           %
+%   ds  - dip-slip (thrust +)                                                    %
+%   ts  - tensile-slip (opening +)                                               %
+%   ss0,ds0,ts0 - lower bounds for slips				         %
+%   ssX,dsX,tsX - upper bounds for slips				         %
+% Xin - point site locations in the local cartesian system 	  	         %
+%       [n*3] [ xx yy zz ]						         %
+% Lin - los point locations in the local cartesian system + los direction        %
+%       [n*6] [xx yy zz dirE dirN dirV]                                          %
+% Bin - baseline site locations in the local cartesian system 	  	         %
+%       [n*6] [ x1 y1 z1 x2 y2 z2 ]					         %
+% Nin - grid and profile node locations in the local cartesian system            %
+%       [n*3] [ xx yy zz ]						         %
+% Note: z1,z2 depth positive downward                                            %
+%       zz elevation positive upward                                             %
+%                                                                                %
+% OUTPUT:                                                                        %
+% Each fault has three (strike, dip, and tensile) components, so                 %
+% slip_num = flt_num*3                                                           %
+% ------------------------------------------------------------------------------ %
+% Add fields to xyzflt structure                                                 %
+%                                          Cin     Min                           %
+% SSgrn - strike-slip stress kernels  [6*flt_num*flt_num]                        %
+% DSgrn - dip-slip stress kernels     [6*flt_num*flt_num]                        %
+% TSgrn - tensile-slip stress kernels [6*flt_num*flt_num]                        %
+% Min   - subflt info in cartesian coordinate                                    %
+%   for  Okada                                                                   %
+%       = [len width depth dip str east north ss ds ts]     [flt_num*10]         %
+%   for  layered model                                                           %
+%       = [slip north east depth length width str dip rake] [flt_num*9]          %
+% compnum - component number                                                     %
+% ------------------------------------------------------------------------------ %
+% Xgrn  - displacements [east;north;vertical] for different sites   	         %
+%         from unit slips [(3*nn)*slip_num] 				         %
+%         (nn is the  number of sites)  				         %
+% Lgrn  - los displacements [los] for different sites   	                 %
+%         from unit slips [(1*nn)*slip_num] 				         %
+%         (nn is the number of los points)                                       %
+% Bgrn  - length changes [east;north;vertical;length] for 	  	         %
+%         different baselines from unit slips [(4*nn)*slip_num] 	         %
+%         (nn is the  number of baselines)  				         %
+% Ngrn  - displacements [east;north;vertical] for different nodes   	         %
+%         from unit slips [(3*nn)*slip_num] 				         %
+%         (nn is the  number of nodes)  				         %
+% Aineq - left-hand  side matrix for linear inequalities  [(flt_num*2)*slip_num] %
+% bineq - right-hand side vector for linear inequalities  [flt_num*2]            %
+% Aeq   - left-hand side matrix for linear equalities     [slip_num*slip_num]    %
+% beq   - right-hand side vector for linear equalities    [slip_num*1]           %
+% x0    - initial values for ss,ds,ts 	[slip_num*1]                             %
+% lb    - lower bounds for ss,ds,ts 	[slip_num*1]                             %
+% ub    - upper bounds for ss,ds,ts	[slip_num*1]			         %
+%                                                                                %
+% first created by Lujia Feng Wed Apr 22 16:52:43 EDT 2009	   	         %
+% preallocate and do parfor lfeng Thu Nov 11 11:51:28 EST 2010 		         %
+% added layered model lfeng Mon Feb 27 19:18:01 SGT 2012		         %
+% renamed from GTdef_fault1.m to GTdef_fault1uni.m lfeng May  8 SGT 2012         %
+% added output Min0 for stress calculation lfeng Thu May 17 SGT 2012             %
+% added earth structure lfeng Fri Mar 20 11:39:54 SGT 2015                       %
+% added Cin lfeng Wed Mar 25 19:01:06 SGT 2015                                   %
+% added Min,SSgrn,DSgrn,TSgrn to xyzflt lfeng Thu Mar 26 15:54:56 SGT 2015       %
+% added los Lin & Lgrn lfeng Tue Nov  3 11:46:52 SGT 2015                        %
+% added Aineq & bineq to modspace, compnum to xyzflt lfeng Jun 13 SGT 2016       %
+% last modified by Lujia Feng Thu Jun 16 00:45:59 SGT 2016                       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if size(flt,2)~=16, error('GTdef_fault1uni ERROR: need a n*16 fault vector as input!'); end
 
@@ -105,7 +107,8 @@ lb  = [ flt(:,11); flt(:,13); flt(:,15) ];	% [ss0;ds0;ts0]
 ub  = [ flt(:,12); flt(:,14); flt(:,16) ];	% [ssX;dsX;tsX]
 
 xunit = x0; xunit(xunit~=0) = 1;		% set unit slips for nonzero initial slips
-Aeq = zeros(slip_num,slip_num); beq = zeros(slip_num,1);
+Aineq = zeros(flt_num*2,slip_num); bineq = zeros(flt_num*2,1);   % useful only for fault type 3 & 4
+Aeq   = zeros(slip_num,slip_num);  beq   = zeros(slip_num,1);
 
 % fix slips that are not free
 for ii = 1:slip_num
@@ -122,32 +125,32 @@ end
 xunit_mat = reshape(xunit,[],comp_num);
 ss = xunit_mat(:,1); ds = xunit_mat(:,2); ts = xunit_mat(:,3);
 if strcmpi(etype,'homogeneous')
-   % M = [len width depth dip str east north ss ds ts];	[flt_num*10]
-   [ Min0 ] = GTdef_fault1p_to_okada(xx,yy,z1,z2,len,str,dip,flt(:,8),flt(:,9),flt(:,10)); 
-   % unit slips
-   [ M ]    = GTdef_fault1p_to_okada(xx,yy,z1,z2,len,str,dip,ss,ds,ts);
-   % unit slip for ss only; zero slips for ds,ts
-   Mss = M; Mss(:,9:10) = 0;
-   % unit slip for ds only; zero slips for ss,ts
-   Mds = M; Mds(:,[8 10]) = 0;
-   % unit slip for ts only; zero slips for ss,ds
-   Mts = M; Mts(:,8:9) = 0;
-   % Min = [len;width;depth;dip;str;east;north;ss;ds;ts];	[10*slip_num]
-   Min = [ Mss' Mds' Mts' ];
+    % M = [len width depth dip str east north ss ds ts]         [flt_num*10]
+    [ Min0 ] = GTdef_fault1p_to_okada(xx,yy,z1,z2,len,str,dip,flt(:,8),flt(:,9),flt(:,10)); 
+    % unit slips
+    [ M ]    = GTdef_fault1p_to_okada(xx,yy,z1,z2,len,str,dip,ss,ds,ts);
+    % unit slip for ss only; zero slips for ds,ts
+    Mss = M; Mss(:,9:10) = 0;
+    % unit slip for ds only; zero slips for ss,ts
+    Mds = M; Mds(:,[8 10]) = 0;
+    % unit slip for ts only; zero slips for ss,ds
+    Mts = M; Mts(:,8:9) = 0;
+    % Min = [len;width;depth;dip;str;east;north;ss;ds;ts]       [10*slip_num]
+    Min = [ Mss' Mds' Mts' ];
 else
-   % no opening for EDGRN, so ignore any input for ts
-   ts(:,:) = 0;
-   xunit = [ ss; ds; ts ];
-   % M = [slip north east depth length width str dip rake]
-   [ Min0 ] = GTdef_fault1p_to_edcmp(xx,yy,z1,z2,len,str,dip,flt(:,8),flt(:,9),ts);
-   % unit slip for ss only; zero slips for ds,ts
-   [ Mss ] = GTdef_fault1p_to_edcmp(xx,yy,z1,z2,len,str,dip,ss,ts,ts);
-   % unit slip for ds only; zero slips for ss,ts
-   [ Mds ] = GTdef_fault1p_to_edcmp(xx,yy,z1,z2,len,str,dip,ts,ds,ts);
-   % zero slips for ss,ds,ts
-   Mts = Mds; Mts(:,[1 9]) = 0;
-   % Min = [slip;north;east;depth;length;width;str;dip;rake] 	[9*slip_num]
-   Min = [ Mss' Mds' Mts' ];
+    % no opening for EDGRN, so ignore any input for ts
+    ts(:,:) = 0;
+    xunit = [ ss; ds; ts ];
+    % M = [slip north east depth length width str dip rake]
+    [ Min0 ] = GTdef_fault1p_to_edcmp(xx,yy,z1,z2,len,str,dip,flt(:,8),flt(:,9),ts);
+    % unit slip for ss only; zero slips for ds,ts
+    [ Mss ] = GTdef_fault1p_to_edcmp(xx,yy,z1,z2,len,str,dip,ss,ts,ts);
+    % unit slip for ds only; zero slips for ss,ts
+    [ Mds ] = GTdef_fault1p_to_edcmp(xx,yy,z1,z2,len,str,dip,ts,ds,ts);
+    % zero slips for ss,ds,ts
+    Mts = Mds; Mts(:,[1 9]) = 0;
+    % Min = [slip;north;east;depth;length;width;str;dip;rake]   [9*slip_num]
+    Min = [ Mss' Mds' Mts' ];
 end
 
 %----% form stress kernel
@@ -277,7 +280,8 @@ end
 % a zero row-vector for smoothing
 sm = zeros(1,slip_num);
 
-xyzflt.Min   = Min0;
-xyzflt.SSgrn = SSgrn; 
-xyzflt.DSgrn = DSgrn;
-xyzflt.TSgrn = TSgrn;
+xyzflt.Min     = Min0;
+xyzflt.SSgrn   = SSgrn; 
+xyzflt.DSgrn   = DSgrn;
+xyzflt.TSgrn   = TSgrn;
+xyzflt.compnum = comp_num;

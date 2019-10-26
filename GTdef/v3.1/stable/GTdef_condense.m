@@ -1,4 +1,4 @@
-function [ matrix1 ] = GTdef_condense(matrix0)
+function [ matrix1,ind ] = GTdef_condense(matrix0)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                            GTdef_condense				  %
@@ -8,8 +8,10 @@ function [ matrix1 ] = GTdef_condense(matrix0)
 %									  %
 % OUTPUT:								  %
 %   matrix1 - new small condensed matrix				  %
+%   ind     - index of rows that are kept                                 %
 %									  %
 % first created by Lujia Feng Thu Dec  3 01:13:59 EST 2009		  %
+% output ind lfeng Thu Jun 16 16:44:47 SGT 2016                           %
 % last modified by Lujia Feng Thu Dec  3 01:17:03 EST 2009		  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

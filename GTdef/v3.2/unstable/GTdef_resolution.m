@@ -23,7 +23,7 @@ function [] = GTdef_resolution(finName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,su
 %      files are named '*_kp???_patches_R_??.out                                %
 %                                                                               %
 % PARAMETERS                                                                    %
-%   same as GTdef_project (but also looks for info in modspace.res              %
+%   same as GTdef_project (but also looks for info in modspace.resolflag        %
 %                                                                               %
 % first created by Andrew Newman Thu May  5 09:21:55 AST 2016                   %
 % added fault6 lfeng Thu Jun  2 10:50:44 SGT 2016                               %
@@ -36,7 +36,7 @@ R      = modspace.R;
 Rdiag  = diag(full(R));
 N      = modspace.N;
 Ndiag  = diag(full(N));
-res    = modspace.res;
+res    = modspace.resolflag;
 [ ~,basename,~ ] = fileparts(finName);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% set origin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

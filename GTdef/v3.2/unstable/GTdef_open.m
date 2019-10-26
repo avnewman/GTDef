@@ -64,7 +64,8 @@ function [ modspace,earth,...
 %   Comments can now be UNIX or MATLAB style (# or %). anewman May 11 14:04:07 EDT 2016  %
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016     %
 % added fault6 for external geometry, changed old fault6 to fault7 lfeng Jun 1 SGT 2016  %
-% last modified Lujia Feng Wed Jun  1 17:18:32 SGT 2016                                  %
+% added Aineq & bineq to modspace lfeng Mon Jun  6 15:46:35 SGT 2016                     %
+% last modified Lujia Feng Wed Jun 15 00:42:07 SGT 2016                                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -79,18 +80,19 @@ modspace.smooth    = '2d';
 modspace.surf      = 'free';
 modspace.grnflag   = 'off';
 modspace.sdropflag = 'off';
+modspace.resolflag = 'off';
+modspace.matflag   = 'off';
 %modspace.kappa    = 0; will be defined later
 %modspace.beta     = 0; will be defined later
-% form everything that is needed for x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)
-modspace.Xgrn = []; modspace.Lgrn = [];
-modspace.Bgrn = []; modspace.Ngrn = []; 
-modspace.Aeq  = []; modspace.beq  = []; 
-modspace.lb   = []; modspace.ub   = []; 
-modspace.x0   = []; modspace.xx   = [];
-modspace.sm   = []; modspace.sm_abs = []; % sm_abs for calculate absolute 1st derivative (strain)
+% form everything that is needed for x = lsqlin(C,d,Aineq,bineq,Aeq,beq,lb,ub,x0)
+modspace.Xgrn  = []; modspace.Lgrn   = [];
+modspace.Bgrn  = []; modspace.Ngrn   = []; 
+modspace.Aineq = []; modspace.bineq  = []; 
+modspace.Aeq   = []; modspace.beq    = []; 
+modspace.lb    = []; modspace.ub     = []; 
+modspace.x0    = []; modspace.xx     = [];
+modspace.sm    = []; modspace.sm_abs = []; % sm_abs for calculate absolute 1st derivative (strain)
 modspace.modinfo = [];
-modspace.res = [];
-modspace.mat = [];
 
 % earth structure defaults
 earth.type      = 'homogeneous';
@@ -112,13 +114,13 @@ flt6.num = 0;    flt6.name = {};    flt6.flt = [];    flt6.sdrop = [];    flt6.g
 flt7.num = 0;    flt7.name = {};    flt7.flt = [];    flt7.sdrop = [];    flt7.grname  = {};
 % - to built up later
 % ordered along dip first, then along strike
-flt1.Min = {}; flt1.xyzflt = {};
-flt2.Min = {}; flt2.xyzflt = {};
-flt3.Min = {}; flt3.xyzflt = {};
-flt4.Min = {}; flt4.xyzflt = {};
-flt5.Min = {}; flt5.xyzflt = {};
-flt6.Min = {}; flt6.xyzflt = {};
-flt7.Min = {}; flt7.xyzflt = {};
+flt1.xyzflt = {};
+flt2.xyzflt = {};
+flt3.xyzflt = {};
+flt4.xyzflt = {};
+flt5.xyzflt = {};
+flt6.xyzflt = {};
+flt7.xyzflt = {};
 
 % subfault structure
 subflt.num   = 0;  subflt.name   = {};  subflt.flt = []; 
@@ -229,7 +231,7 @@ while(1)
         elseif strcmp(method,'2')
  	    [ k1,remain ] = GTdef_read1double(remain);
  	    [ kn,remain ] = GTdef_read1double(remain);
- 	    [ N,remain ] = GTdef_read1double(remain);
+ 	    [ N,remain ]  = GTdef_read1double(remain);
 	    delta_k = (kn-k1)/(N-1);
 	    n0 = beta_num+1; beta_num = beta_num+N; 
 	    for ii = n0:beta_num
@@ -245,27 +247,28 @@ while(1)
         [method,remain] = strtok(remain);
 	%% method 1 %%
 	if strcmp(method,'1')
-	    modspace.res='diags';
+	    modspace.resolflag ='diags';
 	%% method 2 %%
 	elseif strcmp(method,'2')
            rr = strtok(remain);
            if GTdef_skip(rr)   % process on all data (if empty, or starts with # or %)
-	      modspace.res='all';
+	      modspace.resolflag = 'all';
            else
-             while (~isempty(remain))
-                [rr,remain] = strtok(remain);
-                if GTdef_skip(rr) , break ; end
-                modspace.res=[modspace.res,str2num(rr)];
-             end
+	      modspace.resolflag = [];
+              while (~isempty(remain))
+                 [rr,remain] = strtok(remain);
+                 if GTdef_skip(rr) , break ; end
+                 modspace.resolflag = [modspace.resolflag,str2num(rr)];
+              end
            end
         else
 	    warning('Line %d, of %s: Input resolution method "%s" not recognised. Continuing with resolution method = 1',ln,filename,method)
-	    modspace.res='diags';
+	    modspace.resolflag='diags';
         end
-    %%%%% resolution %%%%%
+    %%%%% save Mat files %%%%%
     elseif strncmpi(flag,'mat',3)
-	[modspace.mat,remain] = strtok(remain);
-	if ~strcmpi(modspace.mat,'on') && ~strcmpi(modspace.mat,'off')
+	[modspace.matflag,remain] = strtok(remain);
+	if ~strcmpi(modspace.matflag,'on') && ~strcmpi(modspace.matflag,'off')
             error('GTdef_open ERROR: matfile should be either on or off!');
 	end
     %%%%% green's functions %%%%%
