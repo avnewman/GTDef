@@ -106,6 +106,9 @@ flt? (structure)
       flt6.flt = [rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns] 
 
      *flt?.out              - similar to flt?.flt
+     *flt?.Min (matrix)     - subflt info in cartesian coordinate
+               (flt_num*10) - Okada   = [len width depth dip str east north ss ds ts]
+               (flt_num*9)  - layered = [slip north east depth length width str dip rake] 
      *flt?.xyzflt (structure) - fault patch info in cartesian coordinate
            xyzflt.xyzctr (flt_num*3)  - location of center points in cartesian coordinate     = [xx yy zz]                                
            xyzflt.xyztop1 (flt_num*3) - location of top upper corners in cartesian coordinate = [xx yy zz]
@@ -113,13 +116,6 @@ flt? (structure)
            xyzflt.duv(flt_num*3)      - unit vector in the dip direction                      = [xx yy zz]
            xyzflt.nuv(flt_num*3)      - normal unit vector                                    = [xx yy zz]
       Note: zz elevation positive upward
-           xyzflt.Min (matrix)        - subflt info in cartesian coordinate
-               (flt_num*10) - Okada   = [len width depth dip str east north ss ds ts]
-               (flt_num*9)  - layered = [slip north east depth length width str dip rake] 
-           xyzflt.SSgrn (6*flt_num*flt_num) - strike-slip stress kernels                        
-           xyzflt.DSgrn (6*flt_num*flt_num) - dip-slip stress kernels                           
-           xyzflt.TSgrn (6*flt_num*flt_num) - tensile-slip stress kernels                       
-           xyzflt.compnum(scalar)     - component number
 
       # below only for fault type 5 & 6
       flt?.geoname (cell array) - geometry file names

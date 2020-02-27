@@ -34,8 +34,7 @@ function [ ] = GTdef_prjpnt(fout,pnt,fltType,fltName,flt,strin)
 % used structure lfeng Thu Feb 23 10:21:11 SGT 2012			        %
 % changed to dealing with one fault system lfeng Fri Oct 24 19:19:15 SGT 2014   %
 % changed point output lfeng Fri Oct 24 19:28:41 SGT 2014                       %
-% changed name to have a length of 20 letters lfeng Tue Jun 14 13:05:14 SGT 2016%
-% last modified by Lujia Feng Tue Jun 14 13:05:20 SGT 2016                      %
+% last modified by Lujia Feng Mon Oct 27 01:40:34 SGT 2014                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if nargin<6, strin = []; end
@@ -77,7 +76,7 @@ if isempty(strin)
        Dstr2   = len-Dstr1;
        Dvert   = Ddip.*tand(dip);
        cpnt    = pntOut(ii,:);
-       fprintf(fout,'point 3 %-30s %12.6f %12.6f %12.4e %10.5f %10.5f %10.5f %8.5f %8.5f %8.5f %5.2f %-10s %12.4e %12.4e %12.4e %12.4e\n',...
+       fprintf(fout,'point 3 %4s %12.6f %12.6f %12.4e %10.5f %10.5f %10.5f %8.5f %8.5f %8.5f %5.2f %-10s %12.4e %12.4e %12.4e %12.4e\n',...
                pnt.name{ii},cpnt,fltName,Dstr1,Dstr2,Ddip,Dvert);
    end
 else
@@ -104,7 +103,7 @@ else
        Dstr2      = Dstr2_0+lenclosest-Dstr1;
        Dvert      = Ddip.*tand(dip);
        cpnt       = pntOut(ii,:);
-       fprintf(fout,'point 3 %-30s %12.6f %12.6f %12.4e %10.5f %10.5f %10.5f %8.5f %8.5f %8.5f %5.2f %-10s %12.4e %12.4e %12.4e %12.4e\n',...
+       fprintf(fout,'point 3 %4s %12.6f %12.6f %12.4e %10.5f %10.5f %10.5f %8.5f %8.5f %8.5f %5.2f %-10s %12.4e %12.4e %12.4e %12.4e\n',...
                pnt.name{ii},cpnt,fltName,Dstr1,Dstr2,Ddip,Dvert);
    end
 end

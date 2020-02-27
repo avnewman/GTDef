@@ -54,10 +54,7 @@ kappa 1  1 10 50 100 500 1000			# k1 k2 k3 ......
 kappa 2  0 1000 5				# k1 kn N
 greensfns  on
 stressdrop on
-resolution  1                                   # perform resolution analysis output only model and data resolution informatoin   
-resolution  2                                   # output resolution spread information for every model parameter *MESSY*
-resolution  2  1 8 65 68 72 100 120 128         # output only at subfaults defined increasing from the Nd then Ns (starting from 1st fault)
-matfile     on                                  # save a matlab file of all model paremters sent to GTdef.m (save as 'fin'.mat)
+
 #################################################################
 # EARTH STRUCTURE
 # earth	   - earth structure {homogeneous}
@@ -106,9 +103,8 @@ layer  5   15.0e3	4.5e3	2.4e3	2.7e3
 #                2 = uniformly or distributed slipping fault defined by two endpoints (ss ds ts)
 #                3 = uniformly or distributed slipping fault defined by one endpoint, fault length, and strike (rake rs ts)
 #                4 = uniformly or distributed slipping fault defined by two endpoints (rake rs ts) 
-#                5 = external geometry with (ss ds ts)
-#                6 = external geometry with (rake rs ts)
-#                7 = external green functions
+#                5 = external geometry
+#                6 = external green functions
 # Note: distributed slipping faults are followed by subfault definitions; slip values for the main fault are used for unspecified subfaults
 #----------------------------------------------------------------
 # name 	      - name of fault (keep it short and with no special characters or spaces)
@@ -180,16 +176,9 @@ fault  5    2010banyak   20100406_static_out.txt   len=12000,wid=12000,clat,clon
      #subfault name      dnum snum   ss    ds   ts     ss0  ssX      ds0  dsX      ts0  tsX
      subfault  2010banyak   2    2     0     0    0      0     0        0    0        0    0   
 
-#fault type name         geometry_filename         colnmaes                                                          rake   rs   ts  rake0 rakeX  rs0  rsX   ts0  tsX   Nd  Ns
-# for fault5, Nd or Ns could be NaN; slips are only used when the external file does not provide slips
-fault  6    banyakthrust SMT_10km2_3D_0slip_subfaults.out no,dnum,snum,llon,llat,depm,len,wid,str,dip,rake,slipm     79     1    0   79    79      0   20      0    0   23  23
-
-     #subfault name          dnum snum  rake   rs   ts    rake0  rakeX   rs0  rsX     ts0  tsX                                          # name is the name of the main fault
-     subfault  banyakthrust   1   2     79     0     0    79     79      0     0      0    0
-
 # external grnfns from other softwares
 #fault type name      greenfns_filename    ss   ds   ts     ss0  ssX   ds0  dsX   ts0  tsX   Nd  Ns
-fault  7    mentawai  MTW.grnfns           0    1     0     0     0    0    20    0    0     24  53
+fault  6    mentawai  MTW.grnfns           0    1     0     0     0    0    20    0    0     24  53
      #subfault name      dnum snum   ss    ds   ts     ss0  ssX      ds0  dsX      ts0  tsX
      subfault  mentawai   2    2     0     0    0      0     0        0    0        0    0   
 

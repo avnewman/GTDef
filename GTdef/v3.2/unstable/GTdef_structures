@@ -27,10 +27,6 @@ grnflag   - whether to output green's functions                  (string)       
 sdropflag - whether to calculate stress drop                     (string)       {off}                                        
           = 'off' do not calculate stress drop                               
             'on'  calculate stress drop
-resolflag - whether to output resolution matrix
-matflag   - whether to save MATLAB workspace to a mat file
-          = 'off' do not save
-          = 'on' do save
 kappa     - a list of smoothing weights                          (1*kappa_num)  {0}  
             usually for 2nd derivative   
 beta 	  - a list of smoothing weights                          (1*beta_num)   {0}  
@@ -45,9 +41,7 @@ Bgrn      - baseline length changes from unit slips
           = [east;north;vertical;length]                         ((4*nn)*slip_num)
 Ngrn      - node displacements from unit slips                   
           = [east;north;vertical]                                ((3*nn)*slip_num)
-Aineq     - left  side matrix for linear inequalities            ((flt_num*2)*slip_num)
-bineq     - right side vector for linear inequalities            (flt_num*2)      
-Aeq       - left  side matrix for linear equalities              (slip_num*slip_num)
+Aeq       - left side matrix for linear equalities               (slip_num*slip_num)
 beq       - right side vector for linear equalities              (slip_num*1)      
 x0        - initial values for ss,ds,ts 	                 (slip_num*1)           
 xx        - final values for ss,ds,ts 	                         (slip_num*1)
@@ -153,7 +147,7 @@ flt5.flt       = [ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]
 flt5.geoname   - geometry file name
 flt5.colname   - column names for geometry file
    subflt.flt  = [dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX]		  	              
-flt6.flt       = [rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]
+flt6.flt       = [rake rs ts rake0 rakeX rs0 rsX ts0 tsX]
 flt6.geoname   - geometry file name
 flt6.colname   - column names for geometry file
    subflt.flt  = [dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX]                          
@@ -177,8 +171,6 @@ xyzflt.nuv     - normal unit vector
 xyzflt.SSgrn   - strike-slip stress kernels                        (6*flt_num*flt_num)
 xyzflt.DSgrn   - dip-slip stress kernels                           (6*flt_num*flt_num)
 xyzflt.TSgrn   - tensile-slip stress kernels                       (6*flt_num*flt_num)
-
-xyzflt.compnum - component number                                  (scalar)
 
 # - read in from input file, can be updated after running a model
 xyzflt.Min     - subflt info in cartesian coordinate                                           

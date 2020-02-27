@@ -45,8 +45,7 @@ function [] = GTdef_output(filename,earth,modspace,beta,...
 % added output origin lfeng with Paul M.  Wed Jun 24 12:34:52 SGT 2015                   %
 % added InSAR los & Lgrn lfeng Tue Nov  3 23:17:37 SGT 2015                              %
 % added fault6, changed old fault6 to fault7 lfeng Thu Jun  2 10:38:24 SGT 2016          %
-% modified kappa, beta output to be compatible with input lfeng Tue Jun 14 SGT 2016      %
-% last modified by Lujia Feng Tue Jun 14 17:55:47 SGT 2016                               %
+% last modified by Lujia Feng Thu Jun  2 10:47:44 SGT 2016                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 etype     = earth.type;
@@ -97,7 +96,7 @@ end
 %%%%%%%%%% smooth parameters %%%%%%%%%%
 if ~isempty(beta)
     kappa = sqrt(beta);
-    fprintf(fout,'kappa  1\t%-12.5f\nbeta   1\t%-12.5f\n\n',kappa,beta);
+    fprintf(fout,'kappa   \t%-12.5f\nbeta     \t%-12.5f\n\n',kappa,beta);
 end
 
 if ~isempty(smooth)
@@ -230,22 +229,22 @@ end
 %%%%%%%%%%  point  %%%%%%%%%%
 if strcmp(coord,'local')
     for ii =1:pnt.num
-        fprintf(fout,'point 3 %-20s\t%14.5e %14.5e %14.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n', pnt.name{ii},pnt.out(ii,:));
+        fprintf(fout,'point 3 %s\t%14.5e %14.5e %14.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n', pnt.name{ii},pnt.out(ii,:));
     end
 else
     for ii =1:pnt.num
-        fprintf(fout,'point 3 %-20s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n', pnt.name{ii},pnt.out(ii,:));
+        fprintf(fout,'point 3 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n', pnt.name{ii},pnt.out(ii,:));
     end
 end
 
 %%%%%%%%%%  los point  %%%%%%%%%%
 if strcmp(coord,'local')
     for ii =1:los.num
-        fprintf(fout,'los 1 %-20s\t%14.5e %14.5e %14.5e  %10.5f %10.5f   %10.5f %10.5f %10.5f  %-5.2f\n', los.name{ii},los.out(ii,:));
+        fprintf(fout,'los 1 %s\t%14.5e %14.5e %14.5e  %10.5f %10.5f   %10.5f %10.5f %10.5f  %-5.2f\n', los.name{ii},los.out(ii,:));
     end
 else
     for ii =1:los.num
-        fprintf(fout,'los 1 %-20s\t%14.8f %12.8f %12.5e  %10.5f %10.5f   %10.5f %10.5f %10.5f  %-5.2f\n', los.name{ii},los.out(ii,:));
+        fprintf(fout,'los 1 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f   %10.5f %10.5f %10.5f  %-5.2f\n', los.name{ii},los.out(ii,:));
     end
 end
 
@@ -272,11 +271,11 @@ for ii =1:prf.num
     cnod_out  = nod.out(ind,:);
     if strcmp(coord,'local')
         for jj = 1:num
-            fprintf(fout,'point 3 %-20s\t%14.5e %14.5e %14.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
+            fprintf(fout,'point 3 %s\t%14.5e %14.5e %14.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
         end
     else
         for jj = 1:num
-            fprintf(fout,'point 3 %-20s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
+            fprintf(fout,'point 3 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
         end
     end
 end
@@ -292,11 +291,11 @@ for ii =1:grd.num
     cnod_out  = nod.out(ind,:);
     if strcmp(coord,'local')
         for jj = 1:num
-        	fprintf(fout,'point 3 %-20s\t%14.5e %14.5e %14.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
+        	fprintf(fout,'point 3 %s\t%14.5e %14.5e %14.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
         end
     else
         for jj = 1:num
-        	fprintf(fout,'point 3 %-20s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
+        	fprintf(fout,'point 3 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
     
         end
     end

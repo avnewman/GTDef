@@ -1,7 +1,7 @@
 function [] = GTdef(finName,wnum)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                              	       GTdef.m                                         %
+%                              	     GTdef.m                                           %
 %                  Georgia Tech Matlab program for deformation                         %
 %                    Lujia Feng; Andrew V. Newman; Ting Chen                           %
 %                                                                                      %
@@ -59,7 +59,7 @@ function [] = GTdef(finName,wnum)
 % added output resolution matrix information (see GTdef_input) anewman May 10 2016     %
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016   %
 % corrected fault type 7 bugs lfeng Fri Jun 10 01:04:06 SGT 2016                       %
-% last modified Lujia Feng Fri Jun 17 01:31:39 SGT 2016                                %
+% last modified Lujia Feng Fri Jun  3 15:42:54 SGT 2016                                %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -565,9 +565,9 @@ tic
        [ siteList,siteloc,vertices,grnList,grnfns ] = PyLith_read_greensfns(cgrname);
        % trim greens functions
        [ siteloc,grnList,grnfns ] = PyLith_trim_greensfns(pnt.name,siteList,siteloc,grnList,grnfns);
-       [ Xgrn7,Lgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aineq7,bineq7,Aeq7,beq7,lb7,ub7,x07 ] = ...
+       [ Xgrn7,Lgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aeq7,beq7,lb7,ub7,x07 ] = ...
        GTdef_fault7(flt7.flt(ii,:),subflt.flt(subInd,:),vertices,grnfns,modspace.smooth,modspace.surf);
-       [ modspace ] = GTdef_addall(modspace,Xgrn7,Lgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aineq7,bineq7,Aeq7,beq7,lb7,ub7,x07);
+       [ modspace ] = GTdef_addall(modspace,Xgrn7,Lgrn7,Bgrn7,Ngrn7,sm7,sm7_abs,Aeq7,beq7,lb7,ub7,x07);
     end
 toc
 end
@@ -633,8 +633,8 @@ fprintf(1,'\n............. doing inversion .............\t');
         end
         % output results
         GTdef_output(foutName,earth,modspace,bt,flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt,addon,pnt,los,bsl,prf,grd,nod);
-        % output resolution matrix
-        if isstr(modspace.resolflag) && ~strcmpi(modspace.resolflag,'off')
+	% output resolution matrix
+        if ~isempty(modspace.res)
             GTdef_resolution(foutName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl);
         end
         toc
@@ -643,11 +643,11 @@ fprintf(1,'\n............. doing inversion .............\t');
     fsumName = [ basename '_inv.out' ];
     GTdef_summary(fsumName,modspace);
 
-    % save workspace
-    if strcmpi(modspace.matflag,'on')
+    if (strcmpi(modspace.mat,'on'))
         fmatName = [ basename '.mat' ];
 	save(fmatName);
     end
+
 end
 
 % close up parpool for parallel computing
