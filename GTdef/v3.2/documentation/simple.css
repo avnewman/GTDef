@@ -1,0 +1,124 @@
+body {
+	/*background-image: url('http://geophysics.eas.gatech.edu/people/anewman/pics/blueblackstripe2.png'); */
+	background-color: darkgreen;
+	color: black;
+	font-size: 12px;
+	font-family: arial, helvetica, sans-serif;
+	line-height: 1.5em;
+	width: 80em;
+	margin-right:auto;
+        margin-left: auto;
+}
+ A:link {text-decoration: none ; color: #0000aa; }
+ A:visited {text-decoration: none ; color: #662222; }
+ A:active {text-decoration: none ; color: red; }
+ A:hover {text-decoration: underline; color: red; }
+
+
+div {
+	border: none;
+}
+li {
+	border: none;
+	margin: 10;
+}
+/*li p {
+	display: inline;
+} */
+
+h1 {
+	font-size: 16pt;
+	text-align: center;
+}
+
+h2 {
+	font-size: 12pt;
+}
+h3,h4,h5 {
+	font-size: 10pt;
+}
+img {
+	border: none;
+	background-color: none;
+}
+hr {
+	border: 1px
+	margin: 1em;
+}
+table {
+	border: none;
+	border-style: none;
+	border-collapse: collapse;
+	background: lightyellow;
+}
+td,th {
+	border: none;
+	border-style: none;
+	padding: 10pt;
+	font-size: 10pt;
+	font-family: arial, helvetica, sans-serif;
+}
+pre {
+	border: none;
+	border-style: none;
+	padding: 0pt;
+	margin: 1em;
+}
+red, r { color: red; }
+c { color: darkred; }
+bl { color: blue; }
+gr { color: #005500;
+     font-family: monospace; }
+
+box {
+  border: 5px solid #008800;
+  padding: 5px;
+  margin: 5px;
+  background: #ccffca;
+}
+
+code.screen, pre.scr, pre.screen {
+	-webkit-overflow-scrolling: touch;
+	font-family: monospace;
+	font-size: 8pt;
+        display: block;
+	padding: 5pt;
+	margin: 0.5em 0.5em;
+	border: 1px solid #bbb;
+	background-color: #eee;
+	color: #000;
+}
+
+.scrolling-wrapper{
+	overflow-x: scroll;
+	overflow-y: hidden;
+	white-space: nowrap;
+
+	.card {
+		display:block;
+	}*/
+}
+.code-wrapper{
+	-webkit-overflow-scrolling: touch;
+	font-family: monospace;
+	font-size: 8pt;
+        display: block;
+	padding: 0pt;
+	margin: 0.1em 0.0em;
+	border: 1px solid #bbb;
+	background-color: #eee;
+	color: #000;
+        position: relative;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        margin-bottom: 10px !important;
+        width: 72em;
+        overflow-x: auto;
+        overflow-y: auto;
+    	white-space:nowrap;
+    }
+.scrolls {
+    }
+.navheader table, .navheader table td {
+	border: 0 !important;
+}

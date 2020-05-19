@@ -1,0 +1,509 @@
+<html>
+<head>
+  <title> Dislocation Modeling using GTdef (V_3.2)</title>
+  <link rel="stylesheet" href="simple.css" type="text/css">
+</head>
+<body margin-right="0" bgcolor=lightyellow text=black link=darkblue vlink=black alink=lime>
+<table border=0 cellspacing=5 cellpadding=00>
+<tr><td align=top>
+ <h1 class="left">Dislocation Modeling using GTdef(V_3.2)</h1>
+</td></tr>
+<tr><td align=top>
+<section id="TOC">
+<ol>
+<h2>Sections of the GTdef model</h2>
+<font size=-2pt>(Clicking on section heads will return to the Table of Contents)</font>
+<H2>
+<li> <a href = "#INTRO"> Basic Introduction</a></li>
+<li> <a href = "#DL"> GTdef Code and How to Download it </a></li>
+<li> <a href = "#INPUT"> The Input File</a></li>
+<li> <a href = "#SPF"> Simple Planar Forward Model </a></li>
+<li> <a href = "#uslip"> Uniform Slip Model Inversion </a></li>
+<li> <a href = "#nslip"> Non-Uniform Slip Model</a></li>
+<li> <a href = "#cbt"> Checkerboard Testing </a></li>
+<li> <a href = "#gf"> Ingesting External Green's Functions</a></li>
+<li> <a href = "#ref"> References</a></li>
+</H2>
+</ol>
+</section>
+
+<ol> 
+<section id="INTRO">
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+<li> <H2> <a href = "#TOC"> Introduction </a> </H2></li>
+
+ Manual developed by <a href="https://eas.gatech.edu/people/murekezi-derrick"> Derrick Murekezi </a> and <a href="http://geophysics.eas.gatech.edu/people/anewman">Andrew Newman</a>
+<br>
+<p>
+<gr>GTdef</gr> is an implementation of the Okada (1985) dislocation model written by 
+Lujia Feng, Ting Chen, and Andrew Newman, with codes translated from <gr>disl</gr> (by Peter Cervelli).  Okada (1985) can describe the
+surface deformation associated with rectangular dislocations of most orientations,  within
+a purely-elastic half-space, however we've further adapted the codes to allow for horizontally layered materials. 
+Fault planes do require one edge to be horizontal. Dislocations can be described with dip-slip, strike-slip, and/or opening,
+and hence can be used to describe a range of processes including earthquake faulting, interseismic
+coupling, and planar fluid changes like magmatic dike inflation or groundwater withdrawal.
+</p>
+<p>
+The code is developed so that one could perform both forward models that predict ground deformation
+and inverse models that use data with errors and some modeling constraints to predict information about the
+source.  The source in either case can be either simple rectangular slips along the plane, orthogonal to it
+or some combination of both.</p> 
+<p>
+Requirements: Algorithms are written in Matlab and require the <c>'Parameter estimation'</c> toolbox for inversions.  Also, if you wish to use parallel processors, your version needs to include <gr>'parpool'</gr>, which was implemented around 2015.
+</p>
+<p>
+Below, we will first step through some forward models, and eventually inversions. 
+</p>
+</section>
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "DL">
+<li> <h2> <a href = "#TOC"> GTdef Code and How to Download it</a></li>
+<ul><b> Current Version </b> : GTDef 3.2 </ul>
+<ul><b> Github Repository for Download </b>:
+<a href=https://github.gatech.edu/an77/GTDef.git>https://github.gatech.edu/an77/GTDef.git</a> </ul>
+</section>
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "INPUT">
+<li> <H2> <a href = "#TOC"> The Input File </a> </H2></li>
+<p>
+The code includes a detailed input file (<a href="./GTdef_input" target=aux>click here to download/view</a>) that describes the structure of the input file for both the foward and inverse models. The file describes the model parameters and how they differ for different models run. Below we have included snapshots of the input file for each example model. 
+</p><p>
+Ground rules for the input file include:
+<ol>
+   <li> Model parameters and data are combined in one input file. 
+   <ol type="a">
+      <li> Forward and inverse models are mixed and distinguished by the range [min max]. If parameter min == max (e.g. 0 == 0), then the parameter is fixed
+      <li> Output files can be, and are often used as subsequent input files.  For example, an inversion will produce model parameters that you may want to use to predict deformation away from the data that were used in the inversion.
+   </ol>
+   <li> No specific order is required for specifying parameters 
+   <li> The first column is important to identify the data type. Flag is not case sensitive.
+   <li> Information within parameter rows are all white-space seperated.
+   <li> All parameters use the same units, defaulting to meters for each length of fault components, slip magnitudes, and measurement data.
+   <li> Angles are described in degree
+   <li> Depths are too reported in meters and are increasing going into the earth.
+   <li> Any line preceded by a hash <c>'#'</c> is treated as a comment and is ignored.
+   <li> The only reqirements for the most simple input file are at least one fault line, and one 'data' line, describing the parameters for each. All lines are characterized by their first field and the line order does not matter.
+</ol>
+In the following sections we will further explore parameter characterization within the input file.
+</p>
+
+<h3> Fault characterization: </h3> 
+Each fault must fall into one of the below 7 catagories described by the nature of slip on the fault, fault parameters, external geometries, or simply extrenal Green's functions. A fault line may look like (example shown in above-linked input file):
+<div class="code-wrapper"><pre>
+#fault type name        lon       lat     z1  z2   len   str   dip     ss     ds   ts     ss0  ssX      ds0  dsX      ts0  tsX    Nd  Ns
+fault  1    gnrc-1      -120.2000 38.0000 3e3 15e3 100e3 170.0 25.0    2.5e-3 1.2  0      0    0        1    1.5      0    0      1   1   # inverted only on dip-slip between 1 and 1.5 m
+</pre></div>
+Depending on the fault type (second column) the fields within the row will vary.
+<ul>
+  <li> <b>FAULT Types </b> method used to describe fault [1-4], external geometries [5-6], or external Green's functions [7]
+  <ol>
+     <li> = uniformly or distributed slipping fault defined by one endpoint, fault length, and strike (ss ds ts)
+     <li> = uniformly or distributed slipping fault defined by two endpoints (ss ds ts)
+     <li> = uniformly or distributed slipping fault defined by one endpoint, fault length, and strike (rake rs ts)
+     <li> = uniformly or distributed slipping fault defined by two endpoints (rake rs ts)
+     <li> = external geometry with (ss ds ts)
+     <li> = external geometry with (rake rs ts)
+     <li> = external green functions
+  </ol>
+  Note: distributed slipping faults are followed by subfault definitions; slip values for the main fault are used for unspecified subfaults
+  
+  <li>The fault model defines a fault by its location in terms of longitude then latitude (or x then y if using a local coordinate system), 
+	  its depth, strike and dip, slip parameters, and the number of subfaults within the model. 
+  
+  <li><b>FAULT Parameters</b> (for fault type 1) <br>
+     <li> flt = [ lon lat z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX ]
+  	<ul>
+  	   <li>  lon,lat (or xx,yy) - one endpoint describing the surface projection of the faults in either geographic (default), or a local cartesian coordinate system
+  	   <li>   z1  - vertical burial depth, describing top of slipping portion of fault  [≥0]
+  	   <li>   z2  - vertical locking depth, describing the bottom of slipping fault  [≥0]
+  	   <li>   len - fault length [≥0]
+  	   <li>   str - strike from the endpoint describe above (degree CW from N) [0-360]
+  	   <li>   dip - downward from horizontal, and right looking in the strike-direction [0-180]
+  	   <li>   ss  - strike-slip motion (left-lateral +)
+  	   <li>   ds  - dip-slip motion (thrust +)
+  	   <li>   ts  - tensile motion (opening +)
+  	   <li>   ss0,ds0,ts0 - lower bounds for slips 
+  	   <li>   ssX,dsX,tsX - upper bounds for slips
+  	   <li>   nd,ns - number of subfaults along-dip, and along-strike
+  	</ul>
+</ul>
+<h3> Data characterization: </h3> 
+Every input file needs to desribe either real data, or points in which you want to predict the surface motions.  Each data line begins with its unique identifying name describe below.
+A data line for 3-component GPS point data may look like (also from above-linked input file):
+<div class="code-wrapper"><pre>
+#point type name    lon       lat     z            Ue   Un   Uv      eUe  eUn  eUv	weight
+point  3    rdom    -118.8979 37.6770 2417.4049    9.6  1.1  36.1    1.0  1.0  1.3	1
+</pre></div>
+<ul>
+  <li><b>DATA Types</b> <br>
+	Depending on data type both the data type identifier (first column) and the data-type number (second column) will change as described below..
+   <ul>
+	   <li>point - data described at a single point at the surface (e.g. GPS).<br>
+		   Point-types are:
+		<ol type="1">
+		  <li>= vertical component only
+		  <li>= east, and north components
+		  <li>= east, north, and vertical components
+		</ol>
+	    <li>los - a 1-D data point of arbitrary orientation (e.g. line-of-site to SAR satellite).<br>     	      
+		   LOS-types are:
+		<ol type="1">
+		  <li>= displacement in direction of LOS (e.g. toward satellite)
+		  <li>= phase change in LOS direction (not implemented yet)
+		</ol>
+	    <li>baseline - a baseline defined between two sites.<br>
+		 baseline-types are:
+		<ol type="1">
+		  <li>= length change only
+		  <li>= east, north, and vertical components
+		  <li>= east, north, vertical,and length change components
+                </ol>
+	<hr> <!-- -------------------------------------------------------------------- -->
+	<li>profile - a line defined by two endpoints with evenly distributed data points.
+	<li>grid - a parallelogram defined by the lower-left (lon1,lat1) and upper-right (lon2,lat2) corners with data points parallel to the sides.
+   </ul>
+ Note: profile and grid are generally used for displaying results from a forward model. 
+   <li><b>DATA parameters</b><br>
+	   The data-types described above will use differing parameters. Their meaning  and convention are describe here.
+	<ul>
+	   <li>lon(x),lat(y),z - horizontal location and elevation (positive upward) [m]
+	   <li>Erot,Nrot - rotation angles for the East and North axis of grid [degree; + CW] (-90 90)
+	   <li>Ue,Un,Uv - surface displacements in East, North, and Vertical directions [m]
+	   <li>Ul - length change between two sites [m]
+	   <li>ULOS - surface displacement in LOS direction [m]
+	   <li>eUe,eUn,eUv,eUl  - standard error for displacements and length change [m]
+	   <li>eULOS - standard error for surface displacement in LOS direction [m]
+	   <li>LOSdirE,LOSdirN,LOSdirV - unit vector pointing from the ground toward the satellite (LOS direction)
+	   <li>N,Ne,Nn - number of data points, and number of columns and rows
+	   <li>wavelength - wavelength of signal for LOS (1/2 the SAR satellite natural wavelength)[not yet implemented]
+	   <li>weight - weight for incorperating different type of data {1}
+	</ul>
+<!--  	<li> Xin - point site locations in the local cartesian system
+  	<li>       [n*3] [ xx yy zz ]
+  	<li> Lin - los point locations in the local cartesian system + los direction
+  	<li>       [n*6] [xx yy zz dirE dirN dirV]
+  	<li> Bin - baseline site locations in the local cartesian system
+  	<li>       [n*6] [ x1 y1 z1 x2 y2 z2 ]
+  	<li> Nin - grid and profile node locations in the local cartesian system
+  	<li>       [n*3] [ xx yy zz ]
+  	<li> Note: z1,z2 depth positive downward
+		<li>       zz elevation positive upward -->
+</ul>
+<h3> Other Model Parameters: </h3> 
+To be desribed (e.g. coord, smooth, greensfns, matfile, resolution)
+<ul>
+</ul>
+</section>
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "SPF">
+<li> <H2> <a href = "#TOC">Simple Planar Forward Model</a> </H2></li>
+<p>
+We'll start with the most straight-forward case of a single vertical fault plane with strike-slip motion on the interface.
+</p>
+<h3> Example Forward Model Run: </h3> 
+The simplist model includes just one fault and one data-point ran in a forward sense to prediction deformation at that data-point.  We will not stray significantly from there.<br>
+<br>
+<b>Input:</b>
+ <ol type="i">
+ <li> We will create a vertical planar fault approximately 20 km long, with 1 meter, strike-slip motion, buried between 5 and 15 km depth. The output will describe the spatial deformation every 2 km across a 60x60 km grid surrounding the fault.
+	 <li> To keep the algorithm from attempting an inversion, it is important that all slip parameter ranges for a given slip-type on a fault block have equal value (i.e. ss0=ssX, ds0=dsX, and ts0=tsX in this example).  
+ <li> If all range values are set to zero <c>'0'</c>, the initial value will be used. Here, we will have 1m of left-lateral (+) strike-slip that will not vary (all range parameters are set to zero).
+ <li> Input files should all end in <c>.in</c>
+ <li> The input file can be created in your favorite text-editor (e.g. vim). For simplicity here, we'll just direct stdout from an echo-command into a file called <c>local1.in</c>. The <c>%</c> represents a shell prompt.
+<div class="code-wrapper"> <pre>
+% echo "
+coord local <c># otherwise it will expect geographic coordinates</c>
+<c>#fault type name       lon1 lat1   lon2  lat2  z1  z2    dip  ss  ds ts ss0 ssX ds0  dsX  ts0  tsX   Nd  Ns</c>
+fault  2    myfault    0   -10e3   0     10e3  5e3 15e3  90   1   0  0  0   0   0    0    0    0     1   1
+<c>#grid name    Erot Nrot lon1(x1) lat1(y1) lon2(x2) lat2(y2) Ne Nn</c>
+grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31 
+" > local1.in
+</pre></div>
+</ol>
+<b>Run:</b>
+ <ol type="i">
+<li> To run <gr>GTdef</gr>, you must call up matlab (interactive and gui are not necessary).
+	<li> Be sure the current version of GTdef is in your path.  You can check this using the <gr>path</gr> function, and add it using <gr>addpath</gr>.
+<div class="code-wrapper"> <pre>
+<c> # within matlab</c>
+> addpath('/path/to/GTdef/v3.2/unstable/') <c>%replacing with your actual path</c>
+</pre></div>
+<li> The processing code that oversees both forward and inverse models is <gr>GTdef</gr> and is called with just the input file name, and optionally, the number of processors you'd like it to use on your machine. By default, it will use all available processors if not defined.
+<div class="code-wrapper"> <pre>
+<c> # within matlab</c>
+> GTdef('local1.in',1) <c>% will run on '1' core.
+</pre></div>
+</ol>
+<b>Output:</b>
+<ol type="i">
+	<li> This will create an output file called <c>'local1_fwd.out'</c> that will repeat the model, and give predicted results for the defined grid locations (now as <c>'point'</c> data-type). 
+
+<li> Quick and dirty visualization can easily be achieved using the freely available gnuplot program.  This allows us to look at the full 3D vector field.
+<div class="code-wrapper"> <pre>
+ <c># first comment out all lines that are not output data using vim or similar. (not shown)</c>
+ % gnuplot 
+   gnuplot>  set ticslevel 0.0 <c># removes empty whitespace below plot </c>
+   gnuplot>  splot 'local1_fwd.out' u 4:5:(0):($7*1e5):($8*1e5):($9*1e5) w vect t "surface displacement" <c> # just the surface results amplified to see variability</c>
+   <c>#If you're more adventurous, you can plot the fault too (this assumes the fault is vertically dipping).</c>
+   gnuplot>  splot "&lt; awk \'$1==\"point\"{print $0}' local1_fwd.out" u 4:5:(0):($7*1e5):($8*1e5):($9*1e5) w vect t "surface displacement",\
+   "&lt; awk '$1==\"fault\"{printf \"%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n\", $4,$5,-$8,$6,$7,-$8,$6,$7,-$9,$4,$5,-$9,$4,$5,-$8}' local1_fwd.out" w l lw 2 lt -1 t "fault"
+ <c> # use the cursor to move around the data</c>
+</pre></div>
+ <img src="local1_fwd.png">
+</ol>
+</section>
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "uslip">
+<li> <H2> <a href = "#TOC"> Uniform Slip Model Inversion: </a> </H2></li>
+<p> <gr>GTdef</gr> performs a linear least-squares inversion of Green's functions to define
+the best-fitting set of models to describe a dataset with errors. The program uses the parameter optimization toolbox program called <gr>lsqlin</gr>. 
+You can read more about inversion methods from a number of books. Options include: <a href="http://geophysics.eas.gatech.edu/internal/papers/2005/Santamaria/Santamaria_Fratta_DiscreteSignalsInverseProblems_2005.pdf" target=aux2>
+	Santamarina & Fratta, "Discrete Signals and Inverse Problems" (2005)</a> in the EAS paper repository, and <a href="https://www.sciencedirect.com/science/article/pii/B9780123971609000035">Menke, "Geophysical Data Analysis"</a>, particularly chapters 3 &amp; 4. 
+<br>
+While the simplified forward problem exists:<br>
+<center><c><b> d</b> = <b>Gm</b></c></center><br> 
+where Okada (1985) describes the Green's function, <c><b>G</b></c>, that relates model parameters <c><b>m</b></c>, to the data, <c><b>d</b></c>.
+If data are numerous, and/or model parameters are greater than one, each can be written as a vector of size <c>n</c> and <c>m</c>, with the <c><b>G</b></c> being a matrix sized <c>n x m</c>. 
+</p>
+The inversion equation, where we try to solve for model parameters becomes:
+<center><c><b>Gm</b> = <b> d</b></c></center><br> 
+
+For a least-squares solution, the simplified inversion becomes:
+<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>]<sup>-1</sup><b>G</b><sup>T</sup> <b>d</b></c></center><br> 
+
+Because we expect there to be interdepence between adjacent model patches, we can describe an additional set of equations to apply to the inversion and regularize the final model. 
+Every model patch m<sub>i</sub> can describe its model roughness as the Laplacian of that component of slip (e.g. ds, ss, ts).  We will try to minimize that roughness for each slip component of the model, <c><b>s</b></c>, which here will be the same as <c><b>m</b></c>:
+
+<center><c><b>d<sub>p</sub></b>= 0 = &kappa;&nabla;<sup>2</sup><b>s</b></c></center><br>
+
+where <c><i>&kappa;</i></c> is the smoothing kernel. 
+Furthermore, we combine the data weights and errors into a weighting matrix <c><b>W</b></c>.
+Now, incorporating the errors and weighting, the forward problem becomes:
+
+<center><c>
+<b> d</b> = <b>Gm</b> =
+<math xmlns = "http://www.w3.org/1998/Math/MathML"> 
+   <mrow>
+    <mo>[</mo>
+    <mtable display="true">
+        <mtr> <mn>W<sub>ii</sub><b>d</b></mn> </mtr>
+        <mtr> <mn>0</mn> </mtr>
+    </mtable>
+    <mo>]</mo>
+   <mrow>
+</math>
+= 
+<math>
+   <mrow>
+    <mo>[</mo>
+     <mtable display="true">
+        <mtr><mn>W<sub>ii</sub><b>G</b></mn></mtr>
+	<mtr><mn>&kappa;&nabla;<sup>2</sup><b>s</b></mn></mtr>
+     </mtable>
+    <mo>]</mo>
+   <mrow>
+</math> <b>m</b></c></center>
+where the data and greens function matrix become everything in their respective matrices above.
+The diaganol compontents of the weighting matrix <c>W<sub><i>ii</i></sub> = (<i>w<sub>i</sub></i>)<sup>0.5</sup>/<i>e<sub>i</sub></i></c>, 
+which are the per datum weighting <i>w<sub>i</sub></i> and errors <i>e<sub>i</sub></i>. 
+
+With <c><b>d</b></c> and <c><b>G</b></c> now containing the smoothing and weighting terms, our model estimate can now be defined as:
+
+<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>d</b></c></center><br> 
+where <c><math>&epsilon;<sup>2</sup><b>I</b> =&kappa;&nabla;<sup>2<b></sup>s</b></math></c>.
+We can simplify this be defining the Generalized Inverse Matrix:<br>
+<center><c><b>G</b><sup>-g</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup></c></center><br> 
+so:<br>
+<center><c><b>m</b><sup>est</sup> = <b>G</b><sup>-g</sup><b>d</b></c></center><br> 
+<!--<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>W</b><sub>e</sub><b>G</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>W</b><sub>e</sub><b>d</b></c></center>--> 
+<br>
+<b>Input File:</b>
+<ol type="i">
+		<li> From <a href="http://geophysics.eas.gatech.edu/people/anewman/research/papers/Newman_etal_GJI_2011.pdf">Newman et al. (2010)</a>
+		pull the coastal subsidence data from sheet 3 of the <a href="http://geophysics.eas.gatech.edu/people/anewman/research/data/Newman_etal_GJI_2011_Subsidence_and_Tsunami_Data.xls">excel spreadsheet</a>.Convert this data to the GTdef input format for vertical only data.  Errors are approximately 0.1 m on all data, and
+		all data were measured using the same methods, and likely have similar error values, thus they should all be given equal weight.
+<div class="code-wrapper"> <pre>
+<c>#point type name                        lon             lat        z    Uv     eUv   weight</c>
+point 1  Rendova-Rendova_Harbor         157.33602       -8.40359   0.0  -0.15  0.10  1.0
+point 1  Rendova-Epata_Creek            157.30622       -8.43730   0.0  0      0.10  1.0
+point 1  Rendova-Mbaniata               157.26260       -8.63325   0.0  -0.70  0.10  1.0
+point 1  Rendova-Hofofo_Pt              157.19633       -8.56530   0.0  0      0.10  1.0
+point 1  Rendova-Habila                 157.22920       -8.60414   0.0  -0.60  0.10  1.0
+point 1  Rendova-Rava_Pt                157.40336       -8.72264   0.0  -0.60  0.10  1.0
+point 1  Tetepare-Tofa                  157.53432       -8.75576   0.0  -0.40  0.10  1.0
+point 1  Tetepare-Jetty_near_Ecolodge   157.44286       -8.72234   0.0  -0.25  0.10  1.0
+point 1  Tetepare-Ecolodge_boat_ramp    157.44321       -8.72120   0.0  -0.30  0.10  1.0
+point 1  Rendova-Rano                   157.32886       -8.62969   0.0  -0.50  0.10  1.0
+point 1  Rendova-Vankuva                157.33953       -8.60934   0.0  0      0.10  1.0
+point 1  Rendova-Kofi_Bay_village       157.33874       -8.6039    0.0  -0.40  0.10  1.0
+point 1  Rendova-Mauru_Loging_Camp      157.39881       -8.5137    0.0  -0.30  0.10  1.0
+point 1  Rendova-Ugele                  157.39921       -8.44959   0.0  0      0.10  1.0
+</pre></div>                                                       
+		<li> Build a model for a single fault with no subfaults.  Use your favorite geographic viewer (geomapapp, google earth, google maps) to define the
+		boundaries of a megathrust fault.  Use the CMT focal mechanism to define the dip (If you haven't used this before, it is a
+		good opportunity to become familiar with my code <gr>searchCMT</gr>.
+		<li> Define the fault to allow for a reasonable range of slip values.  Note that since we only have limited vertical data
+		here, it would be unwise to consider any transverse (strike-slip) motion on the fault.  As well, given nature abhors a void, it would
+		be unwise to choose opening on this model. Once you've set up your data and your fault with a slip range, you're ready to model.
+<div class="code-wrapper"> <pre>
+# fault
+<c>#fault type name lon       lat       z1   z2     len     str    dip    ss  ds   ts   ss0  ssX   ds0  dsX    ts0  tsX    Nd  Ns </c>
+fault  1    slm  157.0990  -8.6920   0    5200   50000   125.0  158.0  0   0.1  0    0    0     0    100     0    0     1   1
+
+<c>#point type name                           lon           lat        z    Uv     eUv    weight</c>
+point  1    Rendova-Rendova_Harbor         157.33602     -8.40359   0.0  -0.15  0.10   1.0
+point  1    Rendova-Epata_Creek            157.30622     -8.43730   0.0   0.0   0.10   1.0
+point  1    Rendova-Mbaniata               157.26260     -8.63325   0.0  -0.70  0.10   1.0
+point  1    Rendova-Hofofo_Pt              157.19633     -8.56530   0.0   0.0   0.10   1.0
+point  1    Rendova-Habila                 157.22920     -8.60414   0.0  -0.60  0.10   1.0
+point  1    Rendova-Rava_Pt                157.40336     -8.72264   0.0  -0.60  0.10   1.0
+point  1    Tetepare-Tofa                  157.53432     -8.75576   0.0  -0.40  0.10   1.0
+point  1    Tetepare-Jetty_near_Ecolodge   157.44286     -8.72234   0.0  -0.25  0.10   1.0
+point  1    Tetepare-Ecolodge_boat_ramp    157.44321     -8.72120   0.0  -0.30  0.10   1.0
+point  1    Rendova-Rano                   157.32886     -8.62969   0.0  -0.50  0.10   1.0
+point  1    Rendova-Vankuva                157.33953     -8.60934   0.0   0.0   0.10   1.0
+point  1    Rendova-Kofi_Bay_village       157.33874     -8.6039    0.0  -0.40  0.10   1.0
+point  1    Re ndova-Mauru_Loging_Camp     157.39881     -8.5137    0.0  -0.30  0.10   1.0
+point  1    Rendova-Ugele                  157.39921     -8.44959   0.0   0.0   0.10   1.0
+</pre></div>
+</ol>
+
+
+<b>Output:</b>
+<ol type="i">
+<li> If the model converges, analyze the  output, use the "_kp" file to create an input for the forward model(keep in mind the difference between the inverse and forward model fault parameters) to predict the deformation for the entire region. Rename the new input file to forexample "solomon_inv.in" and the fault dimentions below and run a forward model. The output should give a data file to plot and visualize in gnuplot.
+
+<div class="code-wrapper"> <pre>
+<c>#fault type name lon      lat      z1         z2       len        str    dip     ss    ds     ts      ss0   ssX    ds0   dsX   ts0   tsX    Nd  Ns </c>
+fault 1    slm  157.09896 -8.69204 0.00e+00   5.20e+03 5.00e+04   125.00 158.00  0.000 5.167  0.000   0.00  0.00   0.00  0.00  0.00  0.00   1   1
+<c>#grid name        Erot Nrot lon1    lat1    lon2     lat2     Ne    Nn   </c>
+grid  Solom_region   0    0    156.4   -9.3    158.1    -7.9     200   200 
+</pre></div>
+
+<li> Ploting the results.
+<div class="code-wrapper"> <pre>
+<c># first use awk to create a file of relevant columns </c>
+  awk '$1~"point"{print $4,$5,$9}' solomon_inv_fwd.out > solomon_plotdata.xyz
+
+<c># Quick and easy plotting using Gnuplot on linux and other platforms</c>
+#type:
+gnuplot
+# within the dialog. Once plotted use the cursor to move around the data
+gnuplot> splot 'solomon_plotdata.xyz' u 1:2:(0):($3/1e1):($4/1e1):($5/1e1) every 11 with vectors
+</pre></div>
+</ol>
+</section>
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "nslip">
+<li> <h2> <a href = "#TOC"> Non-uniform Slip Model Inversion: </a> </h2></li>
+		<p> This problem is a little more tricky, as we will quickly go from an overdetermined problem (more data than model paremeters),
+		     to an underdetermined problem.
+		     In order to get around this, and to solve for realistic slip, we constrain the interdependence between individual slip patches.
+		    The most popular way to do this is to define minimize the 'roughness' of the slip patch, as defined in
+		    <a href=http://geophysics.eas.gatech.edu/internal/papers/1987/Harris/Harris_Segall_JGR_1987.pdf>Harris and Segall (1987)</a>,
+ 		     but more concisely in <a href=http://geophysics.eas.gatech.edu/internal/papers/2002/J%f3nsson/J%f3nsson_etal_BSSA_2002.pdf>Jónsson_et al_(2002)</a>.
+		     <br>
+		     The method works to minimize the 2D second-order derviative of the slip surface so that large changes are constrained within a certain value.
+		     The way it's been implemented here is that a series of roughness solutions are determined, all yeilding different misfits to the data.
+		     It is a somewhat arbitrary decision to chose the optimal roughness parameter.  Usually this is done by evaluating the kink-point by which
+		     additionally smooth results significantly increase misfits.
+  <ol type="i">
+		<li> Choose your kappa value (parameter that controls roughness) to range between 0 to 5000 by 500.
+<div class="code-wrapper"> <pre>
+kappa 2 0  5000 11
+</pre></div>
+		<li> Setup your fault to now have 12 subfaults, 4 patches along-strike and 3 patches along-dip.
+<div class="code-wrapper"> <pre>
+<c>#fault type name   lon       lat     z1  z2    len    str    dip     ss   ds    ts    ss0  ssX    ds0  dsX    ts0 tsX    Nd  Ns</c>
+ fault  1   slm    157.0990  -8.6920  0  5200  50000  125.0  158.0   0    0.1   0     0    0      0    100    0   0      3   4
+</pre> </div>
+		<li> Invert, and explore your results.  Try plotting misfit vs. roughness to see how your choices in kappa affect these results.
+		<li> Once you've chosen your optimal kappa value, run a new forward model, and repredict deformation.
+		<li> Finally, you might want to look at your results in a geographic reference system.  I've created a GMT script to do this,
+		     but you must modify it for your purposes.  As well, I haven't gotten the slip models to plot on top of the geographic ones, so you
+		     may want to do this by hand using your favorite vector graphics program like Adobe Illustrator.  If you do get your version
+		     to correctly plot on the map without any one-time tricks, let me know and I will update the online version.
+		     <br><br>
+		     The code: <a href="http://geophysics.eas.gatech.edu/anewman/classes/MGM/GTdef/slipmodel.gmt">slipmodel.gmt</a>
+		<li> Another code that may be of use is <a href="http://geophysics.eas.gatech.edu/anewman/classes/MGM/GTdef/GTdef_interface.gmt "> GTdef_interface.gmt</a> which can be used to plot an individual slip model
+		     along with the mistfit/roughness trade-off.  You again may need to modify this for your needs.
+<div class="code-wrapper"> <pre>
+% GTdef_interface.gmt *kp*.out
+% <c># view your results </c>
+% gs *.ps   <c># page through your numerous ps files to observe the variance with increasing smoothness</c>
+</pre> </div>
+    </ol>
+</section>
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "cbt">
+<li> <h2> <a href = "#TOC"> Checkerboard Testing: </a> </h2></li>
+
+ Okay, you've gotten some solutions by now, however how are you certain that your results are of value?
+		This is a big question that is quite difficult to rightfully answer.  One quote that often comes to mind here is
+		"All models are wrong, but some are useful" attributed to George Box, a statistician.
+		<br>
+		In order to valididate a model, it would be useful if you had independent information, like mapped fault offsets, or tsunami results. However,
+		in the absense of this, one must work with the data we used for the inversion in the first place.
+		This is normally done by creating a checkerboard model and determining whether the predicted 'data' are sufficient
+		to recreate the model.
+	<ol type="i">
+		<li>Create an input model with subfaults that are approximately as large as characteristic changes you
+		observe in your solutions.  Each subfault alternates between 0 and 1 unit of slip.
+		<li>Run a forward model, and predict the deformation at each of the sites you used for your original inversion.
+		<li>If you have error information add these values so they fractionallly scale with the difference between your
+		original data and their error. (e.g 10 cm error for 50 cm original displacment) should now scale to 1 cm error
+		for predicted 5 cm displacemnt).
+		<li>Use these synthetic data and errors to run a new inversion and compare the output to the original
+		checkerboard.  If the input model matches the inversion, then you have great resolution.  Where you start
+		to signficantly deviate from your checkerboard, you lose resolution.  One could be more quantitative than this,
+		but it is usually best to trust your judgement here--it's kept you alive this long.
+	</ol>
+</section>
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "gf">
+	<li> <h2> <a href = "#TOC"> Ingesting External Green's Functions</a></h2></li>
+</section>
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "ref">
+<li> <h2> <a href = "#TOC"> References: </a> </h2></li>
+<ul>
+    <li><a href=http://geophysics.eas.gatech.edu/internal/papers/1985/Okada/Okada_BSSA_1985.pdf> Okada, Y. (1985). Surface deformation due to shear and tensile faults in a half-space, Bull. Seism. Soc. Am. 75, 1135-1154.</a>
+    <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Chen_etal_GRL_2009.pdf> Chen, T., A. V. Newman, L, Feng, H. M. Fritz (2009), Slip Distribution from the 1 April 2007 Solomon Islands Earthquake: A Unique Image of Near-Trench Rupture, Geophys. Res. Lett., 36, L16307, doi:10.1029/2009GL039496. </a>
+    <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Feng_etal_JGR_2012.pdf> Feng, L., A. V. Newman, J. M. Protti, V. González, Y. Jiang, T. H. Dixon (2012), Active Deformation near the Nicoya Peninsula, Northwestern Costa Rica, Between 1996 and 2010: Interseismic Megathrust Coupling, J. Geophys. Res., 117, B06407, doi:10.1029/2012JB009230. </a>
+</ul>
+
+
+
+<!--end sections-->
+</ol>
+</td> </tr>
+
+
+<!--footer-->
+<tr> <td>
+<center>
+<hr size=3 color=black ><!---------------------------------------------------------------------------------------->
+   <font size=2 color=darkblue> <I>dmurekezi3<IMG src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I>, <I>anewman<IMG src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I></font> | <font size=2 color=darkblue><I>Updated:
+Tue May 19 13:23:19 EDT 2020
+   </I></font>
+   </center>
+</td> </tr> 
+</table>
+</body>
+</html>

@@ -38,7 +38,7 @@ function [ modspace,earth,...
 % added 'dip' flag for bended fault lfeng Mon Dec  7 00:53:06 EST 2009                   %
 % added 'freesurface' flag lfeng Wed Dec  9 17:06:48 EST 2009                            %
 % added 'fault5' lfeng Fri Dec 11 12:38:41 EST 2009                                      %
-% changed 'freesurface' to 'surface' flag lfeng Wed Feb 24 12:46:01 EST 2010	         %
+% changed 'freesurface' to 'surface' flag lfeng Wed Feb 24 12:46:01 EST 2010             %
 % changed 'coord' to string flag lfeng Wed Feb 24 13:40:01 EST 2010                      %
 % use cell array of strings for names lfeng Wed Dec  1 14:41:46 EST 2010                 %
 % commented out 'fault5' lfeng Wed Dec  1 14:42:53 EST 2010                              %
@@ -65,6 +65,8 @@ function [ modspace,earth,...
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016     %
 % added fault6 for external geometry, changed old fault6 to fault7 lfeng Jun 1 SGT 2016  %
 % last modified Lujia Feng Wed Jun  1 17:18:32 SGT 2016                                  %
+% added options for reading lsqlin params for fitting                                    %
+%last modified by Andrew Newman Tue May 19 09:58:52 EDT 2020                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -81,17 +83,18 @@ modspace.grnflag   = 'off';
 modspace.sdropflag = 'off';
 %modspace.kappa    = 0; will be defined later
 %modspace.beta     = 0; will be defined later
-% form everything that is needed for x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0)
+% form everything that is needed for x = lsqlin(C,d,A,b,Aeq,beq,lb,ub,x0,options)
 modspace.Xgrn = []; modspace.Lgrn = [];
-modspace.Bgrn = []; modspace.Ngrn = []; 
-modspace.Aeq  = []; modspace.beq  = []; 
-modspace.lb   = []; modspace.ub   = []; 
+modspace.Bgrn = []; modspace.Ngrn = [];
+modspace.Aeq  = []; modspace.beq  = [];
+modspace.lb   = []; modspace.ub   = [];
 modspace.x0   = []; modspace.xx   = [];
 modspace.sm   = []; modspace.sm_abs = []; % sm_abs for calculate absolute 1st derivative (strain)
 modspace.modinfo = [];
 modspace.res = [];
 modspace.mat = [];
-
+modspace.lsqlin = [];
+modspace.lsqlin_MaxIter = 2000; modspace.lsqlin_TolFun = 1e-30;  % prior hard-wired values
 % earth structure defaults
 earth.type      = 'homogeneous';
 earth.rigidity  = 30e9;
@@ -103,10 +106,10 @@ earth.edgrnfcts = [];
 % fault structure
 % - to read in
 % use CELL ARRAY OF STRINGS for names
-flt1.num = 0;  	 flt1.name = {};    flt1.flt = [];    flt1.sdrop = []; 
-flt2.num = 0;    flt2.name = {};    flt2.flt = [];    flt2.sdrop = []; 
-flt3.num = 0;    flt3.name = {};    flt3.flt = [];    flt3.sdrop = []; 
-flt4.num = 0;    flt4.name = {};    flt4.flt = [];    flt4.sdrop = []; 
+flt1.num = 0;  	 flt1.name = {};    flt1.flt = [];    flt1.sdrop = [];
+flt2.num = 0;    flt2.name = {};    flt2.flt = [];    flt2.sdrop = [];
+flt3.num = 0;    flt3.name = {};    flt3.flt = [];    flt3.sdrop = [];
+flt4.num = 0;    flt4.name = {};    flt4.flt = [];    flt4.sdrop = [];
 flt5.num = 0;    flt5.name = {};    flt5.flt = [];    flt5.sdrop = [];    flt5.geoname = {};    flt5.colname = {};
 flt6.num = 0;    flt6.name = {};    flt6.flt = [];    flt6.sdrop = [];    flt6.geoname = {};    flt6.colname = {};
 flt7.num = 0;    flt7.name = {};    flt7.flt = [];    flt7.sdrop = [];    flt7.grname  = {};
@@ -121,7 +124,7 @@ flt6.Min = {}; flt6.xyzflt = {};
 flt7.Min = {}; flt7.xyzflt = {};
 
 % subfault structure
-subflt.num   = 0;  subflt.name   = {};  subflt.flt = []; 
+subflt.num   = 0;  subflt.name   = {};  subflt.flt = [];
 
 % addon structure
 addon.dipnum = 0;  addon.dipname = {};  addon.dip  = [];
@@ -130,10 +133,10 @@ addon.crt    = [];
 
 % data structure
 % - to read in
-pnt.num = 0;     pnt.name = {};     pnt.loc = [];   pnt.disp = [];  pnt.err = [];   pnt.wgt = []; 
+pnt.num = 0;     pnt.name = {};     pnt.loc = [];   pnt.disp = [];  pnt.err = [];   pnt.wgt = [];
 los.num = 0;     los.name = {};     los.loc = [];   loc.disp = [];  los.err = [];   los.wgt = [];  los.dir = [];
-bsl.num = 0;     bsl.name = {};     bsl.loc = [];   bsl.disp = [];  bsl.err = [];   bsl.wgt = []; 
-prf.num = 0;     prf.name = {};     prf.prf = []; 
+bsl.num = 0;     bsl.name = {};     bsl.loc = [];   bsl.disp = [];  bsl.err = [];   bsl.wgt = [];
+prf.num = 0;     prf.name = {};     prf.prf = [];
 grd.num = 0;     grd.name = {};     grd.grd = [];
 % - to be built later
 pnt.crt = []; pnt.obs = []; pnt.obs_err = []; pnt.obs_wgt = []; pnt.coef = [];
@@ -143,14 +146,14 @@ bsl.crt = []; bsl.obs = []; bsl.obs_err = []; bsl.obs_wgt = []; bsl.coef = [];
 
 % stress fault
 sspnt.num  = 0;  sspnt.name  = {};  sspnt.loc  = []; sspnt.str = []; sspnt.dip = []; sspnt.rake = []; sspnt.fric = [];
-ssflt1.fltnum = 0;  ssflt1.num = 0;  ssflt1.fltname = {};  ssflt1.flt = []; 
-ssflt2.fltnum = 0;  ssflt2.num = 0;  ssflt2.fltname = {};  ssflt2.flt = []; 
+ssflt1.fltnum = 0;  ssflt1.num = 0;  ssflt1.fltname = {};  ssflt1.flt = [];
+ssflt2.fltnum = 0;  ssflt2.num = 0;  ssflt2.fltname = {};  ssflt2.flt = [];
 
 kappa_num = 0;
 beta_num  = 0;
 layer_num = 0;
 ln = 0; % line number
-while(1)   
+while(1)
     % read in one line
     tline = fgetl(fin);
     ln=ln+1;
@@ -161,7 +164,6 @@ while(1)
     % omit '#,%, and blank' comment lines
     %if (strncmpi(flag,'#',1)||strncmpi(flag,'%',1)||isempty(flag)), continue; end
     if (GTdef_skip(flag)), continue; end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Controlling Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%% coordinate %%%%%
@@ -188,6 +190,13 @@ while(1)
         if ~strcmpi(modspace.surf,'none') && ~strcmpi(modspace.surf,'free') && ~strcmpi(modspace.surf,'fixed')
             error('GTdef_open ERROR: surfce should be either free or fixed!');
         end
+    %%%%% lsqlin %%%%%
+    elseif strcmpi(flag,'lsqlin')
+        %[modspace.lsqlin,remain] = strtok(remain);
+        [MaxIter,remain] = strtok(remain);
+        [TolFun,remain] = strtok(remain);
+        modspace.lsqlin_MaxIter = str2double(MaxIter);
+        modspace.lsqlin_TolFun = str2double(TolFun);
     %%%%% kappa %%%%%
     elseif strcmpi(flag,'kappa')
         [method,remain] = strtok(remain);
@@ -197,7 +206,7 @@ while(1)
                 [kk,remain] = strtok(remain);
     		if GTdef_skip(kk), break; end
 	        kappa_num = kappa_num+1;
-                kappa(kappa_num) = str2double(kk);             
+                kappa(kappa_num) = str2double(kk);
 	    end
 	%% method 2 %%
         elseif strcmp(method,'2')
@@ -205,7 +214,7 @@ while(1)
  	    [ kn,remain ] = GTdef_read1double(remain);
  	    [ N,remain ] = GTdef_read1double(remain);
 	    delta_k = (kn-k1)/(N-1);
-	    n0 = kappa_num+1; kappa_num = kappa_num+N; 
+	    n0 = kappa_num+1; kappa_num = kappa_num+N;
 	    for ii = n0:kappa_num
 	        kappa(ii) = k1+delta_k*(ii-n0);
 	    end
@@ -223,7 +232,7 @@ while(1)
                 [kk,remain] = strtok(remain);
     		if GTdef_skip(kk), break; end
 	        beta_num = beta_num+1;
-                beta(beta_num) = str2double(kk);             
+                beta(beta_num) = str2double(kk);
 	    end
 	%% method 2 %%
         elseif strcmp(method,'2')
@@ -231,7 +240,7 @@ while(1)
  	    [ kn,remain ] = GTdef_read1double(remain);
  	    [ N,remain ] = GTdef_read1double(remain);
 	    delta_k = (kn-k1)/(N-1);
-	    n0 = beta_num+1; beta_num = beta_num+N; 
+	    n0 = beta_num+1; beta_num = beta_num+N;
 	    for ii = n0:beta_num
 	        beta(ii) = k1+delta_k*(ii-n0);
 	    end
@@ -314,7 +323,7 @@ while(1)
 	end
     %%%%% warning.  old usage no longer read %%%%%
     elseif (strcmpi(flag,'rigidity') ||strcmpi(flag,'poisson'))
-       warning('Line %d, of %s: Old input call for "%s" is deprecated and currently ignored.  Please see "earth" flag for modern usage.',ln,filename,flag)	    
+       warning('Line %d, of %s: Old input call for "%s" is deprecated and currently ignored.  Please see "earth" flag for modern usage.',ln,filename,flag)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Fault Parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%% fault %%%%%
@@ -381,7 +390,7 @@ while(1)
 	    end
         else
 	    warning('Line %d, of %s: Input fault type "%s" not recognised. Ignoring this fault.',ln,filename,method)
-        end   
+        end
     %%%%% subfault %%%%%
     elseif strcmpi(flag,'subfault')
         [name,remain] = strtok(remain);
@@ -425,7 +434,7 @@ while(1)
 	    pnt.err(pnt.num,1) = nan; pnt.err(pnt.num,2) = nan;
  	    [ pnt.err(pnt.num,3),remain ] = GTdef_read1double(remain);
             %% weight %%
-            [str,remain] = strtok(remain); 
+            [str,remain] = strtok(remain);
 	    if GTdef_skip(str) % if weight is absent, use default 1
 	        pnt.wgt(pnt.num,1) = 1;
 	    else
@@ -450,7 +459,7 @@ while(1)
             end
 	    pnt.err(pnt.num,3) = nan;
             %% weight %%
-            [str,remain] = strtok(remain); 
+            [str,remain] = strtok(remain);
 	    if GTdef_skip(str)  % if weight is absent, use default 1
 	        pnt.wgt(pnt.num,1) = 1;
 	    else
@@ -473,7 +482,7 @@ while(1)
  	        [ pnt.err(pnt.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% weight %%
-            [str,remain] = strtok(remain); 
+            [str,remain] = strtok(remain);
 	    if GTdef_skip(str)  % if weight is absent, use default 1
 	        pnt.wgt(pnt.num,1) = 1;
 	    else
@@ -502,7 +511,7 @@ while(1)
  	        [ los.dir(los.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% weight %%
-            [str,remain] = strtok(remain); 
+            [str,remain] = strtok(remain);
 	    if GTdef_skip(str) % if weight is absent, use default 1
 	        los.wgt(los.num,1) = 1;
 	    else
@@ -530,7 +539,7 @@ while(1)
 	    bsl.err(bsl.num,1) = nan; bsl.err(bsl.num,2) = nan; bsl.err(bsl.num,3) = nan;
  	    [ bsl.err(bsl.num,4),remain ] = GTdef_read1double(remain);
             %% weight %%
-            [str,remain] = strtok(remain); 
+            [str,remain] = strtok(remain);
 	    if GTdef_skip(str)  % if weight is absent, use default 1
 	        bsl.wgt(bsl.num,1) = 1;
 	    else
@@ -555,7 +564,7 @@ while(1)
             end
 	    bsl.err(bsl.num,4) = nan;
             %% weight %%
-            [str,remain] = strtok(remain); 
+            [str,remain] = strtok(remain);
 	    if GTdef_skip(str)  % if weight is absent, use default 1
 	        bsl.wgt(bsl.num,1) = 1;
 	    else
@@ -578,7 +587,7 @@ while(1)
  	        [ bsl.err(bsl.num,ii),remain ] = GTdef_read1double(remain);
             end
             %% weight %%
-            [str,remain] = strtok(remain); 
+            [str,remain] = strtok(remain);
 	    if GTdef_skip(str) % if weight is absent, use default 1
 	        bsl.wgt(bsl.num,1) = 1;
 	    else
@@ -689,14 +698,14 @@ if strcmpi(modspace.coord,'geo') || strcmpi(modspace.coord,'geo_polyconic')
 end
 
 % set out as the same as input first
-flt1.out = flt1.flt; 
-flt2.out = flt2.flt; 
-flt3.out = flt3.flt; 
-flt4.out = flt4.flt; 
+flt1.out = flt1.flt;
+flt2.out = flt2.flt;
+flt3.out = flt3.flt;
+flt4.out = flt4.flt;
 flt5.out = flt5.flt;
 flt6.out = flt6.flt;
 flt7.out = flt7.flt;
-subflt.out     = subflt.flt; 
+subflt.out     = subflt.flt;
 subflt.outname = subflt.name;
 
 % if layer exists, sort layer according to the ascending id
@@ -740,8 +749,8 @@ lon(ind) = lon(ind)-360;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [ out ] = GTdef_skip(str)
-if (strncmpi(str,'#',1)||strncmpi(str,'%',1)||isempty(str)) 
-   out = true(); 
+if (strncmpi(str,'#',1)||strncmpi(str,'%',1)||isempty(str))
+   out = true();
 else
    out = false();
 end

@@ -25,18 +25,24 @@ function [ modspace ] = GTdef_invert(modspace,pnt,los,bsl,beta)
 % added InSAR los & Lgrn lfeng Tue Nov  3 23:17:37 SGT 2015               %
 % added Model and Data Resolution Matrices, output of weighted Green's    %
 %  function matrix (and other data into modspace)                         %
-%    anewman Tue May 10 11:55:42 EDT 2016                                 %
+%    anewman Tue May 10 11:55:42 EDT 2016
 %last modified by Andrew Newman Tue May 10 11:55:42 EDT 2016              %
+% added option for variable lsqlin control parameters                     %
+%last modified by Andrew Newman Tue May 19 09:58:52 EDT 2020              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Xgrn = modspace.Xgrn;  
-Lgrn = modspace.Lgrn;  
+Xgrn = modspace.Xgrn;
+Lgrn = modspace.Lgrn;
 Bgrn = modspace.Bgrn;
 Aeq  = modspace.Aeq;
 beq  = modspace.beq;
 lb   = modspace.lb;
 ub   = modspace.ub;
 x0   = modspace.x0;
+%define options for lsqlin fit, may use later as one possibility for inversion
+%lsqlin         = modspace.lsqlin   % currently the only option
+lsqlin_MaxIter = modspace.lsqlin_MaxIter;
+lsqlin_TolFun  = modspace.lsqlin_TolFun;
 
 % condense the smoothing matrix by removing rows of all zeros
 sm     = GTdef_condense(modspace.sm);
@@ -80,14 +86,16 @@ nrealdata=size(C,1); % identify the size of the real-data part of the data vecto
 % add beta to the smoothing matrix
 sm = sm.*beta;
 
-% combine the green matrices and the smoothing matrix
+% combine the green matrices and the smoothing matrix; adding zeros to the data vector as well
 d_sm = zeros(size(sm,1),1);
 C = [ C;sm ]; d = [ d;d_sm ];
 
 ind = find(isinf(lb));
 Aeq_red = Aeq(ind,:); beq_red = beq(ind);
 
-options = optimset('MaxIter',2000,'TolFun',1e-30);
+%options = optimset('MaxIter',2000,'TolFun',1e-30,'TolCon',1e-30,'TolX',1e-20);
+
+options = optimset('MaxIter',lsqlin_MaxIter,'TolFun',lsqlin_TolFun);
 [xx,resnorm] = lsqlin(C,d,[],[],Aeq_red,beq_red,lb,ub,x0,options);
 %[xx,resnorm,res,exitflag,output] = lsqlin(C,d,[],[],Aeq_red,beq_red,lb,ub,x0);
 fprintf(1,'resnorm = %-12.5e\n',resnorm);
@@ -116,11 +124,11 @@ if isempty(sm)
     Gg=inv(G'*G)*G' ;  % no smoothing and unweighted
 else
     e2I=sm.^2;     % weighted smoothing matrix
-   %e2I=sm(ix,ix).^2; (version that ignored non-inverted data)      
-    Gg=inv(G'*G+e2I)*G'; % overdetermined.
+   %e2I=sm(ix,ix).^2; (version that ignored non-inverted data)
+    Gg=inv(G'*G+e2I)*G'; % overdetermined and damped least squares (eqn 4.21 Menke).
 end
-    %Gg = G'*inv(G*G'+e2I);  % same thing, but for underdetermined 
-R=Gg*G ;            % Model Resolution Matrix 
+    %Gg = G'*inv(G*G'+e2I);  %  (eqn 4.22 Menke) damped least squares minimizing resolution spread and covarience size
+R=Gg*G ;            % Model Resolution Matrix
 N=G*Gg ;            % Data Resolution Matrix
 
 
