@@ -70,7 +70,7 @@ Below, we will first step through some forward models, and eventually inversions
 <section id= "INPUT">
 <li> <H2> <a href = "#TOC"> The Input File </a> </H2></li>
 <p>
-The code includes a detailed input file (<a href="./GTdef_input" target=aux>click here to download/view</a>) that describes the structure of the input file for both the foward and inverse models. The file describes the model parameters and how they differ for different models run. Below we have included snapshots of the input file for each example model. 
+The code includes a detailed input file (<a href="files/GTdef_input" target=aux>click here to download/view</a>) that describes the structure of the input file for both the foward and inverse models. The file describes the model parameters and how they differ for different models run. Below we have included snapshots of the input file for each example model. 
 </p><p>
 Ground rules for the input file include:
 <ol>
@@ -208,8 +208,8 @@ We'll start with the most straight-forward case of a single vertical fault plane
 </p>
 <h3> Example Forward Model Run: </h3> 
 The simplist model includes just one fault and one data-point ran in a forward sense to prediction deformation at that data-point.  We will not stray significantly from there.<br>
-<br>
-<b>Input:</b>
+
+<H4>Input:</H4>
  <ol type="i">
  <li> We will create a vertical planar fault approximately 20 km long, with 1 meter, strike-slip motion, buried between 5 and 15 km depth. The output will describe the spatial deformation every 2 km across a 60x60 km grid surrounding the fault.
 	 <li> To keep the algorithm from attempting an inversion, it is important that all slip parameter ranges for a given slip-type on a fault block have equal value (i.e. ss0=ssX, ds0=dsX, and ts0=tsX in this example).  
@@ -226,7 +226,7 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 " > local1.in
 </pre></div>
 </ol>
-<b>Run:</b>
+<h4>Run:</h4>
  <ol type="i">
 <li> To run <gr>GTdef</gr>, you must call up matlab (interactive and gui are not necessary).
 	<li> Be sure the current version of GTdef is in your path.  You can check this using the <gr>path</gr> function, and add it using <gr>addpath</gr>.
@@ -240,7 +240,7 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 > GTdef('local1.in',1) <c>% will run on '1' core.
 </pre></div>
 </ol>
-<b>Output:</b>
+<h4>Output:</h4>
 <ol type="i">
 	<li> This will create an output file called <c>'local1_fwd.out'</c> that will repeat the model, and give predicted results for the defined grid locations (now as <c>'point'</c> data-type). 
 
@@ -251,11 +251,11 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
    gnuplot>  set ticslevel 0.0 <c># removes empty whitespace below plot </c>
    gnuplot>  splot 'local1_fwd.out' u 4:5:(0):($7*1e5):($8*1e5):($9*1e5) w vect t "surface displacement" <c> # just the surface results amplified to see variability</c>
    <c>#If you're more adventurous, you can plot the fault too (this assumes the fault is vertically dipping).</c>
-   gnuplot>  splot "&lt; awk \'$1==\"point\"{print $0}' local1_fwd.out" u 4:5:(0):($7*1e5):($8*1e5):($9*1e5) w vect t "surface displacement",\
+   gnuplot>  splot "&lt; awk '$1==\"point\"{print $0}' local1_fwd.out" u 4:5:(0):($7*1e5):($8*1e5):($9*1e5) w vect t "surface displacement",\
    "&lt; awk '$1==\"fault\"{printf \"%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n\", $4,$5,-$8,$6,$7,-$8,$6,$7,-$9,$4,$5,-$9,$4,$5,-$8}' local1_fwd.out" w l lw 2 lt -1 t "fault"
  <c> # use the cursor to move around the data</c>
 </pre></div>
- <img src="local1_fwd.png">
+ <img src="files/local1_fwd.png">
 </ol>
 </section>
 
@@ -263,31 +263,41 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 
 <section id= "uslip">
 <li> <H2> <a href = "#TOC"> Uniform Slip Model Inversion: </a> </H2></li>
+
+<h3>A little inversion theory:</h3>
 <p> <gr>GTdef</gr> performs a linear least-squares inversion of Green's functions to define
 the best-fitting set of models to describe a dataset with errors. The program uses the parameter optimization toolbox program called <gr>lsqlin</gr>. 
 You can read more about inversion methods from a number of books. Options include: <a href="http://geophysics.eas.gatech.edu/internal/papers/2005/Santamaria/Santamaria_Fratta_DiscreteSignalsInverseProblems_2005.pdf" target=aux2>
 	Santamarina & Fratta, "Discrete Signals and Inverse Problems" (2005)</a> in the EAS paper repository, and <a href="https://www.sciencedirect.com/science/article/pii/B9780123971609000035">Menke, "Geophysical Data Analysis"</a>, particularly chapters 3 &amp; 4. 
 <br>
 While the simplified forward problem exists:<br>
-<center><c><b> d</b> = <b>Gm</b></c></center><br> 
+<p class="right"><c>(1)</c></p>
+<center><c><b> d</b> = <b>Gm</b></c></center>	
+
 where Okada (1985) describes the Green's function, <c><b>G</b></c>, that relates model parameters <c><b>m</b></c>, to the data, <c><b>d</b></c>.
 If data are numerous, and/or model parameters are greater than one, each can be written as a vector of size <c>n</c> and <c>m</c>, with the <c><b>G</b></c> being a matrix sized <c>n x m</c>. 
 </p>
 The inversion equation, where we try to solve for model parameters becomes:
-<center><c><b>Gm</b> = <b> d</b></c></center><br> 
+
+<p class="right"><c>(2)</c></p>
+<center><c><b>Gm</b> = <b> d</b></c></center>
 
 For a least-squares solution, the simplified inversion becomes:
-<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>]<sup>-1</sup><b>G</b><sup>T</sup> <b>d</b></c></center><br> 
+<p class="right"><c>(3)</c></p>
+<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>]<sup>-1</sup><b>G</b><sup>T</sup> <b>d</b></c></center>
+
 
 Because we expect there to be interdepence between adjacent model patches, we can describe an additional set of equations to apply to the inversion and regularize the final model. 
 Every model patch m<sub>i</sub> can describe its model roughness as the Laplacian of that component of slip (e.g. ds, ss, ts).  We will try to minimize that roughness for each slip component of the model, <c><b>s</b></c>, which here will be the same as <c><b>m</b></c>:
 
-<center><c><b>d<sub>p</sub></b>= 0 = &kappa;&nabla;<sup>2</sup><b>s</b></c></center><br>
+<p class="right"><c>(4)</c></p>
+<center><c><b>d<sub>p</sub></b>= 0 = &kappa;&nabla;<sup>2</sup><b>s</b></c></center>
 
 where <c><i>&kappa;</i></c> is the smoothing kernel. 
 Furthermore, we combine the data weights and errors into a weighting matrix <c><b>W</b></c>.
 Now, incorporating the errors and weighting, the forward problem becomes:
 
+<p class="right"><c>(5)</c></p>
 <center><c>
 <b> d</b> = <b>Gm</b> =
 <math xmlns = "http://www.w3.org/1998/Math/MathML"> 
@@ -311,25 +321,42 @@ Now, incorporating the errors and weighting, the forward problem becomes:
     <mo>]</mo>
    <mrow>
 </math> <b>m</b></c></center>
-where the data and greens function matrix become everything in their respective matrices above.
+
+where the data and greens function matrix are now everything in their respective matrices above.
 The diaganol compontents of the weighting matrix <c>W<sub><i>ii</i></sub> = (<i>w<sub>i</sub></i>)<sup>0.5</sup>/<i>e<sub>i</sub></i></c>, 
-which are the per datum weighting <i>w<sub>i</sub></i> and errors <i>e<sub>i</sub></i>. 
+which are the per datum weighting <c><i>w<sub>i</sub></i></c> and errors <c><i>e<sub>i</sub></i></c>. 
 
 With <c><b>d</b></c> and <c><b>G</b></c> now containing the smoothing and weighting terms, our model estimate can now be defined as:
 
-<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>d</b></c></center><br> 
-where <c><math>&epsilon;<sup>2</sup><b>I</b> =&kappa;&nabla;<sup>2<b></sup>s</b></math></c>.
+<p class="right"><c>(6)</c></p>
+<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>d</b></c></center>
+
+where <c><math>&epsilon;<sup>2</sup><b>I</b> = &kappa;&nabla;<sup>2<b></sup>s</b></math></c>.
 We can simplify this be defining the Generalized Inverse Matrix:<br>
-<center><c><b>G</b><sup>-g</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup></c></center><br> 
-so:<br>
-<center><c><b>m</b><sup>est</sup> = <b>G</b><sup>-g</sup><b>d</b></c></center><br> 
+
+<p class="right"><c>(7)</c></p>
+<center><c><b>G</b><sup>-g</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup></c></center>
+	
+so:
+<p class="right"><c>(8)</c></p>
+<center><c><b>m</b><sup>est</sup> = <b>G</b><sup>-g</sup><b>d</b></c></center>
 <!--<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>W</b><sub>e</sub><b>G</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>W</b><sub>e</sub><b>d</b></c></center>--> 
-<br>
-<b>Input File:</b>
+
+The above mathematical formulation is not exactly the inversion scheme, as we employ bounding conditions in <gr>lsqlin</gr>, 
+including the option of positivity constraints, which make the full formulation much more complicated.
+However, the grouping of terms are important particularly for the development of distributed slip models as input into the solver, 
+and for understanding the model resolution matrix and ultimately resolution spread (discussed later).  
+
+<h3>Input File:</h3>
+We will need to build the model, including gathering the appropriate data and then estabishing an appropriate a priori interface. In this example, we will use the very small tsunami earthquake described in <a href="http://geophysics.eas.gatech.edu/people/anewman/research/papers/Newman_etal_GJI_2011.pdf">Newman et al. (2011)</a>.
+
 <ol type="i">
-		<li> From <a href="http://geophysics.eas.gatech.edu/people/anewman/research/papers/Newman_etal_GJI_2011.pdf">Newman et al. (2010)</a>
-		pull the coastal subsidence data from sheet 3 of the <a href="http://geophysics.eas.gatech.edu/people/anewman/research/data/Newman_etal_GJI_2011_Subsidence_and_Tsunami_Data.xls">excel spreadsheet</a>.Convert this data to the GTdef input format for vertical only data.  Errors are approximately 0.1 m on all data, and
-		all data were measured using the same methods, and likely have similar error values, thus they should all be given equal weight.
+	<li><b>Data:</b> Here, we pull coastal subsidence data from sheet 3 of the 
+	<a href="http://geophysics.eas.gatech.edu/people/anewman/research/data/Newman_etal_GJI_2011_Subsidence_and_Tsunami_Data.xls">excel spreadsheet</a>.
+	The data, being just vertical uplift/subsidence data need to be convert into the '<c>point 1</c>' format in <gr>GTdef</gr>.  
+	Errors are estimated to be approximately 0.1 m on all data (assuming error in tidal correction and prior high-tide estimates),
+	Because all data were measured using the same methods and likely have similar error values, we choose to give them all equal weight.
+	
 <div class="code-wrapper"> <pre>
 <c>#point type name                        lon             lat        z    Uv     eUv   weight</c>
 point 1  Rendova-Rendova_Harbor         157.33602       -8.40359   0.0  -0.15  0.10  1.0
@@ -347,58 +374,95 @@ point 1  Rendova-Kofi_Bay_village       157.33874       -8.6039    0.0  -0.40  0
 point 1  Rendova-Mauru_Loging_Camp      157.39881       -8.5137    0.0  -0.30  0.10  1.0
 point 1  Rendova-Ugele                  157.39921       -8.44959   0.0  0      0.10  1.0
 </pre></div>                                                       
-		<li> Build a model for a single fault with no subfaults.  Use your favorite geographic viewer (geomapapp, google earth, google maps) to define the
-		boundaries of a megathrust fault.  Use the CMT focal mechanism to define the dip (If you haven't used this before, it is a
-		good opportunity to become familiar with my code <gr>searchCMT</gr>.
-		<li> Define the fault to allow for a reasonable range of slip values.  Note that since we only have limited vertical data
-		here, it would be unwise to consider any transverse (strike-slip) motion on the fault.  As well, given nature abhors a void, it would
-		be unwise to choose opening on this model. Once you've set up your data and your fault with a slip range, you're ready to model.
-<div class="code-wrapper"> <pre>
-# fault
-<c>#fault type name lon       lat       z1   z2     len     str    dip    ss  ds   ts   ss0  ssX   ds0  dsX    ts0  tsX    Nd  Ns </c>
-fault  1    slm  157.0990  -8.6920   0    5200   50000   125.0  158.0  0   0.1  0    0    0     0    100     0    0     1   1
 
-<c>#point type name                           lon           lat        z    Uv     eUv    weight</c>
-point  1    Rendova-Rendova_Harbor         157.33602     -8.40359   0.0  -0.15  0.10   1.0
-point  1    Rendova-Epata_Creek            157.30622     -8.43730   0.0   0.0   0.10   1.0
-point  1    Rendova-Mbaniata               157.26260     -8.63325   0.0  -0.70  0.10   1.0
-point  1    Rendova-Hofofo_Pt              157.19633     -8.56530   0.0   0.0   0.10   1.0
-point  1    Rendova-Habila                 157.22920     -8.60414   0.0  -0.60  0.10   1.0
-point  1    Rendova-Rava_Pt                157.40336     -8.72264   0.0  -0.60  0.10   1.0
-point  1    Tetepare-Tofa                  157.53432     -8.75576   0.0  -0.40  0.10   1.0
-point  1    Tetepare-Jetty_near_Ecolodge   157.44286     -8.72234   0.0  -0.25  0.10   1.0
-point  1    Tetepare-Ecolodge_boat_ramp    157.44321     -8.72120   0.0  -0.30  0.10   1.0
-point  1    Rendova-Rano                   157.32886     -8.62969   0.0  -0.50  0.10   1.0
-point  1    Rendova-Vankuva                157.33953     -8.60934   0.0   0.0   0.10   1.0
-point  1    Rendova-Kofi_Bay_village       157.33874     -8.6039    0.0  -0.40  0.10   1.0
-point  1    Re ndova-Mauru_Loging_Camp     157.39881     -8.5137    0.0  -0.30  0.10   1.0
-point  1    Rendova-Ugele                  157.39921     -8.44959   0.0   0.0   0.10   1.0
+<li><p><b>Modeled Fault:</b> We need to come up with a choice for the appropriate input model.  This can be done using existing published fault geometries, evaluating distributions of microseismicity, focal mechanisms, examination of surface topography/bathymetry, or some combination of these methods.  Once an initial model is chosen, output from a number of inversions using differing geometries can be used to chose an optimal geometry by evaluating each geometry's overall model fit. The output results of these inversions can then be broken up into distributed models (discussed below).
+	Here, Newman et al. (2011) defined the fault using a combination of the overall fault strike, and testing a range of dip geometries. </p>
+<br>
+<p>
+For our inversion, we will define a finite range of allowble thrust(+) values (<c>ds</c>, and <c>dX</c> between 0 and 100 m). 
+Because data here are only vertical, we will chose to set strike-slip to 0 and not allow it to vary in the model, as this component will be very poorly constrained, possibly being dependent on choice of geometry. Finally, because this is a uniform slip model, the number of slip and strike components must be set to one (<c>Nd=Ns=1</c>).
+	</p>		
+	<p><i>Note:</i> Here, the dip =158&deg; for a strike of 125&deg;. This is equivelent to a dip of 22&deg; striking 305&deg;, but from the far end-point.</p>		
+<div class="code-wrapper"> <pre>
+<c>#fault type name lon      lat     z1  z2   len   str   dip   ss ds ts ss0 ssX ds0 dsX  ts0 tsX  Nd  Ns </c>
+fault  1    slm  157.0990 -8.6920 0   5200 50000 125.0 158.0 0 0.1 0  0   0   0   100  0   0    1   1
 </pre></div>
+<li><b>Run:</b> After combining the above parameters into a single input file (e.g. '<c>solomon.in</c>'), you can run the code jsut as was done in the forward model.
 </ol>
 
 
-<b>Output:</b>
+<H3>Output:</H3>
 <ol type="i">
-<li> If the model converges, analyze the  output, use the "_kp" file to create an input for the forward model(keep in mind the difference between the inverse and forward model fault parameters) to predict the deformation for the entire region. Rename the new input file to forexample "solomon_inv.in" and the fault dimentions below and run a forward model. The output should give a data file to plot and visualize in gnuplot.
+	<li> <b>Output files:</b> If the model converges, you can analyze the output results in either the '<c>_inv.out</c>' or '<c>_kp*.out</c>'. 
+	The former file gives the fit results of the run, while the later gives the model results as well as their predicted displacements at the sites described in the orginal input model. Its this second file that can be used as an input for future runs.
+	<ul>
+		<li><b> Model fit:</b> Below is the output from '<c>solomon_inv.out</c>' created by <gr>GTdef</gr>. Since there is only one inversion ran, there will be only one data line following a header line preceded by its column number (#). 
+		<div class="code-wrapper"> <pre>
+<c>#(1)beta (2)kappa (3)data_num (4)slip_num (5)ndf (6)rss [m^2] (7)rms [m] (8)wrrs [m^2] (9)wrms [m] (10)chi2 (11)rchi2 (12)r_1d [cm/km] (13)r_2d [cm/km^2] (14)strain [cm/km]</c>
+0.00000e+00  0.00000e+00      14 1 13 4.05607e-01  1.70211e-01   4.05607e+01   1.70211e+00   4.05607e+01   3.12005e+00   NaN           NaN           NaN </pre></div>
 
-<div class="code-wrapper"> <pre>
-<c>#fault type name lon      lat      z1         z2       len        str    dip     ss    ds     ts      ss0   ssX    ds0   dsX   ts0   tsX    Nd  Ns </c>
+			<li><b> Model results and predicted displacements:</b> Shown here is the output from '<c>solomon_kp0.00000.out</c>'.  Note that in addition to lines repeating the input file, there are several default input options explicitely written out here (e.g. coord, earth, surface).  Also included are model misfits repeated from the above file.  Lastly, the model line now includes the model output for a best-fit (showing 5.16091 m of thrust), and the model predictions for each data line (e.g. Rendova-Mbaniata predicts 62.62 cm of subsidence).Though data type was input as <c>point 1</c>, they are output as <c>point 3</c>, giving the predicted horizontal motions as well. Errors are not reported for models.
+		<div class="code-wrapper"> <pre>coord   	geo
+#data_num	14
+#slip_num	1
+#ndf     	13
+#rss      	4.05607e-01  [m^2]
+#rms      	1.70211e-01  [m]
+#wrss   	4.05607e+01  [m^2]
+#wrms   	1.70211e+00  [m]
+#chi2    	4.05607e+01 
+#rchi2   	3.12005e+00 
+#r_1d   	NaN          [cm/km]
+#r_2d   	NaN          [cm/km^2]
+#strain   	NaN          [cm/km]
+
+earth	homogeneous	3.00e+10  	0.2500
+
+kappa   	0.00000     
+beta     	0.00000     
+
+smooth   	2d
+surface  	free
+
+fault 1 slm  157.09900000   -8.69200000  0.0000e+00   5.2000e+03 5.0000e+04   125.00 158.00     0.00000 5.16091  0.00000   0.0000 0.0000  0.0000 100.0000  0.0000 0.0000    1 1
+point 3 Rendova-Rendova_Harbor	  157.33602000  -8.40359000  0.00000e+00    -0.09951   -0.25301    0.00474         NaN        NaN        NaN  1.00 
+point 3 Rendova-Epata_Creek	  157.30622000  -8.43730000  0.00000e+00    -0.11693   -0.31236   -0.00387         NaN        NaN        NaN  1.00 
+point 3 Rendova-Mbaniata	  157.26260000  -8.63325000  0.00000e+00    -0.89590   -1.40681   -0.62620         NaN        NaN        NaN  1.00 
+point 3 Rendova-Hofofo_Pt	  157.19633000  -8.56530000  0.00000e+00    -0.26215   -0.92622   -0.30033         NaN        NaN        NaN  1.00 
+point 3 Rendova-Habila	  157.22920000  -8.60414000  0.00000e+00    -0.70254   -1.31715   -0.55581         NaN        NaN        NaN  1.00 
+point 3 Rendova-Rava_Pt	  157.40336000  -8.72264000  0.00000e+00    -0.98978   -1.39069   -0.60162         NaN        NaN        NaN  1.00 
+point 3 Tetepare-Tofa	  157.53432000  -8.75576000  0.00000e+00    -0.71027   -0.73619   -0.19750         NaN        NaN        NaN  1.00 
+point 3 Tetepare-Jetty_near_Ecolodge	  157.44286000  -8.72234000  0.00000e+00    -0.87663   -1.18799   -0.39089         NaN        NaN        NaN  1.00 
+point 3 Tetepare-Ecolodge_boat_ramp	  157.44321000  -8.72120000  0.00000e+00    -0.86957   -1.17774   -0.38133         NaN        NaN        NaN  1.00 
+point 3 Rendova-Rano	  157.32886000  -8.62969000  0.00000e+00    -0.73815   -1.12756   -0.30286         NaN        NaN        NaN  1.00 
+point 3 Rendova-Vankuva	  157.33953000  -8.60934000  0.00000e+00    -0.59654   -0.93641   -0.17707         NaN        NaN        NaN  1.00 
+point 3 Rendova-Kofi_Bay_village	  157.33874000  -8.60390000  0.00000e+00    -0.57048   -0.90517   -0.16057         NaN        NaN        NaN  1.00 
+point 3 Rendova-Mauru_Loging_Camp	  157.39881000  -8.51370000  0.00000e+00    -0.24266   -0.41934   -0.00177         NaN        NaN        NaN  1.00 
+point 3 Rendova-Ugele	  157.39921000  -8.44959000  0.00000e+00    -0.15468   -0.29970    0.00941         NaN        NaN        NaN  1.00 </pre></div>
+</ul>
+
+<li><b>Predicting displacements elsewhere:</b> To estimate model displacements outside of the original data points in '<c>_kp*.out</c>', you can copy the model output into a new file along with the points that you want prediced.  Here, we are just using a grid, similar in the foward model example above, name it something like '<c>solomon_fwd.in</c>', and run as before. 
+
+<div class="code-wrapper"> <pre> <c>#fault type name lon      lat      z1         z2       len        str    dip     ss    ds     ts      ss0   ssX    ds0   dsX   ts0   tsX    Nd  Ns </c>
 fault 1    slm  157.09896 -8.69204 0.00e+00   5.20e+03 5.00e+04   125.00 158.00  0.000 5.167  0.000   0.00  0.00   0.00  0.00  0.00  0.00   1   1
 <c>#grid name        Erot Nrot lon1    lat1    lon2     lat2     Ne    Nn   </c>
-grid  Solom_region   0    0    156.4   -9.3    158.1    -7.9     200   200 
-</pre></div>
+grid  Solom_region   0    0    156.4   -9.3    158.1    -7.9     200   200 </pre></div>
 
-<li> Ploting the results.
+<li><b>Plotting results:</b> One tool that is particularly useful is the supplied algorithm '<gr>GTdef_project</gr>', as it can take the predicted output model and transform it into a highly-readable file for your favorite plotting program.
+<div class="code-wrapper"> <pre>> <c>% within matlab</c>
+> GTdef_project('solomon_kp0.00000.out') </pre></div>
+
+	This creates a new file (here '<c>solomon_kp0.00000_patches.out</c>') that describes all elements (here only one) of the model, including geographic position of corners, the element center position, and slip values.
+	While you could use a more full-featured plotting program like <a href="gmt.soest.hawaii.edu">GMT</a>, we'll again use <gr>gnuplot</gr> for our quick and dirty plot to show the predicted displacements from '<c>_kp*.out</c>', and then model geometry from '<c>_kp*_patches.out</c>'.
 <div class="code-wrapper"> <pre>
-<c># first use awk to create a file of relevant columns </c>
-  awk '$1~"point"{print $4,$5,$9}' solomon_inv_fwd.out > solomon_plotdata.xyz
-
-<c># Quick and easy plotting using Gnuplot on linux and other platforms</c>
-#type:
-gnuplot
-# within the dialog. Once plotted use the cursor to move around the data
-gnuplot> splot 'solomon_plotdata.xyz' u 1:2:(0):($3/1e1):($4/1e1):($5/1e1) every 11 with vectors
-</pre></div>
+<c># within gnuplot </c>
+<c># Note: We are using diffential scaling of the displacement vectors to scale with the geographic position and depth (in degrees&deg; and km) </c>
+gnuplot> splot "&lt; awk '$1==\"point\"{print $0}' solomon_kp0.00000.out"\
+u 4:5:(0):($7*1e-1):($8*1e-1):($9*1e1) w vect t "surface displacement",\
+"&lt; awk '$1==\"slm\"{printf \"%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n\", $4,$5,-$6/1000,$7,$8,-$9/1000,$10,$11,-$12/1000,$13,$14,-$15/1000,$4,$5,-$6/1000}' solomon_kp0.00000_patches.out"\
+w l lw 4 lt 7 -8 t "fault" </pre></div>
+After using your pointer to move around your model appropriately, your result should look something like this:
+ <img src="files/solomon_single_fault_inv.png" width="700px">
 </ol>
 </section>
 

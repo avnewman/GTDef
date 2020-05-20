@@ -18,6 +18,10 @@ body {
 div {
 	border: none;
 }
+div.wide {
+	width: 700px;
+	border: none;
+}
 li {
 	border: none;
 	margin: 10;
@@ -121,4 +125,14 @@ code.screen, pre.scr, pre.screen {
     }
 .navheader table, .navheader table td {
 	border: 0 !important;
+}
+p{
+	position: relative;
+	text-align: left;
+	margin: 0;
+}
+.right{
+	position: absolute;
+	right: 0;
+	margin-right: 10%;
 }
