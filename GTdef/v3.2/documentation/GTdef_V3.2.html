@@ -30,9 +30,9 @@
 <ol>
 <section id="INTRO">
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
-<li> <H2> <a href = "#TOC"> Introduction </a> </H2></li>
-
- Manual developed by <a href="https://eas.gatech.edu/people/murekezi-derrick"> Derrick Murekezi </a> and <a href="http://geophysics.eas.gatech.edu/people/anewman">Andrew Newman</a>
+<li> <H2> <a href = "#TOC"> Introduction </a></li>
+  <p>Manual developed by <a href="https://eas.gatech.edu/people/murekezi-derrick"> Derrick Murekezi </a> and <a href="http://geophysics.eas.gatech.edu/people/anewman">Andrew Newman</a></p>
+</H2>
 <br>
 <p>
 <gr>GTdef</gr> is an implementation of the Okada (1985) dislocation model written by
@@ -139,7 +139,7 @@ A data line for 3-component GPS point data may look like (also from above-linked
 point  3    rdom    -118.8979 37.6770 2417.4049    9.6  1.1  36.1    1.0  1.0  1.3	1
 </pre></div>
 <ul>
-  <li><b>DATA Types</b> <br>
+  <li><b>Data Types</b> <br>
 	Depending on data type both the data type identifier (first column) and the data-type number (second column) will change as described below..
    <ul>
 	   <li>point - data described at a single point at the surface (e.g. GPS).<br>
@@ -167,7 +167,7 @@ point  3    rdom    -118.8979 37.6770 2417.4049    9.6  1.1  36.1    1.0  1.0  1
 	<li>grid - a parallelogram defined by the lower-left (lon1,lat1) and upper-right (lon2,lat2) corners with data points parallel to the sides.
    </ul>
  Note: profile and grid are generally used for displaying results from a forward model.
-   <li><b>DATA parameters</b><br>
+   <li><b>Data parameters</b><br>
 	   The data-types described above will use differing parameters. Their meaning  and convention are describe here.
 	<ul>
 	   <li>lon(x),lat(y),z - horizontal location and elevation (positive upward) [m]
@@ -387,7 +387,7 @@ Because data here are only vertical, we will chose to set strike-slip to 0 and n
 <c>#fault type name lon      lat     z1  z2   len   str   dip   ss ds ts ss0 ssX ds0 dsX  ts0 tsX  Nd  Ns </c>
 fault  1    slm  157.0990 -8.6920 0   5200 50000 125.0 158.0 0 0.1 0  0   0   0   100  0   0    1   1
 </pre></div>
-<li><b>Run:</b> After combining the above parameters into a single input file (e.g. '<c>solomon.in</c>'), you can run the code jsut as was done in the forward model.
+<li><b>Run:</b> After combining the above parameters into a single input file (e.g. '<c>solomon.in</c>'), you can run the code just as was done in the forward model.
 </ol>
 
 
@@ -491,7 +491,8 @@ kappa 2 0  5000 11
 <c>#fault type name   lon       lat     z1  z2    len    str    dip     ss   ds    ts    ss0  ssX    ds0  dsX    ts0 tsX    Nd  Ns</c>
  fault  1   slm    157.0990  -8.6920  0  5200  50000  125.0  158.0   0    0.1   0     0    0      0    100    0   0      3   4
 </pre> </div>
-		<li> Invert, and explore your results.  Try plotting misfit vs. roughness to see how your choices in kappa affect these results.
+		<li> Invert, and explore your results.  Try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this data set.
+      <img src="files/non_uniform_solomon.png" width="700px">
 		<li> Once you've chosen your optimal kappa value, run a new forward model, and repredict deformation.
 		<li> Finally, you might want to look at your results in a geographic reference system.  I've created a GMT script to do this,
 		     but you must modify it for your purposes.  As well, I haven't gotten the slip models to plot on top of the geographic ones, so you
