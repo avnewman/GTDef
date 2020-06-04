@@ -90,7 +90,8 @@ gmt psbasemap -O -K $RANGE2 $PROJ -B"$DX/${DY2}":"dy/dx [km^2]":"E" >>$OUTFILE
 gmt psxy $DRV  $RANGE2 $PROJ -O -K -N -W1,red >>$OUTFILE
 gmt psxy $DRV  $RANGE2 $PROJ -O -N -Sc0.2 -Gred -W0.2 >>$OUTFILE
 
-
+# set defaults back to black
+gmt set  MAP_FRAME_PEN black
 # create PNG output from PS file
   OUTPNG=$(basename $OUTFILE .ps).png
   # 600dpi 0.3cm margin on all sides and 50%scale

@@ -93,7 +93,7 @@ gmt pscoast  -X2 -Dh  -W0.1 -S235/255/255 -G235/255/235 -Y10.5 $BGN -P -B1f.2WeS
 awk '$1!~"#" {printf ">-Z%f\n%f %f\n%f %f\n%f %f\n%f %f\n%f %f\n",DEF*($19**2+$20**2+$21**2)**.5, $4,$5, $7,$8, $10,$11, $13,$14, $4,$5 }' DEF=$DEFSCALE $PATCHES \
 	 | gmt psxy  $MID -A -L -W -C"$CPT" >>$OUTFILE
 
-awk '$1!~"#" {print $16,$17, $24*DEF, $25*DEF, "0 0 0" }' DEF=$DEFSCALE $PATCHES | gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -W1,200/200/200 -G200 -Se0.5/0/0 -L >>$OUTFILE
+awk '$1!~"#" {print $16,$17, $24*DEF, $25*DEF, "0 0 0" }' DEF=$DEFSCALE $PATCHES | gmt psvelo -N  $MID -W0p -A0.01/0.05/0.03 -W0.1,100/100/100 -Se0.5/0/0 -L >>$OUTFILE
 
 
 # plot data with errors at 95%confidence and stations (green errows with ellipses)
