@@ -1,0 +1,123 @@
+#!/bin/bash
+# program to plot the patches as read in from a patches.out file with data
+
+# check to make certain variable was cleared
+  if   [ ${#} -lt "2" ] ; then
+	  printf "Usage: %s 'model.in' 'kappa_value' [deformation_scale]
+	     'model.in' should be the original input model used for inversion.  Must end in '.in'
+	     'kappa value' is the value written in the same format as used in the filenames of model output files
+		
+	  Requires:
+	     model.in: The model input file. 
+	     model_kp###.out: The corresponding output at the kappa requested.
+	     model_kp###_patches.out: The corresponding patches file created when running 
+	     	GTDef_project on the model_kp###.out
+	  Options:
+	     deformation_scale: Numeric amplification factor for output results. For cm-level, use 100
+	        for mm use 1000, etc. [default=1 (1m)].
+
+	\nExample: %s nicoya_camp_7x10.in 750000 100 \n" $(basename $0) $(basename $0) ; exit 1
+  fi
+
+
+STARTINGMODEL=$1
+KAPPA=$2
+
+DEFSCALE=$3   ; test "$DEFSCALE" || DEFSCALE=1     #set to cm if empty
+
+
+#STARTINGMODEL=nicoya_camp_7x10.in   # contains original data values and errors
+#PATCHES=nicoya_camp_7x10_kp750000_patches.out  # contains inverse results in geographic coords
+#PREDICTED_data=nicoya_camp_7x10_kp750000.out  # contains inverse results and data in original model format
+PATCHES=$(basename "$STARTINGMODEL" .in)_kp${KAPPA}_patches.out  # contains inverse results in geographic coords
+PREDICTED_data=$(basename "$STARTINGMODEL" .in)_kp${KAPPA}.out  # contains inverse results and data in original model format
+
+# check to see if the required files exist and are readable
+test -r "$STARTINGMODEL" || { echo "ERROR: Cannot find $STARTINGMODEL. Exiting." ;  exit 1 ; }
+test -r "$PATCHES" || { echo "ERROR: Cannot find $PATCHES. Exiting." ;  exit 1 ; }
+test -r "$PREDICTED_data" || { echo "ERROR: Cannot find $PREDICTED_data. Exiting." ;  exit 1 ; }
+
+# first things first 
+# how big is this thing?
+   SCALE=16
+   # bounding boxes are 10% larger on either side
+   # Xs  
+   XMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | minmax  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
+   XMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | minmax  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
+   # Ys
+   YMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | minmax  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
+   YMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | minmax  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
+   RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"
+   #echo $RANGE
+   PROJ="-JM$SCALE"
+
+
+  BGN="$RANGE $PROJ -K"
+  MID="$RANGE $PROJ -O -K"
+  END="$RANGE $PROJ -O"
+
+  CPT=slip.cpt    # created within
+  OUTFILE=$(basename $0 .gmt)_$(basename $PATCHES _patches.out).ps
+#######################################
+gmt set MAP_FRAME_TYPE plain 
+
+# put hidden stamp in file that will denote its source
+  echo " %% created by ${USER} using ${HOST}:${PWD}/$0 $* " >>$OUTFILE
+#######################################
+gmt pscoast  -X2 -Dh  -W0.1 -S235/255/255 -G235/255/235 -Y10.5 $BGN -P -B1f.2WeSn >$OUTFILE
+
+# Determine Slip Range
+# slip magnitude (taking components between ss,ds,ts)
+#results are scaled by DEFSCALE [=1 default].  If SMIN=SMAX at 1-decimal place, use exact range.
+   SMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | minmax -El | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE ) 
+   SMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | minmax -Eh | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE )  
+   DS=$(echo $SMIN $SMAX | awk '{print ($2-$1)/5.}')
+   if [ $SMIN == $SMAX ] ; then
+     SMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | minmax -El | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE ) 
+     SMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | minmax -Eh | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )  
+     DS=$(echo $SMIN $SMAX | awk '{print ($2-$1)/5.}')
+   fi
+
+  # create CPT file for slip model
+  gmt makecpt -Chot -T"$SMIN/$SMAX/$DS" -I -Z >$CPT
+
+
+# grab individual subfault bounding boxes and plot them as lines colored by their slip magnitude
+awk '$1!~"#" {printf ">-Z%f\n%f %f\n%f %f\n%f %f\n%f %f\n%f %f\n",DEF*($19**2+$20**2+$21**2)**.5, $4,$5, $7,$8, $10,$11, $13,$14, $4,$5 }' DEF=$DEFSCALE $PATCHES \
+	 | gmt psxy  $MID -A -L -W -C"$CPT" >>$OUTFILE
+
+awk '$1!~"#" {print $16,$17, $24*DEF, $25*DEF, "0 0 0" }' DEF=$DEFSCALE $PATCHES | gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -W1,200/200/200 -G200 -Se0.5/0/0 -L >>$OUTFILE
+
+
+# plot data with errors at 95%confidence and stations (green errows with ellipses)
+awk '$1!~"#"&&$1=="point" {print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DEFSCALE $STARTINGMODEL | \
+	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Ggreen -Se0.5/0.95/0 -L >>$OUTFILE
+#plot predicted solutions (black arrows)
+awk '$1!~"#"&&$1=="point" {print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DEFSCALE $PREDICTED_data | \
+	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -G255/0/255 -Se0.5/0.0/0 -L >>$OUTFILE
+# plot station locations
+awk '$1!~"#"&&$1~"point"{print $4,$5}' $STARTINGMODEL |  \
+	gmt psxy  $MID  -Sc0.2 -G0/255/0 -W0.1 >>$OUTFILE
+
+# plot coast over model and data and add 100km scalebar
+gmt pscoast -Lx3/2+c157/-7+w100+atl  -Dh  -W0.51,gray  $MID >>$OUTFILE
+
+# end file with scalebar
+if [ $DEFSCALE == "1" ] ; then
+	PSTITLE="Slip [m]"
+elif [ $DEFSCALE == "100" ] ; then
+	PSTITLE="Slip [cm]"
+elif [ $DEFSCALE == "1000" ] ; then
+	PSTITLE="Slip [mm]"
+else
+	PSTITLE="Slip [/$DEFSCALE m]"
+fi
+gmt psscale -D16.5/5/10/0.4 -B"$DS":"$PSTITLE": -C"$CPT" -O >>$OUTFILE
+
+# create PNG output from PS file
+  OUTPNG=$(basename $OUTFILE .ps).png
+  # 600dpi 0.3cm margin on all sides and 50%scale
+  gmt psconvert $OUTFILE -E600 -A0.3c+S0.5 -Tg -F$OUTPNG
+
+open $OUTPNG
+#gv -scale=2  $OUTFILE & 
