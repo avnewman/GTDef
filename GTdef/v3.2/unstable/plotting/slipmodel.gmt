@@ -1,30 +1,37 @@
 #!/bin/bash
-# program to plot the patches as read in from a patches.out file with data
+# program to plot the patches as read in from a model_kp###_patches.out file with data
+# from model.in, and model predictions from model_kp###.out
+# V1.0  AVN
+# Thu Jun  4 12:51:49 EDT 2020
 
 # check to make certain variable was cleared
   if   [ ${#} -lt "2" ] ; then
 	  printf "Usage: %s 'model.in' 'kappa_value' [deformation_scale]
 	     'model.in' should be the original input model used for inversion.  Must end in '.in'
-	     'kappa value' is the value written in the same format as used in the filenames of model output files
+	     'kappa value' is the value written in the same format as used in the filenames of 
+	        model output files
 		
-	  Requires:
-	     model.in: The model input file. 
-	     model_kp###.out: The corresponding output at the kappa requested.
-	     model_kp###_patches.out: The corresponding patches file created when running 
-	     	GTDef_project on the model_kp###.out
+	  Requires:  
+	     Model files: (all files are in current directory)
+	       model.in: The model input file. 
+	       model_kp###.out: The corresponding output at the kappa requested.
+	       model_kp###_patches.out: The corresponding patches file created when running 
+                 GTDef_project on the model_kp###.out
+	     Programs: 
+	       gmt v5 or greater
+	       open or xdg-open (standard on mac and most linux distributions, respectively)
+	       a few standard gnu commands (awk, test, echo, basename; likely on your system already)
 	  Options:
-	     deformation_scale: Numeric amplification factor for output results. For cm-level, use 100
-	        for mm use 1000, etc. [default=1 (1m)].
+	      deformation_scale: Numeric amplification factor for output results. For cm-level, 
+	        use 100 for mm use 1000, etc. [default=1 (1m)].
 
-	\nExample: %s nicoya_camp_7x10.in 750000 100 \n" $(basename $0) $(basename $0) ; exit 1
+	\nExample: %s nicoya_camp_7x10.in 750000 100 \n" $(basename "$0") $(basename "$0") ; exit 1
   fi
-
 
 STARTINGMODEL=$1
 KAPPA=$2
 
 DEFSCALE=$3   ; test "$DEFSCALE" || DEFSCALE=1     #set to cm if empty
-
 
 #STARTINGMODEL=nicoya_camp_7x10.in   # contains original data values and errors
 #PATCHES=nicoya_camp_7x10_kp750000_patches.out  # contains inverse results in geographic coords
@@ -42,11 +49,11 @@ test -r "$PREDICTED_data" || { echo "ERROR: Cannot find $PREDICTED_data. Exiting
    SCALE=16
    # bounding boxes are 10% larger on either side
    # Xs  
-   XMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | minmax  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
-   XMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | minmax  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
+   XMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
+   XMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
    # Ys
-   YMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | minmax  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
-   YMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | minmax  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
+   YMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
+   YMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
    RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"
    #echo $RANGE
    PROJ="-JM$SCALE"
@@ -69,12 +76,12 @@ gmt pscoast  -X2 -Dh  -W0.1 -S235/255/255 -G235/255/235 -Y10.5 $BGN -P -B1f.2WeS
 # Determine Slip Range
 # slip magnitude (taking components between ss,ds,ts)
 #results are scaled by DEFSCALE [=1 default].  If SMIN=SMAX at 1-decimal place, use exact range.
-   SMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | minmax -El | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE ) 
-   SMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | minmax -Eh | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE )  
+   SMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -El | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE ) 
+   SMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -Eh | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE )  
    DS=$(echo $SMIN $SMAX | awk '{print ($2-$1)/5.}')
    if [ $SMIN == $SMAX ] ; then
-     SMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | minmax -El | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE ) 
-     SMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | minmax -Eh | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )  
+     SMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -El | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE ) 
+     SMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -Eh | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )  
      DS=$(echo $SMIN $SMAX | awk '{print ($2-$1)/5.}')
    fi
 
@@ -119,5 +126,11 @@ gmt psscale -D16.5/5/10/0.4 -B"$DS":"$PSTITLE": -C"$CPT" -O >>$OUTFILE
   # 600dpi 0.3cm margin on all sides and 50%scale
   gmt psconvert $OUTFILE -E600 -A0.3c+S0.5 -Tg -F$OUTPNG
 
-open $OUTPNG
+if [ -x $( which open ) ] ; then 
+     open $OUTPNG 
+elif  [ -x $( which xdg-open ) ] ; then
+     xdg-open $OUTPNG &> /dev/null &  
+else
+     echo "WARNING: cannot open $OUTPNG, no viewer available" 
+fi	
 #gv -scale=2  $OUTFILE & 
