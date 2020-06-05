@@ -1,43 +1,125 @@
 #!/bin/bash
 # program to plot the patches as read in from a model_kp###_patches.out file with data
 # from model.in, and model predictions from model_kp###.out
-# V1.0  AVN
+# V1.1  AVN
 # Thu Jun  4 12:51:49 EDT 2020
+# updated to use modifier flags instead of straight input. Many new options exist
+# Fri Jun  5 11:54:36 EDT 2020
 
-# check to make certain variable was cleared
-  if   [ ${#} -lt "2" ] ; then
-	  printf "Usage: %s 'model.in' 'kappa_value' [deformation_scale]
-	     'model.in' should be the original input model used for inversion.  Must end in '.in'
-	     'kappa value' is the value written in the same format as used in the filenames of 
-	        model output files
-		
-	  Requires:  
-	     Model files: (all files are in current directory)
-	       model.in: The model input file. 
-	       model_kp###.out: The corresponding output at the kappa requested.
-	       model_kp###_patches.out: The corresponding patches file created when running 
-                 GTDef_project on the model_kp###.out
-	     Programs: 
-	       gmt v5 or greater
-	       open or xdg-open (standard on mac and most linux distributions, respectively)
-	       a few standard gnu commands (awk, test, echo, basename; likely on your system already)
-	  Options:
-	      deformation_scale: Numeric amplification factor for output results. For cm-level, 
-	        use 100 for mm use 1000, etc. [default=1 (1m)].
+#########################################
 
-	\nExample: %s nicoya_camp_7x10.in 750000 100 \n" $(basename "$0") $(basename "$0") ; exit 1
-  fi
+####################################### 
+# tempdir 
+###################################### 
+if [ $TMPDIR ] ;then   
+   USAGE=$TMPDIR/$$.usage 
+   else 
+   USAGE=$$.usage 
+fi 
+ 
+# create a usage display that will be shown if command is run with no arguements 
+UL="\e[4m" # turns on underline 
+NM="\e[0m" #turns off underline 
+ printf "
+Usage: %s -M${UL}'model.in'${NM} [-K${UL}'kappa_value'${NM}] [-S${UL}deformation_scale${NM}]
+         [-T${UL}TMIN/TMAX/DT${NM}] [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}] 
+        	     
+Requires: 
+       -M   Model_input_file 
+	       Should be the original input model used for building model.  Must end in '.in'
 
-STARTINGMODEL=$1
-KAPPA=$2
+Options: 
+       -K   Kappa 
+	       Value written in the same format as used in the filenames of model output files.
+	       (e.g. model_kp###.out where ### = Kappa).
 
-DEFSCALE=$3   ; test "$DEFSCALE" || DEFSCALE=1     #set to cm if empty
+	       Model files needed: (all files are in current directory)
+	          model_kp###.out: The corresponding output at the kappa requested.
+	          model_kp###_patches.out: The corresponding patches file created when running 
+	             GTDef_project on the model_kp###.out
 
-#STARTINGMODEL=nicoya_camp_7x10.in   # contains original data values and errors
-#PATCHES=nicoya_camp_7x10_kp750000_patches.out  # contains inverse results in geographic coords
-#PREDICTED_data=nicoya_camp_7x10_kp750000.out  # contains inverse results and data in original model format
-PATCHES=$(basename "$STARTINGMODEL" .in)_kp${KAPPA}_patches.out  # contains inverse results in geographic coords
-PREDICTED_data=$(basename "$STARTINGMODEL" .in)_kp${KAPPA}.out  # contains inverse results and data in original model format
+       -S   Deformation_scale
+	       The numeric amplification factor for output results. For cm-level, 
+	       use 100 for mm use 1000, etc. [default=1 (1m)]. Colorbar units will automatically
+	       change to cm or mm for Deformation_scale = 10, or 100, otherwise will show a 
+	       '/Deformation_scale' before the 'm'.
+
+       -T   Deformation_range
+               Choose a range over which to plot deformation. Results are the value used and
+	       will include the amplifcation used with -S flag.  If not selected, the program
+	       will attempt to autoselect range based on data.
+
+       -R   Rectangular_bounds 
+       	       Bounds for plot using XMIN/XMAX/YMIN/YMAX.  Alternatively will use 10 
+	       percent greater than the model geometry on all sides.
+              
+
+Programs Required: 
+       GMT v5 or greater
+       open or xdg-open (standard on mac and most linux distributions, respectively)
+       A few standard gnu commands (awk, test, echo, basename; likely on your system already)
+
+Output: 
+      New files labeled %s_'model'_kp'Kappa'.ps and .png. The .png is displayed.
+
+Example: 
+       %s -Mnicoya_camp_7x10.in -K750000 -S100 
+" $(basename "$0") $(basename "$0") $(basename "$0") >$USAGE
+	              
+if  [ ${#} -lt "1" ] ; then 
+  cat $USAGE  # display usage 
+  rm $USAGE 
+  exit 1 # exit with error after removing temp file 
+fi 
+while getopts "M:K:S:T:R:" OPT 
+do 
+   case ${OPT} in 
+       M) STARTINGMODEL=$OPTARG
+  	  MFLAG=1; # flag for inclusion of model
+        ;; 
+       K) KAPPA=$OPTARG
+  	  KFLAG=1; # flag for plotting specific Kappa inversion
+        ;; 
+       T) TMIN=$(echo $OPTARG | awk -F"/" '{print $1}') 
+	  TMAX=$(echo $OPTARG | awk -F"/" '{print $2}')
+	  DT=$(echo $OPTARG | awk -F"/" '{print $3}')
+  	  TFLAG=1; # flag for Slip Range
+         ;; 
+       S) DEFSCALE=$OPTARG
+  	  SFLAG=1; # flag for def scale
+         ;; 
+       R) XMIN=`echo $OPTARG | awk -F"/" '{if ($1>180) print $1-360; else print $1}'` 
+          XMAX=`echo $OPTARG | awk -F"/" '{if ($2>180) print $2-360; else print $2}'` 
+	  if [ `echo $XMIN $XMAX | awk '$1>$2{print "bad"}'` ] ; then 
+	       echo "ERROR with '-R' option" 
+	       echo "   XMIN must be lower than XMAX. Exiting..." 
+	       rm $USAGE; exit 1 
+	  fi  
+          YMIN=`echo $OPTARG | awk -F"/" '{print $3}'` 
+          YMAX=`echo $OPTARG | awk -F"/" '{print $4}'` 
+	  if [ `echo $YMIN $YMAX | awk '$1>$2{print "bad"}'` ] ; then 
+	       echo "ERROR with '-R' option\n YMIN must be lower than YMAX" 
+	       rm $USAGE; exit 1 
+	  fi  
+  	  RFLAG=1; # flag for rectangular bounds. 
+        ;; 
+       *) echo "ERROR: unknown modifier flag used (${OPT}), exiting."  # if a bad modifier is used 
+           rm $USAGE;   exit 1 ;; # exit with error after removing temp file 
+   esac 
+done 
+rm $USAGE 
+
+test "$MFLAG" || { echo "ERROR: Required -M flag missing, no input model selected.  Exiting." ; exit 1; }
+test "$DEFSCALE" || DEFSCALE=1     #set to cm if empty
+
+if [ "$KFLAG" ] ; then
+	PREDICTED_data=$(basename "$STARTINGMODEL" .in)_kp${KAPPA}.out  # contains inverse results and data in original model format
+	PATCHES=$(basename "$STARTINGMODEL" .in)_kp${KAPPA}_patches.out  # contains inverse results in geographic coords
+else
+	PREDICTED_data=$(basename "$STARTINGMODEL" .in)_fwd.out  # contains inverse results and data in original model format
+	PATCHES=$(basename "$STARTINGMODEL" .in)_fwd_patches.out  # contains inverse results in geographic coords
+	echo "Assuming fwd model: Using $PREDICTED_data and $PATCHES."
+fi
 
 # check to see if the required files exist and are readable
 test -r "$STARTINGMODEL" || { echo "ERROR: Cannot find $STARTINGMODEL. Exiting." ;  exit 1 ; }
@@ -46,48 +128,104 @@ test -r "$PREDICTED_data" || { echo "ERROR: Cannot find $PREDICTED_data. Exiting
 
 # first things first 
 # how big is this thing?
-   SCALE=16
-   # bounding boxes are 10% larger on either side
-   # Xs  
-   XMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
-   XMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
-   # Ys
-   YMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
-   YMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
-   RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"
-   #echo $RANGE
-   PROJ="-JM$SCALE"
+if [ $RFLAG ] ; then
+        echo "Using user supplied map boundaries "
+else
+	# bounding boxes are 10% larger on either side
+	# Xs  
+	XMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
+	XMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
+	# Ys
+	YMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
+	YMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
+   	if [ "$XMIN" == "$XMAX" ] ; then
+	   XMIN=$(echo $XMIN $YMIN $YMAX | awk '{print $1-($3-$2)/2}') 
+	   XMAX=$(echo $XMAX $YMIN $YMAX | awk '{print $1+($3-$2)/2}') 
+	elif [ "$YMIN" == "$YMAX" ] ; then
+	   YMIN=$(echo $YMIN $XMIN $XMAX | awk '{print $1-($3-$2)/2}') 
+	   YMAX=$(echo $YMAX $XMIN $XMAX | awk '{print $1+($3-$2)/2}') 
+	fi
+fi
 
+# scale DXY with xrange
+DXY=$(echo $XMIN $XMAX | awk '{XR=($2-$1)}
+	{if (XR<1) 
+		print "0.1";
+	else if (XR>=1 && XR<2) 
+		print "0.25"; 
+	else if (XR>=2 && XR<5) 
+		print "0.5"; 
+	else if (XR>=5 && XR<10) 
+		print "1"; 
+	else if (XR>=10 && XR<20) 
+		print "5"; 
+	else if (XR>=20 && XR<100) 
+		print "10"; 
+	else if (XR>=100 && XR<1000) 
+		print "100"; 
+	else if (XR>=1000 && XR<10000) 
+		print "1000"; 
+	else if (XR>=10000 && XR<100000) 
+		print "10000"; 
+	else if (XR>=100000 && XR<1000000) 
+		print "100000"; 
+	else 
+		print "1000000";
+	}') 
+RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"  ; echo RANGE = $RANGE
+#echo DXY=$DXY
 
-  BGN="$RANGE $PROJ -K"
-  MID="$RANGE $PROJ -O -K"
-  END="$RANGE $PROJ -O"
+SCALE=16
+ISLOCAL="$(awk '$1=="coord"&&$2=="local"{print "1"}' $STARTINGMODEL)"
+if [ $ISLOCAL ] ; then
+	LFLAG=1   # is a local coord system
+	PROJ="-JX$SCALE"
+	echo "Local Coords: Projection is $PROJ"
+else
+	PROJ="-JM$SCALE"
+	echo "Geographic Coords: Projection is $PROJ"
+fi
 
-  CPT=slip.cpt    # created within
-  OUTFILE=$(basename $0 .gmt)_$(basename $PATCHES _patches.out).ps
+# Determine Slip Range
+# slip magnitude (taking components between ss,ds,ts)
+#results are scaled by DEFSCALE [=1 default].  If TMIN=TMAX at 1-decimal place, use exact range.
+if [ ! $TFLAG ] ; then
+   TMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -El | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE ) 
+   TMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -Eh | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE )  
+   DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
+   if [ $TMIN == $TMAX ] ; then
+     TMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -El | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE ) 
+     TMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -Eh | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )  
+     DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
+        if [ $TMIN == $TMAX ] ; then  # if it still doesn't work
+	  echo "Slip has no range in values. Adding 10 pct. on either side."
+	  TMIN=$(echo $TMIN | awk '{printf "%.1e",  $1-(.1*$1)**2**.5}') 
+	  TMAX=$(echo $TMAX | awk '{printf "%.1e",  $1+(.1*$1)**2**.5}') 
+          DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
+        fi
+   fi
+fi
+# create CPT file for slip model
+CPT=slip.cpt    # created within
+gmt makecpt -Chot -T"$TMIN/$TMAX/$DT" -I -Z >$CPT
+#echo "$TMIN/$TMAX/$DT"
+
+BGN="$RANGE $PROJ -K"
+MID="$RANGE $PROJ -O -K"
+END="$RANGE $PROJ -O"
+
+OUTFILE=$(basename $0 .gmt)_$(basename $PATCHES _patches.out).ps ; #echo $OUTFILE
 #######################################
 gmt set MAP_FRAME_TYPE plain 
 
 # put hidden stamp in file that will denote its source
   echo " %% created by ${USER} using ${HOST}:${PWD}/$0 $* " >>$OUTFILE
 #######################################
-gmt pscoast  -X2 -Dh  -W0.1 -S235/255/255 -G235/255/235 -Y10.5 $BGN -P -B1f.2WeSn >$OUTFILE
-
-# Determine Slip Range
-# slip magnitude (taking components between ss,ds,ts)
-#results are scaled by DEFSCALE [=1 default].  If SMIN=SMAX at 1-decimal place, use exact range.
-   SMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -El | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE ) 
-   SMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -Eh | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE )  
-   DS=$(echo $SMIN $SMAX | awk '{print ($2-$1)/5.}')
-   if [ $SMIN == $SMAX ] ; then
-     SMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -El | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE ) 
-     SMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -Eh | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )  
-     DS=$(echo $SMIN $SMAX | awk '{print ($2-$1)/5.}')
-   fi
-
-  # create CPT file for slip model
-  gmt makecpt -Chot -T"$SMIN/$SMAX/$DS" -I -Z >$CPT
-
+if [ $LFLAG ] ; then
+	gmt psbasemap  -X2 -Y10.5 $BGN -P -B${DXY}WeSn >$OUTFILE
+else
+	gmt pscoast  -X2 -Dh  -W0.1 -S235/255/255 -G235/255/235 -Y10.5 $BGN -P -B${DXY}WeSn >$OUTFILE
+fi
 
 # grab individual subfault bounding boxes and plot them as lines colored by their slip magnitude
 awk '$1!~"#" {printf ">-Z%f\n%f %f\n%f %f\n%f %f\n%f %f\n%f %f\n",DEF*($19**2+$20**2+$21**2)**.5, $4,$5, $7,$8, $10,$11, $13,$14, $4,$5 }' DEF=$DEFSCALE $PATCHES \
@@ -107,7 +245,11 @@ awk '$1!~"#"&&$1~"point"{print $4,$5}' $STARTINGMODEL |  \
 	gmt psxy  $MID  -Sc0.2 -G0/255/0 -W0.1 >>$OUTFILE
 
 # plot coast over model and data and add 100km scalebar
-gmt pscoast -Lx3/2+c157/-7+w100+atl  -Dh  -W0.51,gray  $MID >>$OUTFILE
+
+if [ ! $LFLAG ] ; then
+	LBAR=$(echo $DXY | awk '{print $1*100}')
+	gmt pscoast -Lx3/2+c157/-7+w${LBAR}+atl  -Dh  -W0.51,gray  $MID >>$OUTFILE
+fi
 
 # end file with scalebar
 if [ $DEFSCALE == "1" ] ; then
@@ -119,7 +261,7 @@ elif [ $DEFSCALE == "1000" ] ; then
 else
 	PSTITLE="Slip [/$DEFSCALE m]"
 fi
-gmt psscale -D16.5/5/10/0.4 -B"$DS":"$PSTITLE": -C"$CPT" -O >>$OUTFILE
+gmt psscale -D16.5/5/10/0.4 -B"$DT":"$PSTITLE": -C"$CPT" -O >>$OUTFILE
 
 # create PNG output from PS file
   OUTPNG=$(basename $OUTFILE .ps).png

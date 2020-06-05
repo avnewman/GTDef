@@ -1,29 +1,66 @@
 #!/bin/bash
 # program to plot the trade-off between model and data misfit with model roughness.
 # uses model_inv.out
-# V1.0  AVN
+# V1.1  AVN
 # Thu Jun  4 14:16:45 EDT 2020
+# updated to use modifier flags instead of straight input
+# Fri Jun  5 11:54:36 EDT 2020
 
-# check to make certain variable was cleared
-  if   [ ${#} -lt "1" ] ; then
-	  printf "Usage: %s 'model_inv.out' 
-	     'model_inv.out' should be the output file that contains the fitting summary 
-	        for range of generalization parameters (kappa).
-		
-	  Requires:  
-	     Model files: (all files are in current directory)
-	       model_inv.out: The model inversion summary file. 
-	     Programs: 
-	       gmt v5 or greater
-	       open or xdg-open (standard on mac and most linux distributions, respectively)
-	       a few standard gnu commands (awk, test, echo, basename; likely on your system already)
-          Caveats: 
-	     No labels exist internally.  Kappa values are labeled next to the green circles 
-	       showing the roughness/RMS trade-off.  Red is the derivative of the data.
-	\nExample: %s SI_2DCHK_C2_wNOISE_inv.out\n" $(basename "$0") $(basename "$0") ; exit 1
-  fi
+####################################### 
+# tempdir 
+###################################### 
+if [ $TMPDIR ] ;then   
+   USAGE=$TMPDIR/$$.usage 
+   else 
+   USAGE=$$.usage 
+fi 
+ 
+# create a usage display that will be shown if command is run with no arguements 
+UL="\e[4m" # turns on underline 
+NM="\e[0m" #turns off underline 
+ printf "
+Usage: %s -M${UL}'model_inv.out'${NM}
 
-SUMMARY=$1
+        	     
+Requires: 
+       -M   Model_ininv.out
+	     Should be the output file that contains the fitting summary for range of 
+	     generalization parameters (kappa). It is the inversion summary file. 
+
+Programs Required: 
+       GMT v5 or greater
+       open or xdg-open (standard on mac and most linux distributions, respectively)
+       A few standard gnu commands (awk, test, echo, basename; likely on your system already)
+
+Output: 
+      New files labeled %s_'model_inv'.ps and .png. The .png is displayed.
+
+Caveats: 
+     No labels exist internally.  Kappa values are labeled next to the green circles 
+       showing the roughness/RMS trade-off.  Red is the derivative of the data.
+
+Example: 
+       %s -M SI_2DCHK_C2_wNOISE_inv.out
+" $(basename "$0") $(basename "$0") $(basename "$0") >$USAGE
+	              
+if  [ ${#} -lt "1" ] ; then 
+  cat $USAGE  # display usage 
+  rm $USAGE 
+  exit 1 # exit with error after removing temp file 
+fi 
+while getopts "M:" OPT 
+do 
+   case ${OPT} in 
+       M) SUMMARY=$OPTARG
+  	  MFLAG=1; # flag for inclusion of model
+        ;; 
+       *) echo "ERROR: unknown modifier flag used (${OPT}), exiting."  # if a bad modifier is used 
+           rm $USAGE;   exit 1 ;; # exit with error after removing temp file 
+   esac 
+done 
+rm $USAGE 
+
+test "$MFLAG" || { echo "ERROR: Required -M flag missing, no input model selected.  Exiting." ; exit 1; }
 
 # check to see if the required files exist and are readable
 test -r "$SUMMARY" || { echo "ERROR: Cannot find $SUMMARY. Exiting." ;  exit 1 ; }
@@ -47,7 +84,6 @@ test -r "$SUMMARY" || { echo "ERROR: Cannot find $SUMMARY. Exiting." ;  exit 1 ;
    #echo $DX $DY
    #echo $RANGE
    PROJ="-JX$SCALE"
-
 
   BGN="$RANGE $PROJ -K"
   MID="$RANGE $PROJ -O -K"
