@@ -1,0 +1,220 @@
+#!/bin/bash 
+#################################################################################
+#                           GTdef_interface.gmt                                 #
+# generic GMT script to plot the slip distribution on fault interface  		#
+# only works for single fault type 3						#
+# only works for dip & strike slips						#
+#									  	#
+# INPUT									  	#
+# (1) GTdef *.out file                                                          #
+# (2) GTdef *_inv.out summary file						#
+# note *_inv.out is an implicit input file					#
+# OUTPUT PLOTS									#
+# (1) colored slip distribution on the interface				#
+# (2) roughness vs rms misfit 							#
+# first created by lfeng Wed Jul 21 13:56:53 EDT 2010				#
+# modified y offset for text lfeng Tue Oct  5 01:18:56 EDT 2010			#
+# added two methods to create cpt lfeng Tue Oct  5 21:28:40 EDT 2010		#
+# last modified by lfeng Mon Oct 11 23:34:36 EDT 2010				#
+#################################################################################
+
+# check whether the number of arguments > 0
+if [ $# -lt "1" ] ; then
+   printf "Usage: `basename $0` GTdef.out file(s)
+       e.g. GTdef_interface.gmt *kp*.out\n"; exit 1
+fi
+
+# this is the 1st width I used, so text is placed according to this
+# any new ywidth will be adjusted by a ratio
+YWIDTH0=-21.4229				
+for file in $*
+do
+    ################# PARAMETERS ######################
+    MDL=$file
+    echo Processing $MDL
+
+    KP=`awk '$1~/^kappa$/ { print $2 }' $MDL`
+    BT=`awk '$1~/^beta$/ { print $2 }' $MDL`
+    MU=`awk '$1~/^rigidity$/ { print $2 }' $MDL`
+    SM=`awk '$1~/^smooth$/ { print $2 }' $MDL`
+    XWIDTH=16                   
+    
+    # output
+    if [ $SM == "2d" ]; then
+        KP8=`echo $KP | awk '{if($1>=1) printf("%08d",$1); else printf("%08.5f",$1)}'`
+        OUTFILE=`echo $MDL | awk '{split($1,aa,"_kp"); print aa[1]}'`"_kp${KP8}.ps"
+    else
+        BT8=`echo $BT | awk '{if($1>=1) printf("%08d",$1); else printf("%08.5f",$1)}'`
+        OUTFILE=`echo $MDL | awk '{split($1,aa,"_bt"); print aa[1]}'`"_bt${BT8}.ps"
+    fi
+    
+    ################# PLOT SLIPS ######################
+    gmtset PAPER_MEDIA letter+ ANNOT_FONT_SIZE_PRIMARY 12
+    
+    XMIN=0;  XMAX=`awk '$1~/^fault$/&&$2~/[34]/ {print $21}' $MDL`;		# column numbers for x
+    YMIN=0;  YMAX=`awk '$1~/^fault$/&&$2~/[34]/ {print $20}' $MDL`;		# row numbers for y
+    XINC=1;  YINC=1
+    echo XMAX=$XMAX YMAX=$YMAX
+    FLT_LEN=`awk '$1~/^fault$/&&$2~3 {print $8*1e-3}' $MDL`			# length of fault [km]
+    FLT_WIDTH=`awk '$1~/^fault$/&&$2~3 {print 1e-3*($7-$6)/sin($10*3.1415926/180.0)}' $MDL`  
+    FLT_NAME=`awk '$1~/^fault$/&&$2~3 {print $3}' $MDL`	
+    echo LENGTH=$FLT_LEN WIDTH=$FLT_WIDTH
+    YWIDTH=`echo $FLT_LEN $FLT_WIDTH $XWIDTH | awk '{print -$2*$3/$1}'`
+    RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"
+    PROJ="-JX$XWIDTH/$YWIDTH"
+    BGN="$RANGE $PROJ -K"
+    MID="$RANGE $PROJ -O -K"
+    END="$RANGE $PROJ -O"
+    
+    STRAIN=`awk '$1~/strain/ {printf "%5.2e", $2}' $MDL`
+    echo "strain=$STRAIN"
+    R_2D=`awk '$1~/r_2d/ {printf "%5.2e", $2}' $MDL`
+    echo "r_2d=$R_2D"
+    MISFIT=`awk '$1~/rms/ {printf "%5.2e\n", $2}' $MDL | head -n 1`
+    echo misfit=$MISFIT
+    
+    # create color palette
+    CPT=slip.cpt
+    CLR_MIN=0
+#----------------------------------------------------------------------------------------
+    #(1)# consistent cpt for all kappa values						-
+    #CLR_MAX=`awk '$1~/^fault$/&&$2~3 {if($15>$17) print $15;else print $17}' $MDL`	-
+    #(2)# different cpt for different kappa values					-
+    CLR_MAX=`awk 'BEGIN {maxslip=0}                                                     
+                  $1~/^subfault$/ {if($5>maxslip) maxslip=$5;                           
+		                   if($6>maxslip) maxslip=$6;                           
+		                   if($7>maxslip) maxslip=$7}
+		  END {printf("%d",int((maxslip+5)/5)*5)}' $MDL`
+    #(3)# specify by user
+    #CLR_MAX=25 
+#----------------------------------------------------------------------------------------
+    CLR_INC=`echo $CLR_MIN $CLR_MAX | awk '{printf("%f",($2-$1)/10)}'`
+    TRANGE="${CLR_MIN}/${CLR_MAX}/${CLR_INC}"
+    makecpt -T$TRANGE -Crainbow -D > $CPT	 
+    CLR_LEN=`echo $XWIDTH | awk '{print $1*0.3}'`
+
+    # create a grid file for slip
+    MDL_XYZ=$KP.xyz
+    awk '$1~/^subfault$/&&$2~name {print $4-0.5,$3-0.5,$6}' name=$FLT_NAME $MDL > $MDL_XYZ
+    MEANSLIP=`awk '{SUM=SUM+$3} END{printf "%5.2f\n", SUM/NR}' $MDL_XYZ`
+    MOMENT=`echo $FLT_LEN $FLT_WIDTH $MEANSLIP $MU | awk '{printf "%7.1e", $1*$2*$4*$3*1e6}'`
+    Mw=`echo $MOMENT | awk '{printf "%4.2f", log($1)/2.303*2/3-6.1}'`
+    MDL_GRD=$KP.grd
+    xyz2grd $MDL_XYZ -G$MDL_GRD $RANGE -I$XINC/$YINC -F  					# -F: pixel node registration
+    
+    grdimage $MDL_GRD -C$CPT  -Y10 -X3 -P $BGN > $OUTFILE					# plot the color image
+    #awk '{printf "%f %f 4 0 0 MC %4.1f\n",$1,$2,$3}' $MDL_XYZ | pstext $MID >> $OUTFILE	# plot the text for slip values
+    psbasemap -Bg$XINC/g$YINC $MID >> $OUTFILE							# plot the grids
+    #psbasemap -B100/100wesn $MID >> $OUTFILE							# plot the grid
+#--------------------------------------------------------------------------------
+    #yoff=0.42		# for trench07						-
+    #yoff=0.65           # for trench10						-
+    yoff=1.50           # for 120 km						-
+    sratio=1.00		# space between lines for trench07 & trench10		-
+    sratio=3		# for 120 km						-
+#--------------------------------------------------------------------------------
+    pstext $MID -N <<.....END >> $OUTFILE
+      `echo $XMIN $XMAX $YMIN $YMAX $yoff $sratio | awk '{printf "%f %f ",$1+($2-$1)*0.02, $4+($4-$3)*$5}'`  10 0 0 ML @~k@~ = $KP @~b@~ = $BT
+      `echo $XMIN $XMAX $YMIN $YMAX $yoff $sratio | awk '{printf "%f %f ",$1+($2-$1)*0.02, $4+($4-$3)*($5+0.11*$6)}'`  10 0 0 ML RMS = $MISFIT [m]
+      `echo $XMIN $XMAX $YMIN $YMAX $yoff $sratio | awk '{printf "%f %f ",$1+($2-$1)*0.02, $4+($4-$3)*($5+0.22*$6)}'` 10 0 0 ML Rougness = $R_2D [cm/km@+2@+]
+      `echo $XMIN $XMAX $YMIN $YMAX $yoff $sratio | awk '{printf "%f %f ",$1+($2-$1)*0.02, $4+($4-$3)*($5+0.33*$6)}'` 10 0 0 ML Strain = $STRAIN [cm/km]
+      `echo $XMIN $XMAX $YMIN $YMAX $yoff $sratio | awk '{printf "%f %f ",$1+($2-$1)*0.02, $4+($4-$3)*($5+0.44*$6)}'` 10 0 0 ML D@-mean@- = $MEANSLIP [m]
+      `echo $XMIN $XMAX $YMIN $YMAX $yoff $sratio | awk '{printf "%f %f ",$1+($2-$1)*0.02, $4+($4-$3)*($5+0.55*$6)}'` 10 0 0 ML M@-W@- = $Mw   M@-0@- = $MOMENT [Nm]
+.....END
+    echo $CLR_INC
+    CLR_INC2=`echo $CLR_INC | awk '{print $1*2}'`
+    echo hehe${CLR_INC2}
+    psscale -O -K -D2.8/-0.8/$CLR_LEN/0.20h -C$CPT -P -B$CLR_INC2 >> $OUTFILE
+    # delete cpt file
+    rm -rf $CPT
+#---------------------------------------------------------------------------------
+    #yoff=0.30		# for trench07                                           -
+    #yoff=0.5		# for trench10                                           -
+    yoff=1.2		# for 120 km                                             -
+#---------------------------------------------------------------------------------
+    pstext $MID -N <<.....END >> $OUTFILE
+      `echo $XMIN $XMAX $YMIN $YMAX $yoff | awk '{printf "%f %f ",$1+($2-$1)/6, $4+($4-$3)*$5 }'` 10 0 0 MC Interface Thrust [m]
+.....END
+    rm -rf $MDL_XYZ $MDL_GRD
+    # plot fault interface frame
+    XMIN=0;  XMAX=$FLT_LEN
+    YMIN=0;  YMAX=$FLT_WIDTH
+    RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"
+    PROJ="-JX${XWIDTH}/${YWIDTH}"
+    MID="$RANGE $PROJ -O -K"
+    psbasemap -B5a10/5a10WesN $MID >> $OUTFILE							# plot the grid
+    # create x axis label
+#---------------------------------------------------------------------------------
+    #yoff=0.2		# for trench07 & trench10			  	 -
+    yoff=0.5		# for trench07 & trench10                                -
+#---------------------------------------------------------------------------------
+    pstext $MID -N <<...END >> $OUTFILE
+    `echo $XMIN $XMAX $YMIN $YMAX $yoff | awk '{print ($1+$2)*0.5, $3-($4-$3)*$5}'` 14 0 0 BC Along Strike [km]
+...END
+    # create y axis label
+    pstext $MID -N <<...END >> $OUTFILE
+    `echo $XMIN $XMAX $YMIN $YMAX | awk '{print $1-($2-$1)*0.08,($3+$4)*0.5 }'` 14 90 0 BC Along Dip [km]
+...END
+    
+    ################# PLOT TRADE-OFF ######################
+    gmtset PAPER_MEDIA letter+ PLOT_DEGREE_FORMAT D ANNOT_FONT_SIZE_PRIMARY 10
+    
+    ######################################################################################
+    XWIDTH=7; YWIDTH=5					# size for one plot
+    # smooth = 2d
+    rms_pos=7						# the position of rms field in *_inv.out
+    if [ $SM == "2d" ]; then
+        r_pos=13					# the position of r_2d field in *_inv.out
+        INV=`echo $MDL | awk '{split($1,aa,"_kp"); print aa[1]}'`'_inv.out'	#INV is the inversion summary file
+    else
+    # smooth != 2d
+        r_pos=14					# the position of strain field in *_inv.out
+        INV=`echo $MDL | awk '{split($1,aa,"_bt"); print aa[1]}'`'_inv.out'
+    fi
+    if [ -s $INV ]; then
+        echo  "$INV exists!"
+        # auto determine the values for xmin,xmax,ymin,ymax
+        XMIN=0; XMAX=`awk ' NR==2 { print int($'$r_pos'+1.0) } ' $INV`
+        YMIN=0; NRMAX=`awk ' END { print NR  } ' $INV`
+        YMAX=`awk ' NR==NR9 { print 0.1*int($'$rms_pos'*10)+0.1 } ' NR9=$NRMAX $INV`
+	X_LTICK=`echo $XMAX | awk '{ print $1*0.2 }'`; X_STICK=`echo $X_STICK | awk '{ print $1*0.25 }'`
+	Y_LTICK=`echo $YMAX | awk '{ print int($1+1.0)*0.2 }'`; Y_STICK=`echo $Y_LTICK | awk '{ print $1*0.25 }'`
+        
+        RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"
+        PROJ="-JX${XWIDTH}/${YWIDTH}"
+        MID="$RANGE $PROJ -O -K"
+        END="$RANGE $PROJ -O"
+        
+        psbasemap -B${X_STICK}a${X_LTICK}/${Y_STICK}a${Y_LTICK}WSen  -G$WHITE -X8.5 -Y-5.8 $MID >> $OUTFILE
+        # data curve
+        awk '$1!~"#" {print $'$r_pos',$'$rms_pos'}' $INV | psxy $MID -W2.0p,black >> $OUTFILE
+        # data points
+        awk '$1!~"#" {print $'$r_pos',$'$rms_pos'}' $INV | psxy $MID -Sc0.2 -Gwhite -W1.0p,black -A >> $OUTFILE
+        # beta
+        awk '$1=='$BT'||$2=='$KP' {print $'$r_pos',$'$rms_pos'}' $INV | psxy $MID -Sa0.5 -Gyellow -W1.0p,black -A >> $OUTFILE
+        # create x axis label
+        if [ $SM == "2d" ]; then
+            pstext $MID -N <<...END >> $OUTFILE
+            `echo $XMIN $XMAX $YMIN $YMAX | awk '{print ($1+$2)*0.5, $3-($4-$3)*0.25}'` 10 0 0 BC Roughness [cm/km@+2@+]
+...END
+        else
+            pstext $MID -N <<...END >> $OUTFILE
+            `echo $XMIN $XMAX $YMIN $YMAX | awk '{print ($1+$2)*0.5, $3-($4-$3)*0.25}'` 10 0 0 BC Strain [cm/km]
+...END
+        fi
+        # create y axis label
+          pstext $END -N <<...END >> $OUTFILE
+          `echo $XMIN $XMAX $YMIN $YMAX | awk '{print $1-($2-$1)*0.20,($3+$4)*0.5 }'` 10 90 0 BC RMS Misfit [m]
+...END
+    else
+        echo  "$INV doesn't exist!"
+    fi
+    # put hidden stamp in file that will denote its source
+    echo " %% created by ${USER} using ${HOST}:${PWD}/$0 $* " >>$OUTFILE
+done
+
+#################################################################################
+# want to change the scale? 
+#  perl -pi.bak -e 's/0\.24\ 0\.24\ scale/0\.20\ 0\.20\ scale/g' $OUTFILE
+
+exit 0
