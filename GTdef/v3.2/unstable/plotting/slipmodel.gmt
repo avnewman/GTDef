@@ -63,7 +63,6 @@ Options:
        	       Bounds for plot using XMIN/XMAX/YMIN/YMAX.  Alternatively will use 10
 	       percent greater than the model geometry on all sides.
 
-
 Programs Required:
        GMT v5 or greater
        open or xdg-open (standard on mac and most linux distributions, respectively)
@@ -71,6 +70,12 @@ Programs Required:
 
 Output:
       New files labeled %s_'model'_kp'Kappa'.ps and .png. The .png is displayed.
+
+
+Caveats:
+      Program expects that dips are down and to the right from starting point (internal
+      assumption made when createing _patches.out files).  In other words, its best to 
+      define dips less than 90°, though the program works up to 180°.
 
 Example:
        %s -Mnicoya_camp_7x10.in -K750000 -S100
@@ -233,7 +238,7 @@ END="$RANGE $PROJ -O"
 
 OUTFILE=$(basename $0 .gmt)_$(basename $PATCHES _patches.out).ps ; #echo $OUTFILE
 #######################################
-gmt set MAP_FRAME_TYPE plain
+gmt set MAP_FRAME_TYPE plain  PLOT_DEGREE_FORMAT D
 
 #######################################
 if [ $LFLAG ] ; then
