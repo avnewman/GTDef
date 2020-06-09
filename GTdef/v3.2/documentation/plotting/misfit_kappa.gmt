@@ -1,0 +1,186 @@
+#!/bin/bash
+# program to plot the trade-off between model and data misfit with model roughness.
+# uses model_inv.out
+# V1.3  AVN
+# Thu Jun  4 14:16:45 EDT 2020
+# updated to use modifier flags instead of straight input
+# Fri Jun  5 11:54:36 EDT 2020
+# added range modifier and labels
+# Sat Jun  6 12:08:50 EDT 2020
+
+####################################### 
+# tempdir 
+###################################### 
+if [ $TMPDIR ] ;then   
+   USAGE=$TMPDIR/$$.usage 
+   else 
+   USAGE=$$.usage 
+fi 
+ 
+# create a usage display that will be shown if command is run with no arguements 
+UL="\e[4m" # turns on underline 
+NM="\e[0m" #turns off underline 
+ printf "
+Usage: %s -M${UL}'model_inv.out'${NM} [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}]
+
+Requires: 
+       -M   Model_ininv.out
+	     Should be the output file that contains the fitting summary for range of 
+	     generalization parameters (kappa). It is the inversion summary file. 
+
+Options: 
+       -R   Rectangular_bounds
+       	       Bounds for plot using XMIN/XMAX/YMIN/YMAX.  Alternatively will use 10
+	       percent greater than the model geometry on all sides.
+
+Programs Required: 
+       GMT v5 or greater
+       open or xdg-open (standard on mac and most linux distributions, respectively)
+       A few standard gnu commands (awk, test, echo, basename; likely on your system already)
+
+Output: 
+      New files labeled %s_'model_inv'.ps and .png. The .png is displayed.
+
+Caveats: 
+     No labels exist internally.  Kappa values are labeled next to the green circles 
+       showing the roughness/RMS trade-off.  Red is the derivative of the data.
+
+Example: 
+       %s -M SI_2DCHK_C2_wNOISE_inv.out  -R0/.001/.0008/.005
+" $(basename "$0") $(basename "$0") $(basename "$0") >$USAGE
+	              
+if  [ ${#} -lt "1" ] ; then 
+  cat $USAGE  # display usage 
+  rm $USAGE 
+  exit 1 # exit with error after removing temp file 
+fi 
+while getopts "M:R:" OPT 
+do 
+   case ${OPT} in 
+       M) SUMMARY=$OPTARG
+  	  MFLAG=1; # flag for inclusion of model
+        ;; 
+       R) XMIN=$(echo $OPTARG | awk -F"/" '{print $1}')
+	  XMAX=$(echo $OPTARG | awk -F"/" '{print $2}')
+	  if [ $(echo $XMIN $XMAX | awk '$1>$2{print "bad"}') ] ; then
+	       echo "ERROR with '-R' option"
+	       echo "   XMIN must be lower than XMAX. Exiting..."
+	       rm $USAGE; exit 1
+	  fi
+	  YMIN=$(echo $OPTARG | awk -F"/" '{print $3}')
+	  YMAX=$(echo $OPTARG | awk -F"/" '{print $4}')
+	  if [ $(echo $YMIN $YMAX | awk '$1>$2{print "bad"}') ] ; then
+	       echo "ERROR with '-R' option\n YMIN must be lower than YMAX"
+	       rm $USAGE; exit 1
+	  fi
+  	  RFLAG=1; # flag for rectangular bounds.
+        ;;
+ 
+       *) echo "ERROR: unknown modifier flag used (${OPT}), exiting."  # if a bad modifier is used 
+           rm $USAGE;   exit 1 ;; # exit with error after removing temp file 
+   esac 
+done 
+rm $USAGE 
+
+test "$MFLAG" || { echo "ERROR: Required -M flag missing, no input model selected.  Exiting." ; exit 1; }
+
+# check to see if the required files exist and are readable
+test -r "$SUMMARY" || { echo "ERROR: Cannot find $SUMMARY. Exiting." ;  exit 1 ; }
+
+# first things first 
+# how big is this thing?
+SCALE=16
+if [ $RFLAG ] ; then
+   echo "Using user supplied plot boundaries "
+   #echo XMIN=$XMIN YMIN=$YMIN
+   DX="$(printf "%e\n%e\n" $XMIN $XMAX | gmt info -I.001 -C | awk '{printf" %1.0e", ($2-$1)/10}')"
+   DY="$(printf "%e\n%e\n" $YMIN $YMAX | gmt info -I.001 -C | awk '{printf" %1.0e", ($2-$1)/10}')"
+   #echo DX=$DX DY=$DY
+   RANGE="$(printf "%e %e\n%e %e\n" $XMIN $YMIN $XMAX $YMAX | gmt info -I"$DX/$DY" )"
+else
+   DX="$(awk '$1!~"#"{print $13}' $SUMMARY | gmt info -I.001 -C | awk '{printf" %1.0e", ($2-$1)/10}')"
+   DY="$(awk '$1!~"#"{print $7}'  $SUMMARY | gmt info -I.001 -C | awk '{printf" %1.0e", ($2-$1)/20}')"
+   RANGE="$(awk '$1!~"#"{print $13,$7}' $SUMMARY | gmt info -I"$DX/$DY" )"
+fi
+
+   #echo $DX $DY
+   #echo $RANGE
+   PROJ="-JX$SCALE"
+
+  BGN="$RANGE $PROJ -K"
+  MID="$RANGE $PROJ -O -K"
+  END="$RANGE $PROJ -O"
+
+  OUTFILE=$(basename $0 .gmt)_$(basename $SUMMARY .out).ps
+#######################################
+gmt set MAP_FRAME_TYPE plain  MAP_FRAME_PEN black
+
+#######################################
+gmt psbasemap  -X2  -Y10.5 $BGN -P -B"$DX":"Roughness [cm/km^2]":/"${DY}":"RMS Misfit [m]":"WeSn" >$OUTFILE
+
+
+# plot station locations
+#line
+awk '$1!~"#" {print $13,$7}' $SUMMARY |  \
+	gmt psxy  $MID   -W2 >>$OUTFILE
+#green points
+awk '$1!~"#" {print $13,$7}' $SUMMARY |  \
+	gmt psxy  $MID  -Sc0.3 -G0/255/0 -W0.2 >>$OUTFILE
+#text
+awk '$1!~"#" {printf "%e %e %5.1e \n", $13+DX/5,$7+DY/5, $2}' DX="$DX" DY="$DY" $SUMMARY | \
+	gmt pstext -F+a0+jLB+f12p,Helvetica,black $MID  >>$OUTFILE
+
+# plot 2nd-order derivatives
+gmt set MAP_FRAME_TYPE plain  MAP_FRAME_PEN red
+#2ndorder
+#DRV=d2rmsdr2.txt
+#sort -g -k13 $SUMMARY | awk 'NR==2{X=$13;Y=$7} NR>2{dydx=($7-Y)/($13-X); print X,dydx ;X=$13;Y=$7}' |\
+#        awk 'NR==1{X=$1;Y=$2} NR>1{d2ydx2=($2-Y)/($1-X); print X,d2ydx2 ;X=$1;Y=$2}' > $DRV
+#1st order
+DRV=drmsdr.txt
+sort -g -k13 $SUMMARY | awk 'NR==2{X=$13;Y=$7} NR>2{if (X !=$13) {dydx=($7-Y)/100/($13-X); print X,dydx } ;X=$13;Y=$7}' >$DRV
+echo $DRV created
+DY2="$(awk '$1!~"#"{print $2}'  $DRV | gmt info -I.001 -C | awk '{printf "%.0e", ($2-$1)/10}')"
+YRANGE2="$(gmt info $DRV -I"$DX/$DY2" | awk -F"/" '{print $3"/"$4}' )"
+RANGE2="$(echo $RANGE | awk -F"/" '{print $1"/"$2"/"Y2}' Y2="$YRANGE2")"
+gmt psbasemap -O -K $RANGE2 $PROJ -B"$DX/${DY2}":"dy/dx [km^2]":"E" >>$OUTFILE
+gmt psxy $DRV  $RANGE2 $PROJ -O -K -W1,red >>$OUTFILE
+gmt psxy $DRV  $RANGE2 $PROJ -O -K -Sc0.2 -Gred -W0.2 >>$OUTFILE
+# set defaults back to black
+gmt set  MAP_FRAME_PEN black
+
+#
+gmt pslegend -Dx9.5/15/12 -F+p2p+g255/255/200+r10p+s -P -O $RANGE2 $PROJ << ...EOF >>$OUTFILE
+S 1c c 0.3 0/255/0 0.2  2c RMS/Roughness @@ Kappa (printed value) 
+S 1c c 0.2 red 0.2      2c d RMS@/d Roughness @@ Kappa
+D 0.5c 2p 
+L 7 Helvetica-Oblique L  Created by ${USER} in ${PWD}
+L 7 Helvetica-Oblique L  Command: $(basename $0) $* 
+L 7 Helvetica-Oblique L  Date: $(date)
+...EOF
+
+####################################################################
+# END PS Creation
+####################################################################
+
+
+
+# create PNG output from PS file
+  OUTPNG=$(basename $OUTFILE .ps).png
+  # 600dpi 0.3cm margin on all sides and 50%scale
+  gmt psconvert $OUTFILE -E600 -A1c+S0.5 -Tg -F$OUTPNG
+
+if [ -x $( which open ) ] ; then 
+     open $OUTPNG 
+elif  [ -x $( which xdg-open ) ] ; then
+     xdg-open $OUTPNG &> /dev/null &  
+else
+     echo "WARNING: cannot open $OUTPNG, no viewer available" 
+fi	
+
+
+###############################################
+# put hidden stamp in file that will denote its source
+echo " %%%  created $(date) by ${USER} using ${HOST}:${PWD}/$0 $* " >>$OUTFILE
+
+#gv -scale=2  $OUTFILE & 

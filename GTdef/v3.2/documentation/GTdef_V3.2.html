@@ -82,18 +82,18 @@ Ground rules for the input file include:
    </ol>
    <li> No specific order is required for specifying parameters
    <li> The first column is important to identify the data type. Flag is not case sensitive.
-   <li> Information within parameter rows are all white-space seperated.
+   <li> Information within parameter rows are all white-space separated.
    <li> All parameters use the same units, defaulting to meters for each length of fault components, slip magnitudes, and measurement data.
    <li> Angles are described in degree
    <li> Depths are too reported in meters and are increasing going into the earth.
    <li> Any line preceded by a hash <c>'#'</c> is treated as a comment and is ignored.
-   <li> The only reqirements for the most simple input file are at least one fault line, and one 'data' line, describing the parameters for each. All lines are characterized by their first field and the line order does not matter.
+   <li> The only requirements for the most simple input file are at least one fault line, and one 'data' line, describing the parameters for each. All lines are characterized by their first field and the line order does not matter.
 </ol>
 In the following sections we will further explore parameter characterization within the input file.
 </p>
 
 <h3> FAULT characterization: </h3>
-Each fault must fall into one of the below 7 catagories described by the nature of slip on the fault, fault parameters, external geometries, or simply extrenal Green's functions. A fault line may look like (example shown in above-linked input file):
+Each fault must fall into one of the below 7 categories described by the nature of slip on the fault, fault parameters, external geometries, or simply extrenal Green's functions. A fault line may look like (example shown in above-linked input file):
 <div class="code-wrapper"><pre>
 #fault type name        lon       lat     z1  z2   len   str   dip     ss     ds   ts     ss0  ssX      ds0  dsX      ts0  tsX    Nd  Ns
 fault  1    gnrc-1      -120.2000 38.0000 3e3 15e3 100e3 170.0 25.0    2.5e-3 1.2  0      0    0        1    1.5      0    0      1   1   # inverted only on dip-slip between 1 and 1.5 m
@@ -478,8 +478,8 @@ After using your pointer to move around your model appropriately, your result sh
 		    <a href=http://geophysics.eas.gatech.edu/internal/papers/1987/Harris/Harris_Segall_JGR_1987.pdf>Harris and Segall (1987)</a>,
  		     but more concisely in <a href=http://geophysics.eas.gatech.edu/internal/papers/2002/J%f3nsson/J%f3nsson_etal_BSSA_2002.pdf>Jónsson_et al_(2002)</a>.
 		     <br>
-		     The method works to minimize the 2D second-order derviative of the slip surface so that large changes are constrained within a certain value.
-		     The way it's been implemented here is that a series of roughness solutions are determined, all yeilding different misfits to the data.
+		     The method works to minimize the 2D second-order derivative of the slip surface so that large changes are constrained within a certain value.
+		     The way it's been implemented here is that a series of roughness solutions are determined, all yielding different misfits to the data.
 		     It is a somewhat arbitrary decision to chose the optimal roughness parameter.  Usually this is done by evaluating the kink-point by which
 		     additionally smooth results significantly increase misfits.
   <ol type="i">
@@ -492,9 +492,9 @@ kappa 2 0  5000 11
 <c>#fault type name   lon       lat     z1  z2    len    str    dip     ss   ds    ts    ss0  ssX    ds0  dsX    ts0 tsX    Nd  Ns</c>
  fault  1   slm    157.0990  -8.6920  0  5200  50000  125.0  158.0   0    0.1   0     0    0      0    100    0   0      3   4
 </pre> </div>
-		<li> Invert, and explore your results.  Using <a href="http://geophysics.eas.gatech.edu/people/dmurekezi/temp/html_pages/documentation/plotting_code/misfit_kappa.gmt"> misfit_kappa.gmt</a> , try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example data set.
+		<li> Invert, and explore your results.  Using <a href="plotting/misfit_kappa.gmt"> misfit_kappa.gmt</a>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example data set.
       <img src="files/misfit_kappa_solomon_inv.png" width="700px">
-      <li> You might want to look at your results in a geographic reference system.  I've created a GMT script(<a href="http://geophysics.eas.gatech.edu/people/dmurekezi/temp/html_pages/documentation/plotting_code/slipmodel.gmt"> slipmodel.gmt</a> ) to do this,
+      <li> You might want to look at your results in a geographic reference system.  I've created a GMT script (<a href="plotting/slipmodel.gmt">slipmodel.gmt</a>) to do this,
            but you must modify it for your purposes.
 		<li> Finally, once you've chosen your optimal kappa value, run a new forward model, and repredict deformation.
 		     <br><br>
@@ -523,14 +523,14 @@ kappa 2 0  5000 11
 		to recreate the model.
 	<ol type="i">
 		<li>Create an input model with subfaults that are approximately as large as characteristic changes you
-		observe in your solutions.  Each subfault alternates between 0 and 1 unit of slip.
+		observe in your solutions.  Each subfault alterna/tes between 0 and 1 unit of slip.
 		<li>Run a forward model, and predict the deformation at each of the sites you used for your original inversion.
 		<li>If you have error information add these values so they fractionallly scale with the difference between your
-		original data and their error. (e.g 10 cm error for 50 cm original displacment) should now scale to 1 cm error
-		for predicted 5 cm displacemnt).
+		original data and their error. (e.g 10 cm error for 50 cm original displacement) should now scale to 1 cm error
+		for predicted 5 cm displacement).
 		<li>Use these synthetic data and errors to run a new inversion and compare the output to the original
 		checkerboard.  If the input model matches the inversion, then you have great resolution.  Where you start
-		to signficantly deviate from your checkerboard, you lose resolution.  One could be more quantitative than this,
+		to significantly deviate from your checkerboard, you lose resolution.  One could be more quantitative than this,
 		but it is usually best to trust your judgement here--it's kept you alive this long.
 	</ol>
 </section>
@@ -563,7 +563,7 @@ kappa 2 0  5000 11
 <center>
 <hr size=3 color=black ><!---------------------------------------------------------------------------------------->
    <font size=2 color=darkblue> <I>murekezi<IMG src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I>, <I>anewman<IMG src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I></font> | <font size=2 color=darkblue><I>Updated:
-Tue May 19 13:23:19 EDT 2020
+Tue Jun  9 11:23:27 EDT 2020
    </I></font>
    </center>
 </td> </tr>
