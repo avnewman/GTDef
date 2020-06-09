@@ -49,7 +49,8 @@ and inverse models that use data with errors and some modeling constraints to pr
 source.  The source in either case can be either simple rectangular slips along the plane, orthogonal to it
 or some combination of both.</p>
 <p>
-Requirements: Algorithms are written in Matlab and require the <c>'Parameter estimation'</c> toolbox for inversions.  Also, if you wish to use parallel processors, your version needs to include <gr>'parpool'</gr>, which was implemented around 2015.
+<br>
+<b>Requirements</b>: Algorithms are written in Matlab and require the <c>'Parameter estimation'</c> toolbox for inversions.  Also, if you wish to use parallel processors, your version needs to include <gr>'parpool'</gr>, which was implemented around 2015.
 </p>
 <p>
 Below, we will first step through some forward models, and eventually inversions.
@@ -91,7 +92,7 @@ Ground rules for the input file include:
 In the following sections we will further explore parameter characterization within the input file.
 </p>
 
-<h3> Fault characterization: </h3>
+<h3> FAULT characterization: </h3>
 Each fault must fall into one of the below 7 catagories described by the nature of slip on the fault, fault parameters, external geometries, or simply extrenal Green's functions. A fault line may look like (example shown in above-linked input file):
 <div class="code-wrapper"><pre>
 #fault type name        lon       lat     z1  z2   len   str   dip     ss     ds   ts     ss0  ssX      ds0  dsX      ts0  tsX    Nd  Ns
@@ -167,7 +168,7 @@ point  3    rdom    -118.8979 37.6770 2417.4049    9.6  1.1  36.1    1.0  1.0  1
 	<li>grid - a parallelogram defined by the lower-left (lon1,lat1) and upper-right (lon2,lat2) corners with data points parallel to the sides.
    </ul>
  Note: profile and grid are generally used for displaying results from a forward model.
-   <li><b>Data parameters</b><br>
+   <li><b>Data Parameters</b><br>
 	   The data-types described above will use differing parameters. Their meaning  and convention are describe here.
 	<ul>
 	   <li>lon(x),lat(y),z - horizontal location and elevation (positive upward) [m]
@@ -491,21 +492,18 @@ kappa 2 0  5000 11
 <c>#fault type name   lon       lat     z1  z2    len    str    dip     ss   ds    ts    ss0  ssX    ds0  dsX    ts0 tsX    Nd  Ns</c>
  fault  1   slm    157.0990  -8.6920  0  5200  50000  125.0  158.0   0    0.1   0     0    0      0    100    0   0      3   4
 </pre> </div>
-		<li> Invert, and explore your results.  Try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this data set.
-      <img src="files/non_uniform_solomon.png" width="700px">
-		<li> Once you've chosen your optimal kappa value, run a new forward model, and repredict deformation.
-		<li> Finally, you might want to look at your results in a geographic reference system.  I've created a GMT script to do this,
-		     but you must modify it for your purposes.  As well, I haven't gotten the slip models to plot on top of the geographic ones, so you
-		     may want to do this by hand using your favorite vector graphics program like Adobe Illustrator.  If you do get your version
-		     to correctly plot on the map without any one-time tricks, let me know and I will update the online version.
+		<li> Invert, and explore your results.  Using <a href="http://geophysics.eas.gatech.edu/people/dmurekezi/temp/html_pages/documentation/plotting_code/misfit_kappa.gmt"> misfit_kappa.gmt</a> , try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example data set.
+      <img src="files/misfit_kappa_solomon_inv.png" width="700px">
+      <li> You might want to look at your results in a geographic reference system.  I've created a GMT script(<a href="http://geophysics.eas.gatech.edu/people/dmurekezi/temp/html_pages/documentation/plotting_code/slipmodel.gmt"> slipmodel.gmt</a> ) to do this,
+           but you must modify it for your purposes.
+		<li> Finally, once you've chosen your optimal kappa value, run a new forward model, and repredict deformation.
 		     <br><br>
-		     The code: <a href="http://geophysics.eas.gatech.edu/anewman/classes/MGM/GTdef/slipmodel.gmt">slipmodel.gmt</a>
-		<li> Another code that may be of use is <a href="http://geophysics.eas.gatech.edu/anewman/classes/MGM/GTdef/GTdef_interface.gmt "> GTdef_interface.gmt</a> which can be used to plot an individual slip model
+		<!--li> Another code that may be of use is <a href="http://geophysics.eas.gatech.edu/anewman/classes/MGM/GTdef/GTdef_interface.gmt "> GTdef_interface.gmt</a> which can be used to plot an individual slip model
 		     along with the mistfit/roughness trade-off.  You again may need to modify this for your needs.
-<div class="code-wrapper"> <pre>
-% GTdef_interface.gmt *kp*.out
-% <c># view your results </c>
-% gs *.ps   <c># page through your numerous ps files to observe the variance with increasing smoothness</c>
+<!--div class="code-wrapper"> <pre>
+<!% GTdef_interface.gmt *kp*.out>
+% <!<c># view your results </c>
+<!% gs *.ps   <c># page through your numerous ps files to observe the variance with increasing smoothness</c>
 </pre> </div>
     </ol>
 </section>
