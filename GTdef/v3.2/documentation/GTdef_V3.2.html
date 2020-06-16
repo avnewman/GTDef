@@ -9,11 +9,12 @@
  <h1 class="left">Dislocation Modeling using GTdef(V_3.2)</h1>
 </td></tr>
 <tr><td align=top>
+<center>
 <section id="TOC">
-<ol>
-<h2>Sections of the GTdef model</h2>
+<h2 >Sections of the GTdef model</h2>
 <font size=-2pt>(Clicking on section heads will return to the Table of Contents)</font>
-<H2>
+<H2 align='center'>
+  <ol class = "center">
 <li> <a href = "#INTRO"> Basic Introduction</a></li>
 <li> <a href = "#DL"> GTdef Code and How to Download it </a></li>
 <li> <a href = "#INPUT"> The Input File</a></li>
@@ -23,9 +24,10 @@
 <li> <a href = "#cbt"> Checkerboard Testing </a></li>
 <li> <a href = "#gf"> Ingesting External Green's Functions</a></li>
 <li> <a href = "#ref"> References</a></li>
-</H2>
 </ol>
+</H2>
 </section>
+</center>
 
 <ol>
 <section id="INTRO">
@@ -486,10 +488,10 @@ After using your pointer to move around your model appropriately, your result sh
 <div class="code-wrapper"> <pre>
 kappa 2 0  5000 11
 </pre></div>
-		<li> Setup your fault to now have 12 subfaults, 4 patches along-strike and 3 patches along-dip.
+		<li> Setup your fault to now have 70 subfaults, 7 patches along-strike and 10 patches along-dip.
 <div class="code-wrapper"> <pre>
 <c>#fault type name   lon       lat     z1  z2    len    str    dip     ss   ds    ts    ss0  ssX    ds0  dsX    ts0 tsX    Nd  Ns</c>
- fault  1   slm    157.0990  -8.6920  0  5200  50000  125.0  158.0   0    0.1   0     0    0      0    100    0   0      3   4
+ fault  1   slm    157.0990  -8.6920  0  5200  50000  305.0  22.0   0    0.1   0     0    0      0    100    0   0      7   10
 </pre> </div>
 		<li> Invert, and explore your results.  Using <a href="plotting/misfit_kappa.gmt"> misfit_kappa.gmt</a>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example data set.
       <img src="files/misfit_kappa_solomon_inv.png" width="700px">
@@ -522,7 +524,7 @@ kappa 2 0  5000 11
 		to recreate the model.
 	<ol type="i">
 		<li>Create an input model with subfaults that are approximately as large as characteristic changes you
-		observe in your solutions.  Each subfault alterna/tes between 0 and 1 unit of slip.
+		observe in your solutions.  Each subfault alternates between 0 and 1 unit of slip.
 		<li>Run a forward model, and predict the deformation at each of the sites you used for your original inversion.
 		<li>If you have error information add these values so they fractionallly scale with the difference between your
 		original data and their error. (e.g 10 cm error for 50 cm original displacement) should now scale to 1 cm error
@@ -562,7 +564,9 @@ kappa 2 0  5000 11
 <center>
 <hr size=3 color=black ><!---------------------------------------------------------------------------------------->
    <font size=2 color=darkblue> <I>murekezi<IMG src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I>, <I>anewman<IMG src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I></font> | <font size=2 color=darkblue><I>Updated:
-Tue Jun  9 11:23:27 EDT 2020
+     <script language="Javascript">
+     document.write(document.lastModified);
+     </script>
    </I></font>
    </center>
 </td> </tr>
