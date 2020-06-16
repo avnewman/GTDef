@@ -66,7 +66,9 @@ function [ modspace,earth,...
 % added fault6 for external geometry, changed old fault6 to fault7 lfeng Jun 1 SGT 2016  %
 % last modified Lujia Feng Wed Jun  1 17:18:32 SGT 2016                                  %
 % added options for reading lsqlin params for fitting                                    %
+%  default values are now considerably lower (20, 1e-20)
 %last modified by Andrew Newman Tue May 19 09:58:52 EDT 2020                             %
+%last modified by Andrew Newman Tue Jun 16 12:40:00 EDT 2020                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -94,7 +96,8 @@ modspace.modinfo = [];
 modspace.res = [];
 modspace.mat = [];
 modspace.lsqlin = [];
-modspace.lsqlin_MaxIter = 2000; modspace.lsqlin_TolFun = 1e-30;  % prior hard-wired values
+%modspace.lsqlin_MaxIter = 2000; modspace.lsqlin_TolFun = 1e-30;  % prior hard-wired values
+modspace.lsqlin_MaxIter = 20; modspace.lsqlin_TolFun = 1e-20;  % new lower default values (can be overridden by lsqlin call in input)
 % earth structure defaults
 earth.type      = 'homogeneous';
 earth.rigidity  = 30e9;

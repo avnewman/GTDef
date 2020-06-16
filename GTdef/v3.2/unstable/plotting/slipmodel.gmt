@@ -267,7 +267,7 @@ awk '$1!~"#" {print $16,$17, $24*DEF, $25*DEF, "0 0 0" }' DEF=$FVSCALE $PATCHES 
   gmt psvelo -N  $MID -W0p -A0.01/0.05/0.03 -W0.1,100/100/100 -Se1/0/0 -L >>$OUTFILE
 
 
-# plot data with errors at 95%confidence and stations (green errows with ellipses)
+# plot data with errors at 1-sigma and stations (green errows with ellipses)
 
 POINT1="$(awk '$1=="point"&&$2=="1"{print "1"}' $PMODEL)"
 POINT2="$(awk '$1=="point"&&$2=="2"{print "1"}' $PMODEL)"
@@ -276,12 +276,12 @@ POINT3="$(awk '$1=="point"&&$2=="3"{print "1"}' $PMODEL)"
 # plot type 2 or 3. (Horizontal data)
 if [ -s "$POINT2" ] || [ "$POINT3" ] ; then
    awk '$1!~"#"&&$1=="point" {if($2=="2" || $2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $MODELIN | \
-	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Ggreen -Se1/0.95/0 -L >>$OUTFILE
+	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Ggreen -Se1/0.65/0 -L >>$OUTFILE
 fi
   # plot type 1 or 3. (Vertical data)
 if [ "$POINT1" ] || [ "$POINT3" ] ; then
    awk '$1!~"#"&&$1=="point" {if($2=="1"){Uz=$7*DEF; eUz=$8*DEF} if($2=="3"){Uz=$9*DEF; eUz=$12*DEF} print $4,$5, 0, Uz,eUz/10, eUz, " 0" }' DEF=$DATASCALE $MODELIN  | \
-  	gmt psvelo -N  $MID -W0p -A0.05/0/0 -Ggreen -Se1/0.95/0 -L >>$OUTFILE
+  	gmt psvelo -N  $MID -W0p -A0.05/0/0 -Ggreen -Se1/0.65/0 -L >>$OUTFILE
 fi
 #plot predicted solutions (black arrows)
 # plot Horizontal
@@ -298,12 +298,12 @@ fi
 # plot type 2 or 3. (Horizontal data)
 if [ "$POINT2" ] || [ "$POINT3" ] ; then
    awk '$1!~"#"&&$1=="point" {if($2=="2" || $2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $MODELIN | \
-	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1  -Se1/0.95/0 -L >>$OUTFILE
+	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1  -Se1/0.65/0 -L >>$OUTFILE
 fi
   # plot type 1 or 3. (Vertical data)
 if [ "$POINT1" ] || [ "$POINT3" ] ; then
    awk '$1!~"#"&&$1=="point" {if($2=="1"){Uz=$7*DEF; eUz=$8*DEF} if($2=="3"){Uz=$9*DEF; eUz=$12*DEF} print $4,$5, 0, Uz,eUz/10, eUz, " 0" }' DEF=$DATASCALE $MODELIN  | \
-  	gmt psvelo -N  $MID -W0p -A0.05/0/0  -Se1/0.95/0 -L >>$OUTFILE
+  	gmt psvelo -N  $MID -W0p -A0.05/0/0  -Se1/0.65/0 -L >>$OUTFILE
 fi
 
 # plot station locations
@@ -326,7 +326,7 @@ getUNIT() {
    elif [ $1 == "1000" ] ; then
    	local UNIT="mm"
    else
-   	local UNIT="/$1 m"
+   	local UNIT="m /$1" 
    fi
    echo $UNIT
 }
@@ -349,12 +349,12 @@ FVUNIT=$(getUNIT $FVSCALE)
 # DATA vectors
 DVUNIT=$(getUNIT $DATASCALE)
 #echo " -86.75 8.55 $DVscaled 0 0 0 0 Data [$DVscale $DVUNIT]" |\
-#	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Ggreen -Se1/0.95/10 -L >>$OUTFILE
+#	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Ggreen -Se1/0.65/10 -L >>$OUTFILE
 gmt pslegend -Dx8/-1/16 -F+p2p+g255/255/200+r10p+s -P  $MID << ...EOF >>$OUTFILE
 S 4c c 0.2 0/255/0 0.1  1c Station
-S 10c v0.25c+e+p3 $DVscale green 1p,green 0.5c  Observed Data ($DVscale [$DVUNIT]) 
-S 10c v0.25c+e+p3 $DVscale magenta 1p,magenta 0.5c  Modelled Data ($DVscale [$DVUNIT]) 
-S 10c v0.15c+e+p3 $FVscale gray 0p 0.5c  Fault ($FVscale [$FVUNIT]) 
+S 10c v0.25c+e+p3 $DVscale green 1p,green 0.5c  Observed Data $DVscale [$DVUNIT]
+S 10c v0.25c+e+p3 $DVscale magenta 1p,magenta 0.5c  Modelled Data $DVscale [$DVUNIT]
+S 10c v0.15c+e+p3 $FVscale gray 0p 0.5c  Fault $FVscale [$FVUNIT]
 D 0.5c 2p 
 L 8 Helvetica-Oblique L  Created by ${USER} in ${PWD}
 L 8 Helvetica-Oblique L  Command: $(basename $0) $* 
@@ -384,4 +384,5 @@ fi
 ###############################################
 # put hidden stamp in file that will denote its source
 echo " %%%  created $(date) by ${USER} using ${HOST}:${PWD}/$0 $* " >>$OUTFILE
+rm $CPT
 #gv -scale=2  $OUTFILE &
