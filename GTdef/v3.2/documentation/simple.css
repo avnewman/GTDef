@@ -29,6 +29,13 @@ li {
 /*li p {
 	display: inline;
 } */
+H2 {
+	font-size: 16pt;
+	.center {
+  text-align: center;
+  list-style-position: inside;
+}
+}
 
 h1 {
 	font-size: 16pt;
