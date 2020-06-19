@@ -378,15 +378,16 @@ do
    #echo " -86.75 8.55 $DVscaled 0 0 0 0 Data [$DVscale $DVUNIT]" |\
    #	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Ggreen -Se1/0.65/10 -L >>$OUTFILE
    gmt pslegend -Dx8/-1/16 -F+p2p+g255/255/200+r10p+s -P  $MID << ...EOF >>$OUTFILE
-   H 14 Helvetica-Bold $MODbase at  @~k@~ = $KAPPA
-   S 4c c 0.2 0/255/0 0.1  1c Station
-   S 10c v0.25c+e+p3 $DVscale green 1p,green 0.5c  Observed Data $DVscale [$DVUNIT]
-   S 10c v0.25c+e+p3 $DVscale magenta 1p,magenta 0.5c  Modelled Data $DVscale [$DVUNIT]
-   S 10c v0.15c+e+p3 $FVscale gray 0p 0.5c  Fault $FVscale [$FVUNIT]
-   D 0.5c 2p 
-   L 8 Helvetica-Oblique L  Created by ${USER} in ${PWD}
-   L 8 Helvetica-Oblique L  Command: $(basename $0) $* 
-   L 8 Helvetica-Oblique L  Date: $(date)
+L 14 Helvetica-Bold C $MODbase at  @~k@~ = $KAPPA
+D 1.5c 2p 
+S 4c c 0.2 0/255/0 0.1  1c Station
+S 10c v0.25c+e+p3 $DVscale green 1p,green 0.5c  Observed Data $DVscale [$DVUNIT]
+S 10c v0.25c+e+p3 $DVscale magenta 1p,magenta 0.5c  Modelled Data $DVscale [$DVUNIT]
+S 10c v0.15c+e+p3 $FVscale gray 0p 0.5c  Fault $FVscale [$FVUNIT]
+D 0.5c 1p 
+L 6 Helvetica-Oblique L  Created by ${USER} in ${PWD}
+L 6 Helvetica-Oblique L  Command: $(basename $0) $* 
+L 6 Helvetica-Oblique L  Date: $(date)
 ...EOF
    
    
