@@ -1,10 +1,10 @@
 # GMT 5 Session common arguments shelf
 BEGIN GMT 5.4.5
-B	2e-03/8e-04:dy/dx [km^2]:E
+B	3e-03/7e-04:dy/dx [km^2]:E
 J	X
 JM	M16
 JX	X16
-R	0/0.022/-0.008/0
+R	0/0.027/-0.007/0
 X	2
 Y	10.5
 L	10

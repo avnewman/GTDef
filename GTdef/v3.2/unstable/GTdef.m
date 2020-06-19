@@ -59,7 +59,8 @@ function [] = GTdef(finName,wnum)
 % added output resolution matrix information (see GTdef_input) anewman May 10 2016     %
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016   %
 % corrected fault type 7 bugs lfeng Fri Jun 10 01:04:06 SGT 2016                       %
-% last modified Lujia Feng Fri Jun  3 15:42:54 SGT 2016                                %
+% added project option for runs. AVN: Thu Jun 18 20:25:58 EDT 2020                     %
+% last modified Andrew NEwman Thu Jun 18 20:25:58 EDT 2020                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -646,6 +647,14 @@ fprintf(1,'\n............. doing inversion .............\t');
     if (strcmpi(modspace.mat,'on'))
         fmatName = [ basename '.mat' ];
 	save(fmatName);
+    end
+
+    if (strcmpi(modspace.proj,'on'))
+    	ldir=pwd;
+	myFiles=dir(fullfile(ldir,strcat(basename,'_kp*00.out')));
+	for k=1:length(myFiles)
+		GTdef_project(myFiles(k).name)
+	end
     end
 
 end

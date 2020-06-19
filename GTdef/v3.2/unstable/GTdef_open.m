@@ -69,6 +69,8 @@ function [ modspace,earth,...
 %  default values are now considerably lower (20, 1e-20)
 %last modified by Andrew Newman Tue May 19 09:58:52 EDT 2020                             %
 %last modified by Andrew Newman Tue Jun 16 12:40:00 EDT 2020                             %
+%last modified by Andrew Newman Thu Jun 18 18:54:03 EDT 2020                             %
+% added project line for input
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -95,6 +97,7 @@ modspace.sm   = []; modspace.sm_abs = []; % sm_abs for calculate absolute 1st de
 modspace.modinfo = [];
 modspace.res = [];
 modspace.mat = [];
+modspace.proj = [];
 modspace.lsqlin = [];
 %modspace.lsqlin_MaxIter = 2000; modspace.lsqlin_TolFun = 1e-30;  % prior hard-wired values
 modspace.lsqlin_MaxIter = 20; modspace.lsqlin_TolFun = 1e-20;  % new lower default values (can be overridden by lsqlin call in input)
@@ -274,7 +277,15 @@ while(1)
 	    warning('Line %d, of %s: Input resolution method "%s" not recognised. Continuing with resolution method = 1',ln,filename,method)
 	    modspace.res='diags';
         end
-    %%%%% resolution %%%%%
+     %%%%% resolution %%%%%
+    %%%%% projection %%%%%
+    elseif strncmpi(flag,'proj',4)
+        [modspace.proj,remain] = strtok(remain);
+	if ~strcmpi(modspace.proj,'on') && ~strcmpi(modspace.proj,'off')
+            error('GTdef_open ERROR: projection should be either on or off!');
+	end
+    %%%%% projection %%%%%
+    %%%%% matlab file %%%%%
     elseif strncmpi(flag,'mat',3)
 	[modspace.mat,remain] = strtok(remain);
 	if ~strcmpi(modspace.mat,'on') && ~strcmpi(modspace.mat,'off')

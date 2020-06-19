@@ -60,10 +60,11 @@ greensfns  on
 stressdrop on
 #lsqlin MaxIter TolFun
 lsqlin  2000    1e-30                           # defaults are shown
-resolution  1                                   # perform resolution analysis output only model and data resolution informatoin
+resolution  1                                   # perform resolution analysis output only model and data resolution information
 resolution  2                                   # output resolution spread information for every model parameter *MESSY*
 resolution  2  1 8 65 68 72 100 120 128         # output only at subfaults defined increasing from the Nd then Ns (starting from 1st fault)
 matfile     on                                  # save a matlab file of all model paremters sent to GTdef.m (save as 'fin'.mat)
+project     on					# get geographic projection of fault and point data (alt. can run GTdef_project in matlab)
 #################################################################
 # EARTH STRUCTURE
 # earth	   - earth structure {homogeneous}
