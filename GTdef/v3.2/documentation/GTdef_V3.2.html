@@ -499,42 +499,48 @@ kappa 2 0  5000 11
            but you must modify it for your purposes.
 		<li> Finally, once you've chosen your optimal kappa value, run a new forward model, and repredict deformation.
 		     <br><br>
-		<!--li> Another code that may be of use is <a href="http://geophysics.eas.gatech.edu/anewman/classes/MGM/GTdef/GTdef_interface.gmt "> GTdef_interface.gmt</a> which can be used to plot an individual slip model
-		     along with the mistfit/roughness trade-off.  You again may need to modify this for your needs.
-<!--div class="code-wrapper"> <pre>
-<!% GTdef_interface.gmt *kp*.out>
-% <!<c># view your results </c>
-<!% gs *.ps   <c># page through your numerous ps files to observe the variance with increasing smoothness</c>
-</pre> </div>
-</ol>-->
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id= "cbt">
 <li> <h2> <a href = "#TOC"> Checkerboard Testing: </a> </h2></li>
-
- Okay, you've gotten some solutions by now, however how are you certain that your results are of value?
-		This is a big question that is quite difficult to rightfully answer.  One quote that often comes to mind here is
-		"All models are wrong, but some are useful" attributed to George Box, a statistician.
-		<br>
-		In order to valididate a model, it would be useful if you had independent information, like mapped fault offsets, or tsunami results. However,
-		in the absense of this, one must work with the data we used for the inversion in the first place.
-		This is normally done by creating a checkerboard model and determining whether the predicted 'data' are sufficient
-		to recreate the model.
-	<ol type="i">
-		<li>Create an input model with subfaults that are approximately as large as characteristic changes you
-		observe in your solutions.  Each subfault alternates between 0 and 1 unit of slip.
-		<li>Run a forward model, and predict the deformation at each of the sites you used for your original inversion.
-		<li>If you have error information add these values so they fractionallly scale with the difference between your
-		original data and their error. (e.g 10 cm error for 50 cm original displacement) should now scale to 1 cm error
-		for predicted 5 cm displacement).
-		<li>Use these synthetic data and errors to run a new inversion and compare the output to the original
-		checkerboard.  If the input model matches the inversion, then you have great resolution.  Where you start
-		to significantly deviate from your checkerboard, you lose resolution.  One could be more quantitative than this,
-		but it is usually best to trust your judgement here--it's kept you alive this long.
-	</ol>
-</section>
+<ol>
+  <li> <b>Develop a Forward Model</b>
+    <ol type="i">
+    <li> Define the size boxes that you will want to try to recreate in your checkerboards.  Normally, we say the size of model that you can interpret falls off about equally to the depth that model parameter is, relative to the surface, assuming stations are immediately overhead.  Thus, on a dipping fault, its good to know about how deep the fault is beneath you.  This will certainly change as a function of position for dipping faults, where fault patches nearer the surface exposure (e.g. trench), will be very close. So, as an example, for a fault patch that is 50 km laterally from a 20&#176; dipping fault surface, the checkerboard patch should be around <c> 50km*sin(20&#176;)=17km </c>.  Now, At 100 km, it's about 34 km, and at  200 km it's about 70 km, assuming a constant 20&#176; dip.  Note, that this is just a starting and approximate parameter.
+    <li> Once you've defined your fault sizes, you can use <c> GTdef_ckbd_subflt.m </c>to help create the input fault model.  This too can be done by hand, but the program makes it much easier.  Check out the header notes within the program for details.
+    <li> For a 30x40 fault named nicoya, you can run <c> GTdef_ckbd_subflt('nicoya',30,40,3,4, [0 -.0823 0  0 0 0 0 0 0],[0 0 0  0 0 0 0 0 0])</c> , to define a fault that groups alternating boxes to include  3 along dip, and 4 along strike.  The vectors here define the forward behavior of the patches that we normally think of as 1's and 0's.  So patch 1 (the black, or slipping patch), p1=only thrust at 82.3 mm (no inversion set for these patches),  For patch 0 (the white, or null patch), p0= zeros (9 of them).  The program will create a file called <c>GTdef_ckbd_subflt.out</c> that will only contain the sub-fault parameters.  This will need to be copied into your input model file for the forward run.
+    <li> Once it's ready,run <c> GTdef('nicoya_ckbd.in')</c> in matlab and if everything  works you will get your initial noise-free synthetics for the rest of the checkerboard test. Using <a href="plotting/GTdef_slipmodel.gmt">GTdef_slipmodel.gmt</a>, plot the noise free model with the <c> nicoya_ckbd_fwd.out</c>, the output from the forward run. The figure should look like the example below;
+      <img src="files/GTdef_slipmodel_nicoya_ckbd_fwd.png" width="700px">
+    </ol>
+  <li> <b> Adding Noise </b>
+    <p>A good synthetic includes an approximation of the noise in the data.  For this, I've written a simple shell script that will search only point data from an output file and add Gaussian noise to the data itself, and too write out the predicted error, of the size defined within the script.  This program needs updating for easier and general use, but it's actually pretty easy to run, as is.  </p>
+    <ol type= "i">
+      <li> Copy the program to your working directory (its called <c> add_noise.sh </c> and is in the plotting directory of v3.2/unstable).
+      <li> Edit the parameters in the top of the file to include the expected East, North, and Vertical noise in your data (in meters). Now run it it on our output file and direct into a new output (e.g. <c>add_noise.sh nicoya_ckbd_fwd.out > nicoya_ckbd_fwd_wNOISE.in</c>).  Note that I called it <c>'.in'</c>
+    </ol>
+  <li>  <b> Invert Synthetics </b>
+    <p> Here we will determine what the synthetic and noised data show on the fault.</p>
+    <ol type="i">
+      <li> Edit new synthetic input file to either comment out or remove the subfault definitions.  You can do this manually, or run a script e.g. <div class = 'code-wrapper'> <pre> grep -v subfault nicoya_ckbd_fwd_wNOISE.in > j1 ; mv j1 nicoya_ckbd_fwd_wNOISE.in </div></pre>.
+      <li> You can add any other parameters that you want into the header of the file input file
+        <div class="code-wrapper"> <pre>
+          surface free             # slip to the trench here
+          kappa 2 1000 5000 5      # 1k-5k for with n=5
+          kappa 2 7000 15000 5     # every 2k now
+          kappa 2 20000 50000 4     # every 10k now
+          resolution 1             # output the results of the resolution matrix (we can use later)
+          lsqlin 10 1e-10          # testing low iterations and higher tolerance limits
+          project on
+      </pre></div>
+      <li> Change the fault line to invert (e.g. make thrust range from -0.823 to 0, the ds0 and dsX values) and then run inversion (e.g. <c> GTdef('nicoya_ckbd_fwd_wNOISE.in')</c>).
+      <li> Now, evaluate the results of the inversion to determine which patches have better or worse representation of the original input file that you created up top.  A great way to do this is to create very similar plots of both the result of the fwd (nicoya_ckbd_fwd.out ) and the new inverse at the kappa that you feel most appropriate (e.g. <c> nicoya_ckbd_fwd_wNOISE_k7000.out</c>). Now the files should be ready for the helper program <c> GTdef_slipmodel.gmt</c>.
+        <img src="files/GTdef_slipmodel_nicoya_ckbd_fwd_lowNOISE_kp7000.png" width="700px">
+<br>
+<b>Note:</b>The examples used in the checkerboard tests above use campaign data from the <a href = "https://nicoya.eas.gatech.edu/sites/nicoya/files/datasets/Protti_etal_2014_Campaign_results.txt">Nicoya Seismic Cycle Observatory GPS data.</a>
+</br>
+</ol>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
