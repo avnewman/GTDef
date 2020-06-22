@@ -9,13 +9,13 @@
  <h1 class="left">Dislocation Modeling using GTdef(V_3.2)</h1>
 </td></tr>
 <tr><td align=top>
-<center>
 <section id="TOC">
 <h2 >Sections of the GTdef model</h2>
 <font size=-2pt>(Clicking on section heads will return to the Table of Contents)</font>
-<H2 align='center'>
-  <ol class = "center">
+<H2 >
+  <ol>
 <li> <a href = "#INTRO"> Basic Introduction</a></li>
+<li> <a href = "#THEORY"> Background Theory</a></li>
 <li> <a href = "#DL"> GTdef Code and How to Download it </a></li>
 <li> <a href = "#INPUT"> The Input File</a></li>
 <li> <a href = "#SPF"> Simple Planar Forward Model </a></li>
@@ -27,7 +27,6 @@
 </ol>
 </H2>
 </section>
-</center>
 
 <ol>
 <section id="INTRO">
@@ -44,7 +43,7 @@ a purely-elastic half-space, however we've further adapted the codes to allow fo
 Fault planes do require one edge to be horizontal. Dislocations can be described with dip-slip, strike-slip, and/or opening,
 and hence can be used to describe a range of processes including earthquake faulting, interseismic
 coupling, and planar fluid changes like magmatic dike inflation or groundwater withdrawal.
-
+</p><br><p>
 The code is developed so that one could perform both forward models that predict ground deformation
 and inverse models that use data with errors and some modeling constraints to predict information about the
 source.  The source in either case can be either simple rectangular slips along the plane, orthogonal to it
@@ -56,6 +55,104 @@ or some combination of both.</p>
 <p>
 Below, we will first step through some forward models, and eventually inversions.
 </p>
+</section>
+
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "THEORY">
+<li> <h2> <a href = "#TOC"> Background Theory</a></li>
+
+<H3>Kinematic Modeling:</H3>
+<p> A very brief discussion of kinematic modeling methods used here should exist.  This would include each Okada (1985) analytical models,
+  the Wang et al (2003) layered method, and general injestion of Green's functions from other sources.
+</p>
+  <br>
+<H3>Inverse Modeling:</H3>
+<p> <gr>GTdef</gr> performs a bounded linear least-squares inversion of Green's functions to define
+  the best-fitting set of models to describe a dataset with errors. The program uses the parameter optimization toolbox program called <gr>lsqlin</gr> (<a href=https://www.mathworks.com/help/optim/ug/lsqlin.html>Matlab info on it</a>).
+  You can read more about it and general inversion methods from a number of books (including <a href="http://geophysics.eas.gatech.edu/internal/papers/2005/Santamaria/Santamaria_Fratta_DiscreteSignalsInverseProblems_2005.pdf" target=aux2>
+  	Santamarina & Fratta, "Discrete Signals and Inverse Problems" [2005]</a>, and <a href="https://www.sciencedirect.com/science/article/pii/B9780123971609000035" target=aux2>Menke, "Geophysical Data Analysis"</a> -- particularly chapters 3 &amp; 4).
+</p>  <br>
+
+<p>    While the simplified forward problem exists:<br>
+  <p class="right"><c>(1)</c></p>
+  <center><c><b> d</b> = <b>Gm</b></c></center>
+
+  where Okada (1985) describes the Green's function, <c><b>G</b></c>, that relates model parameters <c><b>m</b></c>, to the data, <c><b>d</b></c>.
+  If data are numerous, and/or model parameters are greater than one, each can be written as a vector of size <c>n</c> and <c>m</c>, with the <c><b>G</b></c> being a matrix sized <c>n x m</c>.
+  </p>
+  The inversion equation, where we try to solve for model parameters becomes:
+
+  <p class="right"><c>(2)</c></p>
+  <center><c><b>Gm</b> = <b> d</b></c></center>
+
+  For a least-squares solution, the simplified inversion becomes:
+  <p class="right"><c>(3)</c></p>
+  <center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>]<sup>-1</sup><b>G</b><sup>T</sup> <b>d</b></c></center>
+
+  Because we expect there to be interdependence between adjacent model patches, we can describe an additional set of equations to apply to the inversion and regularize the final model.
+  Every model patch m<sub>i</sub> can describe its model roughness as the Laplacian of that component of slip (e.g. ds, ss, ts).  We will try to minimize that roughness for each slip component of the model, <c><b>s</b></c>, which here will be the same as <c><b>m</b></c>:
+
+  <p class="right"><c>(4)</c></p>
+  <center><c><b>d<sub>p</sub></b>= 0 = &kappa;&nabla;<sup>2</sup><b>s</b></c></center>
+
+  where <c><i>&kappa;</i></c> is the smoothing kernel.
+  Furthermore, we combine the data weights and errors into a weighting matrix <c><b>W</b></c>.
+  Now, incorporating the errors and weighting, the forward problem becomes:
+
+  <p class="right"><c>(5)</c></p>
+  <center><c>
+  <b> d</b> = <b>Gm</b> =
+  <math xmlns = "http://www.w3.org/1998/Math/MathML">
+     <mrow>
+      <mo>[</mo>
+      <mtable display="true">
+          <mtr> <mn>W<sub>ii</sub><b>d</b></mn> </mtr>
+          <mtr> <mn>0</mn> </mtr>
+      </mtable>
+      <mo>]</mo>
+     <mrow>
+  </math>
+  =
+  <math>
+     <mrow>
+      <mo>[</mo>
+       <mtable display="true">
+          <mtr><mn>W<sub>ii</sub><b>G</b></mn></mtr>
+  	<mtr><mn>&kappa;&nabla;<sup>2</sup><b>s</b></mn></mtr>
+       </mtable>
+      <mo>]</mo>
+     <mrow>
+  </math> <b>m</b></c></center>
+
+  where the data and greens function matrix are now everything in their respective matrices above.
+  The diagonal components of the weighting matrix <c>W<sub><i>ii</i></sub> = (<i>w<sub>i</sub></i>)<sup>0.5</sup>/<i>e<sub>i</sub></i></c>,
+  which are the per datum weighting <c><i>w<sub>i</sub></i></c> and errors <c><i>e<sub>i</sub></i></c>.
+
+  With <c><b>d</b></c> and <c><b>G</b></c> now containing the smoothing and weighting terms, our model estimate can now be defined as:
+
+  <p class="right"><c>(6)</c></p>
+  <center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>d</b></c></center>
+
+  where <c><math>&epsilon;<sup>2</sup><b>I</b> = &kappa;&nabla;<sup>2<b></sup>s</b></math></c>.
+  We can simplify this be defining the Generalized Inverse Matrix:<br>
+
+  <p class="right"><c>(7)</c></p>
+  <center><c><b>G</b><sup>-g</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup></c></center>
+
+  so:
+  <p class="right"><c>(8)</c></p>
+  <center><c><b>m</b><sup>est</sup> = <b>G</b><sup>-g</sup><b>d</b></c></center>
+  <!--<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>W</b><sub>e</sub><b>G</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>W</b><sub>e</sub><b>d</b></c></center>-->
+
+  The above mathematical formulation is modified for the bounded conditions used for the parameter estimation in <gr>lsqlin</gr>,
+  including the option of positivity constraints, which make the full formulation much more complicated.
+  However, the grouping of terms are important particularly for the development of distributed slip models as input into the solver,
+  and for understanding the model resolution matrix and ultimately resolution spread (an estimate of parameter importance).
+
+</p>
+
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
@@ -265,89 +362,6 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 
 <section id= "uslip">
 <li> <H2> <a href = "#TOC"> Uniform Slip Model Inversion: </a> </H2></li>
-
-<h3>A little inversion theory:</h3>
-<p> <gr>GTdef</gr> performs a linear least-squares inversion of Green's functions to define
-the best-fitting set of models to describe a dataset with errors. The program uses the parameter optimization toolbox program called <gr>lsqlin</gr>.
-You can read more about inversion methods from a number of books. Options include: <a href="http://geophysics.eas.gatech.edu/internal/papers/2005/Santamaria/Santamaria_Fratta_DiscreteSignalsInverseProblems_2005.pdf" target=aux2>
-	Santamarina & Fratta, "Discrete Signals and Inverse Problems" (2005)</a> in the EAS paper repository, and <a href="https://www.sciencedirect.com/science/article/pii/B9780123971609000035">Menke, "Geophysical Data Analysis"</a>, particularly chapters 3 &amp; 4.
-<br>
-While the simplified forward problem exists:<br>
-<p class="right"><c>(1)</c></p>
-<center><c><b> d</b> = <b>Gm</b></c></center>
-
-where Okada (1985) describes the Green's function, <c><b>G</b></c>, that relates model parameters <c><b>m</b></c>, to the data, <c><b>d</b></c>.
-If data are numerous, and/or model parameters are greater than one, each can be written as a vector of size <c>n</c> and <c>m</c>, with the <c><b>G</b></c> being a matrix sized <c>n x m</c>.
-</p>
-The inversion equation, where we try to solve for model parameters becomes:
-
-<p class="right"><c>(2)</c></p>
-<center><c><b>Gm</b> = <b> d</b></c></center>
-
-For a least-squares solution, the simplified inversion becomes:
-<p class="right"><c>(3)</c></p>
-<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>]<sup>-1</sup><b>G</b><sup>T</sup> <b>d</b></c></center>
-
-
-Because we expect there to be interdepence between adjacent model patches, we can describe an additional set of equations to apply to the inversion and regularize the final model.
-Every model patch m<sub>i</sub> can describe its model roughness as the Laplacian of that component of slip (e.g. ds, ss, ts).  We will try to minimize that roughness for each slip component of the model, <c><b>s</b></c>, which here will be the same as <c><b>m</b></c>:
-
-<p class="right"><c>(4)</c></p>
-<center><c><b>d<sub>p</sub></b>= 0 = &kappa;&nabla;<sup>2</sup><b>s</b></c></center>
-
-where <c><i>&kappa;</i></c> is the smoothing kernel.
-Furthermore, we combine the data weights and errors into a weighting matrix <c><b>W</b></c>.
-Now, incorporating the errors and weighting, the forward problem becomes:
-
-<p class="right"><c>(5)</c></p>
-<center><c>
-<b> d</b> = <b>Gm</b> =
-<math xmlns = "http://www.w3.org/1998/Math/MathML">
-   <mrow>
-    <mo>[</mo>
-    <mtable display="true">
-        <mtr> <mn>W<sub>ii</sub><b>d</b></mn> </mtr>
-        <mtr> <mn>0</mn> </mtr>
-    </mtable>
-    <mo>]</mo>
-   <mrow>
-</math>
-=
-<math>
-   <mrow>
-    <mo>[</mo>
-     <mtable display="true">
-        <mtr><mn>W<sub>ii</sub><b>G</b></mn></mtr>
-	<mtr><mn>&kappa;&nabla;<sup>2</sup><b>s</b></mn></mtr>
-     </mtable>
-    <mo>]</mo>
-   <mrow>
-</math> <b>m</b></c></center>
-
-where the data and greens function matrix are now everything in their respective matrices above.
-The diaganol compontents of the weighting matrix <c>W<sub><i>ii</i></sub> = (<i>w<sub>i</sub></i>)<sup>0.5</sup>/<i>e<sub>i</sub></i></c>,
-which are the per datum weighting <c><i>w<sub>i</sub></i></c> and errors <c><i>e<sub>i</sub></i></c>.
-
-With <c><b>d</b></c> and <c><b>G</b></c> now containing the smoothing and weighting terms, our model estimate can now be defined as:
-
-<p class="right"><c>(6)</c></p>
-<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>d</b></c></center>
-
-where <c><math>&epsilon;<sup>2</sup><b>I</b> = &kappa;&nabla;<sup>2<b></sup>s</b></math></c>.
-We can simplify this be defining the Generalized Inverse Matrix:<br>
-
-<p class="right"><c>(7)</c></p>
-<center><c><b>G</b><sup>-g</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup></c></center>
-
-so:
-<p class="right"><c>(8)</c></p>
-<center><c><b>m</b><sup>est</sup> = <b>G</b><sup>-g</sup><b>d</b></c></center>
-<!--<center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>W</b><sub>e</sub><b>G</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>W</b><sub>e</sub><b>d</b></c></center>-->
-
-The above mathematical formulation is not exactly the inversion scheme, as we employ bounding conditions in <gr>lsqlin</gr>,
-including the option of positivity constraints, which make the full formulation much more complicated.
-However, the grouping of terms are important particularly for the development of distributed slip models as input into the solver,
-and for understanding the model resolution matrix and ultimately resolution spread (discussed later).
 
 <h3>Input File:</h3>
 We will need to build the model, including gathering the appropriate data and then estabishing an appropriate a priori interface. In this example, we will use the very small tsunami earthquake described in <a href="http://geophysics.eas.gatech.edu/people/anewman/research/papers/Newman_etal_GJI_2011.pdf">Newman et al. (2011)</a>.

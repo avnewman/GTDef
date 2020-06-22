@@ -152,12 +152,14 @@ gmt set  MAP_FRAME_PEN black
 
 #
 gmt pslegend -Dx9.5/15/12 -F+p2p+g255/255/200+r10p+s -P -O $RANGE2 $PROJ << ...EOF >>$OUTFILE
+L 14 Helvetica-Bold C $(basename $SUMMARY _inv.out)
+D 1.5c 2p 
 S 1c c 0.3 0/255/0 0.2  2c RMS/Roughness @@ Kappa (printed value) 
 S 1c c 0.2 red 0.2      2c d RMS@/d Roughness @@ Kappa
 D 0.5c 2p 
-L 7 Helvetica-Oblique L  Created by ${USER} in ${PWD}
-L 7 Helvetica-Oblique L  Command: $(basename $0) $* 
-L 7 Helvetica-Oblique L  Date: $(date)
+L 6 Helvetica-Oblique L  Created by ${USER} in ${PWD}
+L 6 Helvetica-Oblique L  Command: $(basename $0) $* 
+L 6 Helvetica-Oblique L  Date: $(date)
 ...EOF
 
 ####################################################################
