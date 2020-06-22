@@ -378,7 +378,7 @@ do
    #echo " -86.75 8.55 $DVscaled 0 0 0 0 Data [$DVscale $DVUNIT]" |\
    #	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Ggreen -Se1/0.65/10 -L >>$OUTFILE
    gmt pslegend -Dx8/-1/16 -F+p2p+g255/255/200+r10p+s -P  $MID << ...EOF >>$OUTFILE
-L 14 Helvetica-Bold C $MODbase at  @~k@~ = $KAPPA
+L 14 Helvetica-Bold C $MODbase @@ @~k@~ = $KAPPA
 D 1.5c 2p 
 S 4c c 0.2 0/255/0 0.1  1c Station
 S 10c v0.25c+e+p3 $DVscale green 1p,green 0.5c  Observed Data $DVscale [$DVUNIT]
