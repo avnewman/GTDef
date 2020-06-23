@@ -15,13 +15,14 @@
 <H2 >
   <ol>
 <li> <a href = "#INTRO"> Basic Introduction</a></li>
-<li> <a href = "#THEORY"> Background Theory</a></li>
 <li> <a href = "#DL"> GTdef Code and How to Download it </a></li>
+<li> <a href = "#THEORY"> Background Theory</a></li>
 <li> <a href = "#INPUT"> The Input File</a></li>
 <li> <a href = "#SPF"> Simple Planar Forward Model </a></li>
 <li> <a href = "#uslip"> Uniform Slip Model Inversion </a></li>
 <li> <a href = "#nslip"> Non-Uniform Slip Model</a></li>
 <li> <a href = "#cbt"> Checkerboard Testing </a></li>
+<li> <a href = "#RES"> Resolution Spread Evaluation</a></li>
 <li> <a href = "#gf"> Ingesting External Green's Functions</a></li>
 <li> <a href = "#ref"> References</a></li>
 </ol>
@@ -29,8 +30,8 @@
 </section>
 
 <ol>
-<section id="INTRO">
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+<section id="INTRO">
 <li> <H2> <a href = "#TOC"> Introduction </a></li>
   <p>Manual developed by <a href="https://eas.gatech.edu/people/murekezi-derrick"> Derrick Murekezi </a> and <a href="http://geophysics.eas.gatech.edu/people/anewman">Andrew Newman</a></p>
 </H2>
@@ -48,15 +49,23 @@ The code is developed so that one could perform both forward models that predict
 and inverse models that use data with errors and some modeling constraints to predict information about the
 source.  The source in either case can be either simple rectangular slips along the plane, orthogonal to it
 or some combination of both.</p>
-<p>
+
 <br>
-<b>Requirements</b>: Algorithms are written in Matlab and require the <c>'Parameter estimation'</c> toolbox for inversions.  Also, if you wish to use parallel processors, your version needs to include <gr>'parpool'</gr>, which was implemented around 2015.
-</p>
-<p>
-Below, we will first step through some forward models, and eventually inversions.
-</p>
+<b>Requirements</b>: <ol>
+  <li> Algorithms are written in Matlab and require the <c>'Parameter estimation'</c> toolbox for inversions.
+  <li> If you wish to use parallel processors, your version needs to include <gr>parpool</gr>, which was implemented around 2015.
+  <li> For plotting <a href="https://www.generic-mapping-tools.org/">GMT</a> version 5 or 6.</li>
+</ol>
 </section>
 
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id= "DL">
+<li> <h2> <a href = "#TOC"> GTdef Code and How to Download it</a></li>
+<ul><b> Current Version </b> : GTDef 3.2 </ul>
+<ul><b> Github Repository for Download </b>:
+<a href=https://github.gatech.edu/an77/GTDef.git>https://github.gatech.edu/an77/GTDef.git</a> </ul>
+</section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
@@ -153,15 +162,6 @@ Below, we will first step through some forward models, and eventually inversions
 
 </p>
 
-</section>
-
-<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
-
-<section id= "DL">
-<li> <h2> <a href = "#TOC"> GTdef Code and How to Download it</a></li>
-<ul><b> Current Version </b> : GTDef 3.2 </ul>
-<ul><b> Github Repository for Download </b>:
-<a href=https://github.gatech.edu/an77/GTDef.git>https://github.gatech.edu/an77/GTDef.git</a> </ul>
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
@@ -354,6 +354,7 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
    "&lt; awk '$1==\"fault\"{printf \"%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n\", $4,$5,-$8,$6,$7,-$8,$6,$7,-$9,$4,$5,-$9,$4,$5,-$8}' local1_fwd.out" w l lw 2 lt -1 t "fault"
  <c> # use the cursor to move around the data</c>
 </pre></div>
+<center>
  <img src="files/local1_fwd.png">
 </ol>
 </section>
@@ -469,7 +470,7 @@ grid  Solom_region   0    0    156.4   -9.3    158.1    -7.9     200   200 </pre
 > GTdef_project('solomon_kp0.00000.out') </pre></div>
 
 	This creates a new file (here '<c>solomon_kp0.00000_patches.out</c>') that describes all elements (here only one) of the model, including geographic position of corners, the element center position, and slip values.
-	While you could use a more full-featured plotting program like <a href="gmt.soest.hawaii.edu">GMT</a>, we'll again use <gr>gnuplot</gr> for our quick and dirty plot to show the predicted displacements from '<c>_kp*.out</c>', and then model geometry from '<c>_kp*_patches.out</c>'.
+	While you could use a more full-featured plotting program like <a href="#INTRO">GMT</a>, we'll again use <gr>gnuplot</gr> for our quick and dirty plot to show the predicted displacements from '<c>_kp*.out</c>', and then model geometry from '<c>_kp*_patches.out</c>'.
 <div class="code-wrapper"> <pre>
 <c># within gnuplot </c>
 <c># Note: We are using diffential scaling of the displacement vectors to scale with the geographic position and depth (in degrees&deg; and km) </c>
@@ -478,7 +479,8 @@ u 4:5:(0):($7*1e-1):($8*1e-1):($9*1e1) w vect t "surface displacement",\
 "&lt; awk '$1==\"slm\"{printf \"%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n\", $4,$5,-$6/1000,$7,$8,-$9/1000,$10,$11,-$12/1000,$13,$14,-$15/1000,$4,$5,-$6/1000}' solomon_kp0.00000_patches.out"\
 w l lw 4 lt 7 -8 t "fault" </pre></div>
 After using your pointer to move around your model appropriately, your result should look something like this:
- <img src="files/solomon_single_fault_inv.png" width="700px">
+ <center>
+   <img src="files/solomon_single_fault_inv.png" width="700px">
 </ol>
 </section>
 
@@ -507,8 +509,8 @@ kappa 2 0  5000 11
 <c>#fault type name   lon       lat     z1  z2    len    str    dip     ss   ds    ts    ss0  ssX    ds0  dsX    ts0 tsX    Nd  Ns</c>
  fault  1   slm    157.0990  -8.6920  0  5200  50000  305.0  22.0   0    0.1   0     0    0      0    100    0   0      7   10
 </pre> </div>
-		<li> Invert, and explore your results.  Using <a href="plotting/misfit_kappa.gmt"> misfit_kappa.gmt</a>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example data set.
-      <img src="files/misfit_kappa_solomon_inv.png" width="700px">
+		<li> Invert and explore your results.  Using <a href="plotting/misfit_kappa.gmt"> misfit_kappa.gmt</a>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example data set.
+      <center> <img src="files/misfit_kappa_solomon_inv.png" width="700px"> </center>
       <li> You might want to look at your results in a geographic reference system.  I've created a GMT script (<a href="plotting/slipmodel.gmt">slipmodel.gmt</a>) to do this,
            but you must modify it for your purposes.
 		<li> Finally, once you've chosen your optimal kappa value, run a new forward model, and repredict deformation.
@@ -519,47 +521,151 @@ kappa 2 0  5000 11
 
 <section id= "cbt">
 <li> <h2> <a href = "#TOC"> Checkerboard Testing: </a> </h2></li>
-<ol>
-  <li> <b>Develop a Forward Model</b>
+
+  <H3>Develop a Synthetic Forward Model:</H3>
     <ol type="i">
-    <li> Define the size boxes that you will want to try to recreate in your checkerboards.  Normally, we say the size of model that you can interpret falls off about equally to the depth that model parameter is, relative to the surface, assuming stations are immediately overhead.  Thus, on a dipping fault, its good to know about how deep the fault is beneath you.  This will certainly change as a function of position for dipping faults, where fault patches nearer the surface exposure (e.g. trench), will be very close. So, as an example, for a fault patch that is 50 km laterally from a 20&#176; dipping fault surface, the checkerboard patch should be around <c> 50km*sin(20&#176;)=17km </c>.  Now, At 100 km, it's about 34 km, and at  200 km it's about 70 km, assuming a constant 20&#176; dip.  Note, that this is just a starting and approximate parameter.
-    <li> Once you've defined your fault sizes, you can use <c> GTdef_ckbd_subflt.m </c>to help create the input fault model.  This too can be done by hand, but the program makes it much easier.  Check out the header notes within the program for details.
-    <li> For a 30x40 fault named nicoya, you can run <c> GTdef_ckbd_subflt('nicoya',30,40,3,4, [0 -.0823 0  0 0 0 0 0 0],[0 0 0  0 0 0 0 0 0])</c> , to define a fault that groups alternating boxes to include  3 along dip, and 4 along strike.  The vectors here define the forward behavior of the patches that we normally think of as 1's and 0's.  So patch 1 (the black, or slipping patch), p1=only thrust at 82.3 mm (no inversion set for these patches),  For patch 0 (the white, or null patch), p0= zeros (9 of them).  The program will create a file called <c>GTdef_ckbd_subflt.out</c> that will only contain the sub-fault parameters.  This will need to be copied into your input model file for the forward run.
-    <li> Once it's ready,run <c> GTdef('nicoya_ckbd.in')</c> in matlab and if everything  works you will get your initial noise-free synthetics for the rest of the checkerboard test. Using <a href="plotting/GTdef_slipmodel.gmt">GTdef_slipmodel.gmt</a>, plot the noise free model with the <c> nicoya_ckbd_fwd.out</c>, the output from the forward run. The figure should look like the example below;
-      <img src="files/GTdef_slipmodel_nicoya_ckbd_fwd.png" width="700px">
+    <li> Define the size boxes that you will want to try to recreate in your checkerboards.
+      As a general rule, we find that the model patch size that you can interpret is dependent on and about equal to its depth relative to stations overhead.
+      This assumes stations are immediately overhead.
+      This will certainly change as a function fault dip, and station coverage, thus while you may have theoretical fidelity to recover even extremely small
+      patches near the trench (where the fault is just below you), you may not have data until you're on land, 50 to 200 km away.
+      Thus, we will take an initial example of a fault patch that is 50 km laterally from a 20&#176; dipping fault surface,
+      the checkerboard patch should be around <c> 50km*sin(20&#176;)=17km </c>. At 100 km, it's about <r>34 km</r>, and at  200 km it's about <r>70 km</r>, assuming constant dip.
+      Note, that this is just a starting and approximate parameter.
+
+    <li> You will now need to define a number of subfaults that match your expected optimal resolution.
+      This too can be done by hand, but the program, <gr>GTdef_ckbd_subflt.m</gr> makes it much easier.
+       Check out the header notes within the program for details.
+
+    <li> For a fault named 'nicoya' with 30x40 patches and approximately 200 km x 200 km in size,
+      you can run
+      <div class="code-wrapper"> <pre>
+        <c>% within matlab</c>
+        GTdef_ckbd_subflt('nicoya',30,40,3,4, [0 -.0823 0  0 0 0 0 0 0],[0 0 0  0 0 0 0 0 0])</pre></div>
+      to define a fault that groups alternating blocks into 3 along dip, and 4 along strike patches. Here, the
+      the blocks are 20x20 km (smallest size for coastal data--this is too small for deeper patches).
+      The vectors here define the forward behavior of the patches that we normally think of as 1's and 0's.
+      So, patch 1 (the black, or slipping patch), p1= is only backthrust at 82.3 mm (no inversion set for these patches).
+      For patch 0 (the white, or null patch), p0= zeros (9 of them).
+      The program will create a file called <c>GTdef_ckbd_subflt.out</c> that will only contain the sub-fault parameters.
+      This will need to be copied into your input model file that contains your fault characterization
+      and 'points' in which you want to predict deformation for the forward run.
+      <div class="code-wrapper"> <pre>
+        <c># in shell (command line)</c>
+        cat GTdef_ckbd_subflt.out >> nicoya_ckbd.in</pre></div>
+    <li> Once it's ready, run
+      <div class="code-wrapper"> <pre>
+        <c>% within matlab</c>
+        GTdef('nicoya_ckbd.in')</pre></div>
+   If everything works you will get your initial noise-free synthetics.
+
+   <li>Using <gr>GTdef_slipmodel.gmt</gr>, plot the noise free model with the <c>nicoya_ckbd_fwd.out</c>
+   (the output from the forward run). Running the code without options will give brief usage information.
+   <div class="code-wrapper"> <pre>
+     <c># in shell (command line)</c>
+     GTdef_slipmodel.gmt -M nicoya_ckbd.in -S100/100/10</pre></div>
+
+   The figure should look like the example below.
+       <center><img src="files/GTdef_slipmodel_nicoya_ckbd_fwd.png" width="700px"></center>
+       Note, that because this program is written for real data, the labeling may not be accurate.  Here, 'observed' is arbitrary, and
+       whatever was in your original input file.  Modeled data are the predicted results that will be used for subsequent inversions.
     </ol>
-  <li> <b> Adding Noise </b>
-    <p>A good synthetic includes an approximation of the noise in the data.  For this, I've written a simple shell script that will search only point data from an output file and add Gaussian noise to the data itself, and too write out the predicted error, of the size defined within the script.  This program needs updating for easier and general use, but it's actually pretty easy to run, as is.  </p>
+
+
+
+  <H3>Adding Noise: </H3>
+    <p>Good synthetic data includes an approximation of the noise that you'd get in the real data.
+      For this, We've developed a simple shell script that searches only point data from an output
+      file and adds Gaussian noise to the data itself.
+      The program then writes out the perturbed data and error estimates representing the input error,
+      of the size defined <u>within</u> the script.
+      This program needs updating for easier and general use, but it's pretty easy to run, as is.  </p>
     <ol type= "i">
-      <li> Copy the program to your working directory (its called <c> add_noise.sh </c> and is in the plotting directory of v3.2/unstable).
-      <li> Edit the parameters in the top of the file to include the expected East, North, and Vertical noise in your data (in meters). Now run it it on our output file and direct into a new output (e.g. <c>add_noise.sh nicoya_ckbd_fwd.out > nicoya_ckbd_fwd_wNOISE.in</c>).  Note that I called it <c>'.in'</c>
+      <li> Copy the program to your working directory (its called <gr> add_noise.sh </gr> and is in the
+        plotting directory shared with the GTdef scripts).
+      <li> Edit the parameters at the top of the file to include the expected
+        East, North, and Vertical noise in your data (in meters).
+        Now run it it on the output file, directing into a new output.
+        As an example:
+        <div class="code-wrapper"> <pre>
+        <c># in shell (command line)</c>
+        add_noise.sh nicoya_ckbd_fwd.out > nicoya_ckbd_fwd_wNOISE.in</pre></div>
+        Note that the directed output is now ending in <c>'.in'</c>.
     </ol>
-  <li>  <b> Invert Synthetics </b>
+
+
+  <H3> Invert Synthetics: </H3>
     <p> Here we will determine what the synthetic and noised data show on the fault.</p>
     <ol type="i">
-      <li> Edit new synthetic input file to either comment out or remove the subfault definitions.  You can do this manually, or run a script e.g. <div class = 'code-wrapper'> <pre> grep -v subfault nicoya_ckbd_fwd_wNOISE.in > j1 ; mv j1 nicoya_ckbd_fwd_wNOISE.in </div></pre>.
-      <li> You can add any other parameters that you want into the header of the file input file
+      <li> Edit new synthetic input file to either comment out or remove the sub-fault definitions.
+        You can do this manually, or run a script:
+        <div class = 'code-wrapper'> <pre>
+        <c># in shell (command line)
+        # this scrubs file directing it into a new file that then replaces the original.</c>
+        grep -v subfault nicoya_ckbd_fwd_wNOISE.in > j1 ; mv j1 nicoya_ckbd_fwd_wNOISE.in </div></pre>
+
+      <li> You can add or modify any other parameters that you want into the header of the file input file.
+        We want to be sure that we're running a range of kappa values.
+        Here it's 5 between 1000-5000, 5 between 7k and 15k, and 4 between 20k and 50k, but the useful range
+        depends on the number of patches and relation to data.
+<br>
+        Modify <c>nicoya_ckbd_fwd_wNOISE.in</c> to include:
         <div class="code-wrapper"> <pre>
           surface free             # slip to the trench here
           kappa 2 1000 5000 5      # 1k-5k for with n=5
           kappa 2 7000 15000 5     # every 2k now
-          kappa 2 20000 50000 4     # every 10k now
+          kappa 2 20000 50000 4    # every 10k now
           resolution 1             # output the results of the resolution matrix (we can use later)
-          lsqlin 10 1e-10          # testing low iterations and higher tolerance limits
-          project on
-      </pre></div>
-      <li> Change the fault line to invert (e.g. make thrust range from -0.823 to 0, the ds0 and dsX values) and then run inversion (e.g. <c> GTdef('nicoya_ckbd_fwd_wNOISE.in')</c>).
-      <li> Now, evaluate the results of the inversion to determine which patches have better or worse representation of the original input file that you created up top.  A great way to do this is to create very similar plots of both the result of the fwd (nicoya_ckbd_fwd.out ) and the new inverse at the kappa that you feel most appropriate (e.g. <c> nicoya_ckbd_fwd_wNOISE_k7000.out</c>). Now the files should be ready for the helper program <c> GTdef_slipmodel.gmt</c>.
-        <img src="files/GTdef_slipmodel_nicoya_ckbd_fwd_lowNOISE_kp7000.png" width="700px">
+          lsqlin 10 1e-10          # less iterations and higher tolerance limits (faster runs with no real degredation).
+          project on               # runs through and creates easy to read geographically projected outputs of model and slip parameters.</pre></div>
 <br>
-<b>Note:</b>The examples used in the checkerboard tests above use campaign data from the <a href = "https://nicoya.eas.gatech.edu/sites/nicoya/files/datasets/Protti_etal_2014_Campaign_results.txt">Nicoya Seismic Cycle Observatory GPS data.</a>
+          Change the fault line to invert (e.g. make thrust range from -0.823 to 0, the ds0 and dsX values).
+           <div class="code-wrapper"> <pre>
+           <c>#fault is set for inversion (ds0, dxX = 0, -.0823)
+           #fault type name    lon1         lat1       lon2         lat2         z1 z2      dip   ss  ds      ts ss0 ssX  ds0     dsX  ts0 tsX  Nd Ns</c>
+           fault  2    nicoya  -85.54233907 8.74026277 -86.82826920 10.01077299  0  6.2e+04 17.0  0   -0.0823 0  0   0    -0.0823 0    0   0    30 40 </div></pre>
+
+      <li>Run the inversion:
+        <div class="code-wrapper"> <pre>
+          <c>% within matlab</c>
+          GTdef('nicoya_ckbd_fwd_wNOISE.in')</pre></div>
+
+      <li> Now, evaluate/visualize the results of the inversion to determine which patches have better or worse representation
+        of the original input model that you created (your checkerboards).
+        A great way to do this is to create very similar plots of both the result of the forward prediction (nicoya_ckbd_fwd.out)
+        and the new inverse at the kappa that you feel most appropriate (e.g. <c> nicoya_ckbd_fwd_wNOISE_k7000.out</c>).
+        Now the files should be ready for the helper program <gr> GTdef_slipmodel.gmt</gr>.
+        <div class="code-wrapper"> <pre>
+          <c># in shell (command line)</c>
+          GTdef_slipmodel.gmt -M nicoya_ckbd_fwd_lowNOISE.in -K 7000 -S100/100/10</pre></div>
+
+        The figure should look like the example below.
+         <center><img src="files/GTdef_slipmodel_nicoya_ckbd_fwd_lowNOISE_kp7000.png" width="700px"></center>
+     <br>
+<H3>Notes:</h3><ol type="i">
+<li><p>As you can see in the above figure, the checkerboards are well represented right at the coast, however, the model becomes very
+  smooth with apparent larger patches both updip and downdip.  The updip resolution problem comes from a lack of stations immediately overhead,
+  however, the downdip problem is because our patches are too small, and the earth between the data and the fault is "smoothing it out".
+
+  <p>To improve on the downdip problem, it is possible to make a hybrid checkerboard model with larger downdip patches
+    (maybe 40x40 km), to test the resolution of larger slip features.
+<li>Checkerboard testing is relatively straightforward, but a somewhat cumbersome problem with a visual and not very quantitative
+  assessment of the model quality given data.  Instead, it may be much better to look at the <a href="#RES">output of the resolution matrix</a>, itself.
+<li>The examples used in the checkerboard tests above use campaign data from the <a href = "https://nicoya.eas.gatech.edu/sites/nicoya/files/datasets/Protti_etal_2014_Campaign_results.txt">Nicoya Seismic Cycle Observatory GPS data.</a>
 </br>
-</ol>
+</section>
+
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+
+<section id="RES">
+	<li> <h2> <a href = "#TOC">Resolution Spread Evaluation</a></h2></li>
+</section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id= "gf">
-	<li> <h2> <a href = "#TOC"> Ingesting External Green's Functions</a></h2></li>
+	<li> <h2> <a href = "#TOC">Ingesting External Green's Functions</a></h2></li>
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
@@ -567,6 +673,7 @@ kappa 2 0  5000 11
 <section id= "ref">
 <li> <h2> <a href = "#TOC"> References: </a> </h2></li>
 <ul>
+    <li><r>Needs to include other papers referred to above.  Inc. Menke, Wang et al (2003), Santamarina.</r>
     <li><a href=http://geophysics.eas.gatech.edu/internal/papers/1985/Okada/Okada_BSSA_1985.pdf> Okada, Y. (1985). Surface deformation due to shear and tensile faults in a half-space, Bull. Seism. Soc. Am. 75, 1135-1154.</a>
     <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Chen_etal_GRL_2009.pdf> Chen, T., A. V. Newman, L, Feng, H. M. Fritz (2009), Slip Distribution from the 1 April 2007 Solomon Islands Earthquake: A Unique Image of Near-Trench Rupture, Geophys. Res. Lett., 36, L16307, doi:10.1029/2009GL039496. </a>
     <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Feng_etal_JGR_2012.pdf> Feng, L., A. V. Newman, J. M. Protti, V. González, Y. Jiang, T. H. Dixon (2012), Active Deformation near the Nicoya Peninsula, Northwestern Costa Rica, Between 1996 and 2010: Interseismic Megathrust Coupling, J. Geophys. Res., 117, B06407, doi:10.1029/2012JB009230. </a>
@@ -583,7 +690,7 @@ kappa 2 0  5000 11
 <tr> <td>
 <center>
 <hr size=3 color=black ><!---------------------------------------------------------------------------------------->
-   <font size=2 color=darkblue> <I>murekezi<IMG src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I>, <I>anewman<IMG src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I></font> | <font size=2 color=darkblue><I>Updated:
+   <font size=2 color=darkblue> <I>murekezi<IMG class="noborder" src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I>, <I>anewman<IMG class="noborder" src=http://geophysics.eas.gatech.edu/anewman/pics/at_10.png>gatech.edu</I></font> | <font size=2 color=darkblue><I>Updated:
      <script language="Javascript">
      document.write(document.lastModified);
      </script>

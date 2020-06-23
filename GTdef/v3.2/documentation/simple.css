@@ -1,6 +1,7 @@
 body {
 	/*background-image: url('http://geophysics.eas.gatech.edu/people/anewman/pics/blueblackstripe2.png'); */
-	background-color: darkgreen;
+/*	background-color: darkgreen;*/
+ 	background-color: lightyellow;
 	color: black;
 	font-size: 12px;
 	font-family: arial, helvetica, sans-serif;
@@ -15,9 +16,9 @@ body {
  A:hover {text-decoration: underline; color: red; }
 
 
-div {
+/*div {
 	border: none;
-}
+}*/
 div.wide {
 	width: 700px;
 	border: none;
@@ -49,6 +50,11 @@ h3,h4,h5 {
 	font-size: 10pt;
 }
 img {
+	border: 1pt solid darkred;
+	border-color: darkred;
+	background-color: none;
+}
+img.noborder {
 	border: none;
 	background-color: none;
 }

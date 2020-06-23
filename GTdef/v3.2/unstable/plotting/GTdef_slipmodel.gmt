@@ -29,7 +29,7 @@ UL="\e[4m" # turns on underline
 NM="\e[0m" #turns off underline
  printf "
 Usage: %s -M${UL}'model.in'${NM} [-K${UL}'kappa_value'${NM}] [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}] [-D]
-	 [-S${UL}deformation_scale[/data_scale][/faultvector_scale]${NM}] [-T${UL}TMIN/TMAX/DT${NM}]  
+	 [-S${UL}deformation_scale[/data_scale][/faultvector_scale]${NM}] [-T${UL}TMIN/TMAX/DT${NM}]
 
 Requires:
        -M   Model_input_file
@@ -55,17 +55,17 @@ Options:
        	       Bounds for plot using XMIN/XMAX/YMIN/YMAX.  Alternatively will use 10
 	       percent greater than the model geometry on all sides.
 
-       -D   (display?) 
+       -D   (display?)
        	       If flag is included, program will bring up display, otherwise it will silently make .ps and .png files
 
        -S   Deformation_scale[/Data_scale][/Faultvector_scale]
 	       The numeric amplification factor for output results. For cm-level,
 	       use 100 for mm use 1000, etc. [default=1 (1m)]. Colorbar units will automatically
 	       change to cm or mm for Deformation_scale = 10, or 100, otherwise will show a
-	       '/Deformation_scale' before the 'm'. 
+	       '/Deformation_scale' before the 'm'.
 	       Data_scale is changed by value, otherwise it will have same scale as
 	       used for Deformation_scale.
-	       Faultvector_scale is changed by value, otherwise same as Deformation_scale. 
+	       Faultvector_scale is changed by value, otherwise same as Deformation_scale.
 
        -T   Deformation_range
                Choose a range over which to plot deformation. Results are the value used and
@@ -83,7 +83,7 @@ Output:
 
 Caveats:
       Program expects that dips are down and to the right from starting point (internal
-      assumption made when createing _patches.out files).  In other words, its best to 
+      assumption made when createing _patches.out files).  In other words, its best to
       define dips less than 90°, though the program works up to 180°.
 
 Example: (plotting model at kappa = 750000 with 100x amplification on all vectors and contour, displaying the results)
@@ -161,21 +161,23 @@ MODbase="$(basename $MODELIN .in)"
 
 for PATCHES in $PATCHFILES
 do
-   if [ "$KFLAG" ] ; then 
+   if [ "$KFLAG" ] ; then
    	PMODEL=$(basename "$PATCHES" _patches.out).out  # contains inverse results and data in original model format
-	PATCHsuf="_patches.out"
-	KAPPA="$(echo $PATCHES | sed -e "s/^${MODbase}_kp//" -e "s/${PATCHsuf}$//")"
-	echo "  running:  $PATCHES ($KAPPA)"
+    PATCHsuf="_patches.out"
+    KAPPA="$(echo $PATCHES | sed -e "s/^${MODbase}_kp//" -e "s/${PATCHsuf}$//")"
+    TITLE="$MODbase @@ @~k@~ = $KAPPA"
+    echo "  running:  $PATCHES ($KAPPA)"
    else
-   	PMODEL=$(basename "$MODELIN" .in)_fwd.out  # contains inverse results and data in original model format
-   	echo "Assuming fwd model: Using $PMODEL and $PATCHES."
+   	 PMODEL=$(basename "$MODELIN" .in)_fwd.out  # Forward result
+     TITLE="$MODbase (forward)"
+   	 echo "Assuming fwd model: Using $PMODEL and $PATCHES."
    fi
 
    # check to see if the required files exist and are readable
    test -r "$MODELIN" || { echo "ERROR: Cannot find $MODELIN. Exiting." ;  exit 1 ; }
    test -r "$PATCHES" || { echo "ERROR: Cannot find $PATCHES. Exiting." ;  exit 1 ; }
    test -r "$PMODEL" || { echo "ERROR: Cannot find $PMODEL. Exiting." ;  exit 1 ; }
-   
+
    # first things first
    # how big is this thing?
    if [ $RFLAG ] ; then
@@ -196,7 +198,7 @@ do
    	   YMAX=$(echo $YMAX $XMIN $XMAX | awk '{print $1+($3-$2)/2}')
    	fi
    fi
-   
+
    # scale DXY with xrange
    DXY=$(echo $XMIN $XMAX | awk '{XR=($2-$1)}
    	{if (XR<1)
@@ -225,14 +227,14 @@ do
    XYTICS=$(echo $DXY | awk '{XT=$1}
           {if ( XT==0.25 || XT==0.5 || XT==5 )
                   print XT/5 ;
-          else 
+          else
                   print XT/4 ;
           }')
    #echo "Plot tics are $XYTICS annotated at $DXY"
-   
+
    RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"  ;#: echo RANGE = $RANGE
    #echo DXY=$DXY
-   
+
    SCALE=16
    ISLOCAL="$(awk '$1=="coord"&&$2=="local"{print "1"}' $MODELIN)"
    if [ $ISLOCAL ] ; then
@@ -243,7 +245,7 @@ do
    	PROJ="-JM$SCALE"
    	#echo "Geographic Coords: Projection is $PROJ"
    fi
-   
+
    # Determine Slip Range
    # slip magnitude (taking components between ss,ds,ts)
    #results are scaled by DEFSCALE [=1 default].  If TMIN=TMAX at 1-decimal place, use exact range.
@@ -263,20 +265,20 @@ do
            fi
       fi
    fi
-   
+
    # create CPT file for slip model
    CPT=slip.cpt    # created within
    gmt makecpt -Chot -T"$TMIN/$TMAX/$DT" -I -Z >$CPT
    #echo "$TMIN/$TMAX/$DT"
-   
+
    BGN="$RANGE $PROJ -K"
    MID="$RANGE $PROJ -O -K"
    END="$RANGE $PROJ -O"
-   
+
    OUTFILE=$(basename "$0" .gmt)_$(basename "$PATCHES" _patches.out).ps ; #echo $OUTFILE
    #######################################
    gmt set MAP_FRAME_TYPE plain  FORMAT_GEO_MAP D
-   
+
    #######################################
    if [ $LFLAG ] ; then
    	gmt psbasemap  -X2 -Y10.5 $BGN -P -B${DXY}f${XYTICS}WeSn >$OUTFILE
@@ -285,17 +287,17 @@ do
    	#echo COASTSCALE = $COASTSCALE
    	gmt pscoast  -X2 $COASTSCALE -W0.1 -S235/255/255 -G235/255/235 -Y10.5 $BGN -P -B${DXY}f${XYTICS}WeSn >$OUTFILE
    fi
-   
+
    # grab individual subfault bounding boxes and plot them as lines colored by their slip magnitude
    awk '$1!~"#" {printf ">-Z%f\n%f %f\n%f %f\n%f %f\n%f %f\n%f %f\n",DEF*($19**2+$20**2+$21**2)**.5, $4,$5, $7,$8, $10,$11, $13,$14, $4,$5 }' DEF=$DEFSCALE $PATCHES \
    	 | gmt psxy  $MID -A -L -W -C"$CPT" >>$OUTFILE
-   
+
    awk '$1!~"#" {print $16,$17, $24*DEF, $25*DEF, "0 0 0" }' DEF=$FVSCALE $PATCHES |\
      gmt psvelo -N  $MID -W0p -A0.01/0.05/0.03 -W0.1,100/100/100 -Se1/0/0 -L >>$OUTFILE
-   
-   
+
+
    # plot data with errors at 1-sigma and stations (green errows with ellipses)
-   
+
    POINT1="$(awk '$1=="point"&&$2=="1"{print "1"}' $PMODEL)"
    POINT2="$(awk '$1=="point"&&$2=="2"{print "1"}' $PMODEL)"
    POINT3="$(awk '$1=="point"&&$2=="3"{print "1"}' $PMODEL)"
@@ -332,18 +334,18 @@ do
       awk '$1!~"#"&&$1=="point" {if($2=="1"){Uz=$7*DEF; eUz=$8*DEF} if($2=="3"){Uz=$9*DEF; eUz=$12*DEF} print $4,$5, 0, Uz,eUz/10, eUz, " 0" }' DEF=$DATASCALE $MODELIN  | \
      	gmt psvelo -N  $MID -W0p -A0.05/0/0  -Se1/0.65/0 -L >>$OUTFILE
    fi
-   
+
    # plot station locations
    awk '$1!~"#"&&$1~"point"{print $4,$5}' $MODELIN |  \
    	gmt psxy  $MID  -Sc0.2 -G0/255/0 -W0.1 >>$OUTFILE
-   
+
    # plot coast over model and data and add 100km scalebar
-   
+
    if [ ! $LFLAG ] ; then  # replot coast if not local scale
    	LBAR=$(echo $DXY | awk '{print $1*100}')
    	gmt pscoast -Lx3/2+c157/-7+w${LBAR}+atl $COASTSCALE -W0.51,gray  $MID >>$OUTFILE
    fi
-   
+
    # end file with scalebar
    getUNIT() {
       if [ $1 == "1" ] ; then
@@ -353,56 +355,57 @@ do
       elif [ $1 == "1000" ] ; then
       	local UNIT="mm"
       else
-      	local UNIT="m /$1" 
+      	local UNIT="m /$1"
       fi
       echo $UNIT
    }
    # Fault contours
    FUNIT=$(getUNIT $DEFSCALE)
    PSTITLE="Slip [$FUNIT]"
-   
+
    #echo "Scaling outputs:"
    DVMAX=$(awk '$1!~"#"&&$1=="point" {if($2=="2" || $2=="3") print ($7**2+$8**2)**.5 }' $PMODEL | gmt info -Eh )
    # 1/2 max value  (grow by 5x if too small)
    DVscale=$(echo $DVMAX  $DATASCALE | awk '{if ($1*$2 < 1) DV=$1*$2*5; else DV =$1*$2 ; printf "%.0e", DV/2}' | awk '{print $1*1.}' )
-   
+
    #TMAX already scaled get unscaled version in FVMAX
    FVMAX=$(echo $TMAX $DEFSCALE | awk '{print $1/$2}')
    # 1/2 max value  (grow by 5x if too small)
    FVscale=$(echo $FVMAX $FVSCALE  | awk '{if ($1*$2 < 1) FV=$1*$2*5; else FV =$1*$2 ; printf "%.0e", FV/2}'| awk '{print  $1*1.}' )
-   
+
    # Fault vectors
    FVUNIT=$(getUNIT $FVSCALE)
    # DATA vectors
    DVUNIT=$(getUNIT $DATASCALE)
    #echo " -86.75 8.55 $DVscaled 0 0 0 0 Data [$DVscale $DVUNIT]" |\
    #	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Ggreen -Se1/0.65/10 -L >>$OUTFILE
+
    gmt pslegend -Dx8/-1/16 -F+p2p+g255/255/200+r10p+s -P  $MID << ...EOF >>$OUTFILE
-L 14 Helvetica-Bold C $MODbase @@ @~k@~ = $KAPPA
-D 1.5c 2p 
+L 14 Helvetica-Bold C $TITLE
+D 1.5c 2p
 S 4c c 0.2 0/255/0 0.1  1c Station
 S 10c v0.25c+e+p3 $DVscale green 1p,green 0.5c  Observed Data $DVscale [$DVUNIT]
 S 10c v0.25c+e+p3 $DVscale magenta 1p,magenta 0.5c  Modelled Data $DVscale [$DVUNIT]
 S 10c v0.15c+e+p3 $FVscale gray 0p 0.5c  Fault $FVscale [$FVUNIT]
-D 0.5c 1p 
+D 0.5c 1p
 L 6 Helvetica-Oblique L  Created by ${USER} in ${PWD}
-L 6 Helvetica-Oblique L  Command: $(basename $0) $* 
+L 6 Helvetica-Oblique L  Command: $(basename $0) $*
 L 6 Helvetica-Oblique L  Date: $(date)
 ...EOF
-   
-   
+
+
    gmt psscale -D16.5/5/10/0.4 -B"$DT":"$PSTITLE": -C"$CPT" -O  >>$OUTFILE
-   
+
    ####################################################################
    # END PS Creation
    ####################################################################
-   
+
    # create PNG output from PS file
      OUTPNG=$(basename $OUTFILE .ps).png
      # 600dpi 0.3cm margin on all sides and 50%scale
      gmt psconvert $OUTFILE -E600 -A0.3c+S0.5 -Tg -F$OUTPNG
 
-   if [ $DFLAG ] ; then   
+   if [ $DFLAG ] ; then
       if [ -x $( which open ) ] ; then
            open $OUTPNG
       elif  [ -x $( which xdg-open ) ] ; then
@@ -411,7 +414,7 @@ L 6 Helvetica-Oblique L  Date: $(date)
            echo "WARNING: cannot open $OUTPNG, no viewer available"
       fi
    fi
-   
+
    ###############################################
    # put hidden stamp in file that will denote its source
    echo " %%%  created $(date) by ${USER} using ${HOST}:${PWD}/$0 $* " >>$OUTFILE
