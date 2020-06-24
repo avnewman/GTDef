@@ -566,7 +566,7 @@ kappa 2 0  5000 11
      GTdef_slipmodel.gmt -M nicoya_ckbd.in -S100/100/10</pre></div>
 
    The figure should look like the example below.
-       <center><img src="files/GTdef_slipmodel_nicoya_ckbd_fwd.png" width="700px"></center>
+       <center><img src="files/GTdef_slipmodel_nicoya_ckbd_3x4_fwd.png" width="700px"></center>
        Note, that because this program is written for real data, the labeling may not be accurate.  Here, 'observed' is arbitrary, and
        whatever was in your original input file.  Modeled data are the predicted results that will be used for subsequent inversions.
     </ol>
@@ -630,25 +630,40 @@ kappa 2 0  5000 11
           <c>% within matlab</c>
           GTdef('nicoya_ckbd_fwd_wNOISE.in')</pre></div>
 
+      <li> Determine appropriate &Kappa; value to use by evaluating the information in <c>'nicoya_ckbd_6x8_fwd_lowNOISE_inv.out'</c>, which
+        can be plotted with <gr>GTdef_misfit_kappa.gmt</gr>.
+        <div class="code-wrapper"> <pre>
+          <c># in shell (command line)</c>
+          GTdef_misfit_kappa.gmt -M nicoya_ckbd_3x4_fwd_lowNOISE_inv.out</pre></div>
+
+        Results are
+        <a href="files/GTdef_misfit_kappa_nicoya_ckbd_3x4_fwd_lowNOISE_inv.png" target="aux2">here</a>.
+
       <li> Now, evaluate/visualize the results of the inversion to determine which patches have better or worse representation
         of the original input model that you created (your checkerboards).
         A great way to do this is to create very similar plots of both the result of the forward prediction (nicoya_ckbd_fwd.out)
-        and the new inverse at the kappa that you feel most appropriate (e.g. <c> nicoya_ckbd_fwd_wNOISE_k7000.out</c>).
+        and the new inverse at the kappa that you feel most appropriate (e.g. <c> nicoya_ckbd_fwd_wNOISE_k9000.out</c>).
         Now the files should be ready for the helper program <gr> GTdef_slipmodel.gmt</gr>.
         <div class="code-wrapper"> <pre>
           <c># in shell (command line)</c>
-          GTdef_slipmodel.gmt -M nicoya_ckbd_fwd_lowNOISE.in -K 7000 -S100/100/10</pre></div>
+          GTdef_slipmodel.gmt -M nicoya_ckbd_fwd_lowNOISE.in -K 9000 -S100/100/10</pre></div>
 
         The figure should look like the example below.
-         <center><img src="files/GTdef_slipmodel_nicoya_ckbd_fwd_lowNOISE_kp7000.png" width="700px"></center>
+         <center><img src="files/GTdef_slipmodel_nicoya_ckbd_3x4_fwd_lowNOISE_kp9000.png" width="700px"></center>
      <br>
 <H3>Notes:</h3><ol type="i">
 <li><p>As you can see in the above figure, the checkerboards are well represented right at the coast, however, the model becomes very
-  smooth with apparent larger patches both updip and downdip.  The updip resolution problem comes from a lack of stations immediately overhead,
-  however, the downdip problem is because our patches are too small, and the earth between the data and the fault is "smoothing it out".
+  smooth with apparent larger patches both up-dip and down-dip.  The up-dip resolution problem comes from a lack of stations immediately overhead,
+  however, the down-dip problem is because our patches are too small, and the earth between the data and the fault is "smoothing it out".
 
-  <p>To improve on the downdip problem, it is possible to make a hybrid checkerboard model with larger downdip patches
-    (maybe 40x40 km), to test the resolution of larger slip features.
+  <p>To improve on the down-dip problem, it is possible to make a hybrid checkerboard model with larger down-dip patches
+    (maybe 40x40 km), to test the resolution of larger slip features.  For comparison, here are the
+    <a href="files/GTdef_slipmodel_nicoya_ckbd_6x8_fwd.png" target="aux2">input checkerboard</a>,
+    <a href="files/GTdef_misfit_kappa_nicoya_ckbd_6x8_fwd_lowNOISE_inv.png" target="aux2">trade-off curve</a>,
+     and
+    <a href="files/GTdef_slipmodel_nicoya_ckbd_6x8_fwd_lowNOISE_kp9000.png" target="aux2">inversion results</a>
+    for these patches.
+  </p>
 <li>Checkerboard testing is relatively straightforward, but a somewhat cumbersome problem with a visual and not very quantitative
   assessment of the model quality given data.  Instead, it may be much better to look at the <a href="#RES">output of the resolution matrix</a>, itself.
 <li>The examples used in the checkerboard tests above use campaign data from the <a href = "https://nicoya.eas.gatech.edu/sites/nicoya/files/datasets/Protti_etal_2014_Campaign_results.txt">Nicoya Seismic Cycle Observatory GPS data.</a>
