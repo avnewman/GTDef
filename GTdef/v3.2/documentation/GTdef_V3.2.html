@@ -145,7 +145,7 @@ or some combination of both.</p>
   <center><c><b>m</b><sup>est</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup><b>d</b></c></center>
 
   where <c><math>&epsilon;<sup>2</sup><b>I</b> = &kappa;&nabla;<sup>2<b></sup>s</b></math></c>.
-  We can simplify this be defining the Generalized Inverse Matrix:<br>
+  We can simplify this by defining the Generalized Inverse Matrix:<br>
 
   <p class="right"><c>(7)</c></p>
   <center><c><b>G</b><sup>-g</sup> = [<b>G</b><sup>T</sup><b>G</b>+ &epsilon;<sup>2</sup><b>I</b>]<sup>-1</sup><b>G</b><sup>T</sup></c></center>
@@ -616,7 +616,7 @@ kappa 2 0  5000 11
           kappa 2 7000 15000 5     # every 2k now
           kappa 2 20000 50000 4    # every 10k now
           resolution 1             # output the results of the resolution matrix (we can use later)
-          lsqlin 10 1e-10          # less iterations and higher tolerance limits (faster runs with no real degredation).
+          lsqlin 10 1e-10          # less iterations and higher tolerance limits (faster runs with no real degradation).
           project on               # runs through and creates easy to read geographically projected outputs of model and slip parameters.</pre></div>
 <br>
           Change the fault line to invert (e.g. make thrust range from -0.823 to 0, the ds0 and dsX values).
@@ -659,7 +659,52 @@ kappa 2 0  5000 11
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id="RES">
-	<li> <h2> <a href = "#TOC">Resolution Spread Evaluation</a></h2></li>
+	<li> <h2> <a href = "#TOC">Resolution Spread Evaluation:</a></h2></li>
+  <p>If you've ran inversions with the <c>'resolution'</c> flag set to one (see option in <a href="#cbt">Checkerboard Testing section</a>), we
+  should have outputs with the tail <c>'_patches_R.out'</c> for each of the kappa values in our models. This file describes the output of
+  the diagonals of the model resolution matrix, <c>R<sub>jj</sub></c>, as the product of the Generalized Inverse Matrix and the Green's function (see <a href="#THEORY">Theory</a> section).
+  <p class="right"><c>(9)</c></p>
+  <center><c><b>R</b> = <b> G<sup>-g</sup>G</b></c></center>
+  Equation(7) from above can be rewritten as:
+  <p class="right"><c>(10)</c></p>
+  <center><c><b>G</b><sup>-g</sup> = [<b>G</b><sup>T</sup><b>W<sub>e</sub></b>G+ <i>&rho;</i><b>W<sub>m</sub></b>]<sup>-1</sup><b>G<sup>T</sup>W<sub>e</sub></b></c></center>
+  where <b>W<sub>m</sub></b> is the Laplacian of the slip, <b>W<sub>e</sub></b> is the error weighting matrix, and <i>&rho;</i> is the roughness intensity applied to the models
+  (Jonsson et al., 2002; Kyriakopoulos and Newman, 2016).</p>
+<br>
+<p>From the diagonals of the resolution matrix, <c><i>R<sub>jj</sub></i></c>,
+  you can get a characterization of how spatially a model patch's resolution is spread output across the model space.
+  This can be related in a single scalar per patch that is dependent on the patch size.
+  This parameter is called the resolution spread, <c><i>r<sub>j</sub></i></c>, and is
+  <p class="right"><c>(11)</c></p>
+  <center><c><i>r<sub>j</sub></i> = <i>L<sub>j</sub></i> / &radic;<span style="text-decoration:overline"><i>R<sub>jj</sub></i></span></c>,</center>
+  where <c><i>L<sub>j</sub></i></c> is the nominal patch size (Funning et al., 2005; Kyriakopoulos and Newman, 2016).
+  <br>
+  <p>Because <c><b>R</b></c> doesn't depend on the actual values of the data, but only its location and weighted errors, relative to the model,
+    the same is true for <c><i>r<sub>j</sub></i></c>.</p>
+<br>
+<p>We've created a program that calculates <c><i>L<sub>j</sub></i></c>, and <c><i>r<sub>j</sub></i></c> for a selected component of slip.
+ The program <gr>GTdef_Rmodel.gmt</gr> uses similar inputs to <gr>GTdef_slipmodel.gmt</gr>, but requires Kappa (-K) and Slip components (-C) to be described.
+ As noted above, the program requires the respective <c>'_patches_R.out'</c> files that are created with the c>'resolution'</c> flag set to 1 before an inversion.
+
+ <div class="code-wrapper"> <pre>
+   <c># in shell (command line)</c>
+   GTdef_Rmodel.gmt -M nicoya_ckbd_fwd_lowNOISE.in -K7000 -S D -D</pre></div>
+This will plot the dip-slip (-S D) component, at &Kappa;=7000, displaying the result (-D). </p>
+<br>
+
+<p>The figure should look similar to the example below.
+ <center><img src="files/GTdef_Rmodel_nicoya_ckbd_fwd_lowNOISE_kp7000_Rj.png" width="700px"></center>
+</p>
+<br>
+<p> The real beauty of the Resolution Spread is in it's simplicity and quantitative nature.  Instead of creating apriori assessments
+  of approximate resolvable model size, developing a model/running it, and doing "squinty-eyed" qualitative analysis of what you can
+  resolve (as is done with Checkerboard testing), you get real numbers, with direct resolvable properties of patch size.</p>
+<br>
+<p> While plotting <c><i>r<sub>j</sub></i></c> gives a direct image of all patches average spread, you can use <c>resolution 2</c> to
+  get information on the off-diagonal components of the model resolution matrix to plot the actual spatial smearing of individual
+  patches, per component (see Kyriakopoulos and Newman, 2016).  You may need to develop your own plotting algoritm for this.
+
+
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
@@ -673,7 +718,7 @@ kappa 2 0  5000 11
 <section id= "ref">
 <li> <h2> <a href = "#TOC"> References: </a> </h2></li>
 <ul>
-    <li><r>Needs to include other papers referred to above.  Inc. Menke, Wang et al (2003), Santamarina.</r>
+    <li><r>Needs to include other papers referred to above.  Inc. Menke, Wang et al (2003), Santamarina., Funning et al., 2005; Kyriakopoulos and Newman, 2016</r>
     <li><a href=http://geophysics.eas.gatech.edu/internal/papers/1985/Okada/Okada_BSSA_1985.pdf> Okada, Y. (1985). Surface deformation due to shear and tensile faults in a half-space, Bull. Seism. Soc. Am. 75, 1135-1154.</a>
     <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Chen_etal_GRL_2009.pdf> Chen, T., A. V. Newman, L, Feng, H. M. Fritz (2009), Slip Distribution from the 1 April 2007 Solomon Islands Earthquake: A Unique Image of Near-Trench Rupture, Geophys. Res. Lett., 36, L16307, doi:10.1029/2009GL039496. </a>
     <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Feng_etal_JGR_2012.pdf> Feng, L., A. V. Newman, J. M. Protti, V. González, Y. Jiang, T. H. Dixon (2012), Active Deformation near the Nicoya Peninsula, Northwestern Costa Rica, Between 1996 and 2010: Interseismic Megathrust Coupling, J. Geophys. Res., 117, B06407, doi:10.1029/2012JB009230. </a>
