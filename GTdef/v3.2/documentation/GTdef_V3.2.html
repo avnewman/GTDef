@@ -19,8 +19,8 @@
 <li> <a href = "#THEORY"> Background Theory</a></li>
 <li> <a href = "#INPUT"> The Input File</a></li>
 <li> <a href = "#SPF"> Simple Planar Forward Model </a></li>
-<li> <a href = "#uslip"> Uniform Slip Model Inversion </a></li>
-<li> <a href = "#nslip"> Non-Uniform Slip Model</a></li>
+<li> <a href = "#uslip"> Uniform Slip Modelling </a></li>
+<li> <a href = "#nslip"> Non-Uniform Slip Modelling</a></li>
 <li> <a href = "#cbt"> Checkerboard Testing </a></li>
 <li> <a href = "#RES"> Resolution Spread Evaluation</a></li>
 <li> <a href = "#gf"> Ingesting External Green's Functions</a></li>
@@ -371,7 +371,7 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id= "uslip">
-<li> <H2> <a href = "#TOC"> Uniform Slip Model Inversion: </a> </H2></li>
+<li> <H2> <a href = "#TOC"> Uniform Slip Modelling: </a> </H2></li>
 
 <h3>Input:</h3>
 We will need to build the model, including gathering the appropriate data and then estabishing an appropriate a priori interface. In this example, we will use the very small tsunami earthquake described in <a href="http://geophysics.eas.gatech.edu/people/anewman/research/papers/Newman_etal_GJI_2011.pdf">Newman et al. (2011)</a>.
@@ -501,7 +501,7 @@ w l lw 4 lt 7 -8 t "fault" </pre></div>
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id= "nslip">
-<li> <h2> <a href = "#TOC"> Non-uniform Slip Model Inversion: </a> </h2></li>
+<li> <h2> <a href = "#TOC"> Non-uniform Slip Modelling: </a> </h2></li>
 		<p> This problem is a little more tricky, as we will quickly go from an overdetermined problem (more data than model paremeters),
 		     to an underdetermined problem.
 		     In order to get around this, and to solve for realistic slip, we constrain the interdependence between individual slip patches.
