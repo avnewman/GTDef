@@ -63,8 +63,20 @@ or some combination of both.</p>
 <section id= "DL">
 <li> <h2> <a href = "#TOC"> GTdef Code and How to Download it</a></li>
 <ul><b> Current Version </b> : GTDef 3.2 </ul>
-<ul><b> Github Repository for Download </b>:
+<ul><b> Github Repository to Download/Clone </b>:
 <a href=https://github.gatech.edu/an77/GTDef.git>https://github.gatech.edu/an77/GTDef.git</a> </ul>
+<br>
+Set up Instructions:
+<ol type= "i">
+<li> In the selected directory, to clone GTDef run <div class= "code-wrapper"> <pre> git clone https://github.gatech.edu/an77/GTDef.git   #this will create a copy of the code which you can pull to every time there is an update to the master git repository </div></pre>
+<li> Be sure the current version of GTdef is in your path.  You can check this using the <gr>path</gr> function, and add it using <gr>addpath</gr>.
+<div class="code-wrapper"> <pre>
+<c> # within matlab</c>
+> addpath('/path/to/GTdef/v3.2/unstable/') <c>%replacing with your actual path</c>
+</pre></div>
+<li> Additiionally, create a separate directory to run examples and save files. Running Matlab calls in this directory will save your results in one place to be analysed later.
+</br>
+</ol>
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
@@ -328,11 +340,6 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 <h4>Run:</h4>
  <ol type="i">
 <li> To run <gr>GTdef</gr>, you must call up matlab (interactive and gui are not necessary).
-	<li> Be sure the current version of GTdef is in your path.  You can check this using the <gr>path</gr> function, and add it using <gr>addpath</gr>.
-<div class="code-wrapper"> <pre>
-<c> # within matlab</c>
-> addpath('/path/to/GTdef/v3.2/unstable/') <c>%replacing with your actual path</c>
-</pre></div>
 <li> The processing code that oversees both forward and inverse models is <gr>GTdef</gr> and is called with just the input file name, and optionally, the number of processors you'd like it to use on your machine. By default, it will use all available processors if not defined.
 <div class="code-wrapper"> <pre>
 <c> # within matlab</c>
@@ -342,7 +349,9 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 <h4>Output:</h4>
 <ol type="i">
 	<li> This will create an output file called <c>'local1_fwd.out'</c> that will repeat the model, and give predicted results for the defined grid locations (now as <c>'point'</c> data-type).
-
+</ol>
+<H5>Plotting results:</H5>
+<ol type="i">
 <li> Quick and dirty visualization can easily be achieved using the freely available gnuplot program.  This allows us to look at the full 3D vector field.
 <div class="code-wrapper"> <pre>
  <c># first comment out all lines that are not output data using vim or similar. (not shown)</c>
@@ -364,7 +373,7 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 <section id= "uslip">
 <li> <H2> <a href = "#TOC"> Uniform Slip Model Inversion: </a> </H2></li>
 
-<h3>Input File:</h3>
+<h3>Input:</h3>
 We will need to build the model, including gathering the appropriate data and then estabishing an appropriate a priori interface. In this example, we will use the very small tsunami earthquake described in <a href="http://geophysics.eas.gatech.edu/people/anewman/research/papers/Newman_etal_GJI_2011.pdf">Newman et al. (2011)</a>.
 
 <ol type="i">
@@ -404,11 +413,12 @@ Because data here are only vertical, we will chose to set strike-slip to 0 and n
 <c>#fault type name lon      lat     z1  z2   len   str   dip   ss ds ts ss0 ssX ds0 dsX  ts0 tsX  Nd  Ns </c>
 fault  1    slm  157.0990 -8.6920 0   5200 50000 125.0 158.0 0 0.1 0  0   0   0   100  0   0    1   1
 </pre></div>
-<li><b>Run:</b> After combining the above parameters into a single input file (e.g. '<c>solomon.in</c>'), you can run the code just as was done in the forward model.
 </ol>
+<h3><b>Run:</b> </h3>After combining the above parameters into a single input file (e.g. '<c>solomon.in</c>'), you can run the code just as was done in the forward model.
 
 
-<H3>Output:</H3>
+
+<h4>Output:</h4>
 <ol type="i">
 	<li> <b>Output files:</b> If the model converges, you can analyze the output results in either the '<c>_inv.out</c>' or '<c>_kp*.out</c>'.
 	The former file gives the fit results of the run, while the later gives the model results as well as their predicted displacements at the sites described in the orginal input model. Its this second file that can be used as an input for future runs.
@@ -464,12 +474,14 @@ point 3 Rendova-Ugele	  157.39921000  -8.44959000  0.00000e+00    -0.15468   -0.
 fault 1    slm  157.09896 -8.69204 0.00e+00   5.20e+03 5.00e+04   125.00 158.00  0.000 5.167  0.000   0.00  0.00   0.00  0.00  0.00  0.00   1   1
 <c>#grid name        Erot Nrot lon1    lat1    lon2     lat2     Ne    Nn   </c>
 grid  Solom_region   0    0    156.4   -9.3    158.1    -7.9     200   200 </pre></div>
-
-<li><b>Plotting results:</b> One tool that is particularly useful is the supplied algorithm '<gr>GTdef_project</gr>', as it can take the predicted output model and transform it into a highly-readable file for your favorite plotting program.
+</ol>
+<h5><b>Plotting results:</b></h5>
+<ol type="i">
+<li>One tool that is particularly useful is the supplied algorithm '<gr>GTdef_project</gr>', as it can take the predicted output model and transform it into a highly-readable file for your favorite plotting program.
 <div class="code-wrapper"> <pre>> <c>% within matlab</c>
 > GTdef_project('solomon_kp0.00000.out') </pre></div>
 
-	This creates a new file (here '<c>solomon_kp0.00000_patches.out</c>') that describes all elements (here only one) of the model, including geographic position of corners, the element center position, and slip values.
+  This creates a new file (here '<c>solomon_kp0.00000_patches.out</c>') that describes all elements (here only one) of the model, including geographic position of corners, the element center position, and slip values.
 	While you could use a more full-featured plotting program like <a href="#INTRO">GMT</a>, we'll again use <gr>gnuplot</gr> for our quick and dirty plot to show the predicted displacements from '<c>_kp*.out</c>', and then model geometry from '<c>_kp*_patches.out</c>'.
 <div class="code-wrapper"> <pre>
 <c># within gnuplot </c>
@@ -478,10 +490,12 @@ gnuplot> splot "&lt; awk '$1==\"point\"{print $0}' solomon_kp0.00000.out"\
 u 4:5:(0):($7*1e-1):($8*1e-1):($9*1e1) w vect t "surface displacement",\
 "&lt; awk '$1==\"slm\"{printf \"%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n%f %f %f\\n\", $4,$5,-$6/1000,$7,$8,-$9/1000,$10,$11,-$12/1000,$13,$14,-$15/1000,$4,$5,-$6/1000}' solomon_kp0.00000_patches.out"\
 w l lw 4 lt 7 -8 t "fault" </pre></div>
-After using your pointer to move around your model appropriately, your result should look something like this:
+<li>After using your pointer to move around your model appropriately, your result should look something like this:
  <center>
+   <br>
    <img src="files/solomon_single_fault_inv.png" width="700px">
 </ol>
+</br>
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
@@ -499,6 +513,7 @@ After using your pointer to move around your model appropriately, your result sh
 		     The way it's been implemented here is that a series of roughness solutions are determined, all yielding different misfits to the data.
 		     It is a somewhat arbitrary decision to chose the optimal roughness parameter.  Usually this is done by evaluating the kink-point by which
 		     additionally smooth results significantly increase misfits.
+<h3> Input </h3>
   <ol type="i">
 		<li> Choose your kappa value (parameter that controls roughness) to range between 0 to 5000 by 500.
 <div class="code-wrapper"> <pre>
@@ -509,12 +524,26 @@ kappa 2 0  5000 11
 <c>#fault type name   lon       lat     z1  z2    len    str    dip     ss   ds    ts    ss0  ssX    ds0  dsX    ts0 tsX    Nd  Ns</c>
  fault  1   slm    157.0990  -8.6920  0  5200  50000  305.0  22.0   0    0.1   0     0    0      0    100    0   0      7   10
 </pre> </div>
-		<li> Invert and explore your results.  Using <a href="plotting/misfit_kappa.gmt"> misfit_kappa.gmt</a>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example data set.
-      <center> <img src="files/misfit_kappa_solomon_inv.png" width="700px"> </center>
-      <li> You might want to look at your results in a geographic reference system.  I've created a GMT script (<a href="plotting/slipmodel.gmt">slipmodel.gmt</a>) to do this,
-           but you must modify it for your purposes.
-		<li> Finally, once you've chosen your optimal kappa value, run a new forward model, and repredict deformation.
-		     <br><br>
+</ol>
+<h4> Run </h4>
+<ol type="i">
+  <li> Within Matlab, run <c>GTdef('solomon_inv.in')</c> like in the example above except this time you're running an inversion due to the way the fault parameters are set up.
+</ol>
+<h5> Output </h5>
+<ol type ="i">
+  <li> This time, you have two kinds of output files, those that end in <c>'_kp*'</c> correspond to each kappa value you set in step "i" above, and the other is a summary file <c>'_inv.out'</c>. The inversion summary file will be used in the next step to determine the optimal smoothing factor (kappa value) for this dataset.
+	<li> Explore your inversion results.  Using <a href="plotting/misfit_kappa.gmt"> misfit_kappa.gmt</a>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example dataset.
+    <center>
+      <br>
+      <img src="files/misfit_kappa_solomon_inv.png" width="700px"></img> </center>
+    </ol>
+    </br>
+<h6> Plotting results</h6>
+  <ol type="i">
+    <li> Finally, once you've chosen your optimal kappa value, run a new forward model, and repredict deformation. The new forward model input will be a modified version of the corresponding <c>'_kp.out'</c> file to the optimal kappa value determined from the step above. Remember, for a forward model, it is important that all slip parameter ranges for a given slip-type on a fault block have equal value (i.e. ss0=ssX, ds0=dsX, and ts0=tsX).
+    <li> You might want to look at your results in a geographic reference system.  I've created a GMT script (<a href="plotting/GTdef_slipmodel.gmt">GTdef_slipmodel.gmt</a>) to do this,
+           but you must modify it for your purposes. <a href= files/GTdef_slipmodel_solomon_kp750.png target="aux2">Here</a> is an example of a plot from the results obtained with an inversion with kappa=750.
+         </ol>
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
@@ -566,7 +595,9 @@ kappa 2 0  5000 11
      GTdef_slipmodel.gmt -M nicoya_ckbd.in -S100/100/10</pre></div>
 
    The figure should look like the example below.
-       <center><img src="files/GTdef_slipmodel_nicoya_ckbd_3x4_fwd.png" width="700px"></center>
+      <br></br>
+      <center><img src="files/GTdef_slipmodel_nicoya_ckbd_3x4_fwd.png" width="700px"></center>
+      <br></br>
        Note, that because this program is written for real data, the labeling may not be accurate.  Here, 'observed' is arbitrary, and
        whatever was in your original input file.  Modeled data are the predicted results that will be used for subsequent inversions.
     </ol>
