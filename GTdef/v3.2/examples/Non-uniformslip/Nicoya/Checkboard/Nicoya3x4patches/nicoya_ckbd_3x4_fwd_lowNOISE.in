@@ -26,7 +26,7 @@ lsqlin 20 1e-20          # testing low iterations and higher tolerance limits
 project on               # run all projections
 
 # fault is set for inversion (ds0, dxX = 0, -.823)
-#fault type   name    lon1           lat1           lon2          lat2          z1   z2     dip   ss  ds     ts   ss0 ssX  ds0 dsX  ts0 tsX  Nd Ns  
+#fault type   name    lon1     lat1           lon2         lat2           z1         z2           dip       ss      ds       ts        ss0    ssX     ds0     dsX     ts0    tsX       Nd Ns  
 fault 2 nicoya  -85.54233907   8.74026277     -86.82826920 10.01077299    0.0000e+00 6.2000e+04   17.00     0.00000 -0.08230 0.00000   0.0000 0.0000  -0.0823 0.0000  0.0000 0.0000    30 40
 # subfaults are removed (grep -v subfault nicoya_ckbd_fwd_wNOISE.in > j1 ; mv j1 nicoya_ckbd_fwd_wNOISE.in)
 

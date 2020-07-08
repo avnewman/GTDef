@@ -7,6 +7,7 @@ body {
 	font-family: arial, helvetica, sans-serif;
 	line-height: 1.5em;
 	width: 80em;
+  /*float: right;*/
 	margin-right:auto;
         margin-left: auto;
 }
@@ -15,7 +16,16 @@ body {
  A:active {text-decoration: none ; color: red; }
  A:hover {text-decoration: underline; color: red; }
 
+/*#TOC{
 
+  float: left;
+
+
+
+}
+#TOC ol{
+  list-style-type: none;
+}
 /*div {
 	border: none;
 }*/

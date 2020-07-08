@@ -10,8 +10,8 @@
 </td></tr>
 <tr><td align=top>
 <section id="TOC">
-<h2 >Sections of the GTdef model</h2>
-<font size=-2pt>(Clicking on section heads will return to the Table of Contents)</font>
+  <h2 >Sections of the GTdef model</h2>
+  <font size=-2pt>(Clicking on section heads will return to the Table of Contents)</font>
 <H2 >
   <ol>
 <li> <a href = "#INTRO"> Basic Introduction</a></li>
@@ -19,8 +19,8 @@
 <li> <a href = "#THEORY"> Background Theory</a></li>
 <li> <a href = "#INPUT"> The Input File</a></li>
 <li> <a href = "#SPF"> Simple Planar Forward Model </a></li>
-<li> <a href = "#uslip"> Uniform Slip Modelling </a></li>
-<li> <a href = "#nslip"> Non-Uniform Slip Modelling</a></li>
+<li> <a href = "#uslip"> Uniform Slip Modeling </a></li>
+<li> <a href = "#nslip"> Non-Uniform Slip Modeling</a></li>
 <li> <a href = "#cbt"> Checkerboard Testing </a></li>
 <li> <a href = "#RES"> Resolution Spread Evaluation</a></li>
 <li> <a href = "#gf"> Ingesting External Green's Functions</a></li>
@@ -371,7 +371,7 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id= "uslip">
-<li> <H2> <a href = "#TOC"> Uniform Slip Modelling: </a> </H2></li>
+<li> <H2> <a href = "#TOC"> Uniform Slip Modeling: </a> </H2></li>
 
 <h3>Input:</h3>
 We will need to build the model, including gathering the appropriate data and then estabishing an appropriate a priori interface. In this example, we will use the very small tsunami earthquake described in <a href="http://geophysics.eas.gatech.edu/people/anewman/research/papers/Newman_etal_GJI_2011.pdf">Newman et al. (2011)</a>.
@@ -501,7 +501,7 @@ w l lw 4 lt 7 -8 t "fault" </pre></div>
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id= "nslip">
-<li> <h2> <a href = "#TOC"> Non-uniform Slip Modelling: </a> </h2></li>
+<li> <h2> <a href = "#TOC"> Non-uniform Slip Modeling: </a> </h2></li>
 		<p> This problem is a little more tricky, as we will quickly go from an overdetermined problem (more data than model paremeters),
 		     to an underdetermined problem.
 		     In order to get around this, and to solve for realistic slip, we constrain the interdependence between individual slip patches.
@@ -532,17 +532,25 @@ kappa 2 0  5000 11
 <h5> Output </h5>
 <ol type ="i">
   <li> This time, you have two kinds of output files, those that end in <c>'_kp*'</c> correspond to each kappa value you set in step "i" above, and the other is a summary file <c>'_inv.out'</c>. The inversion summary file will be used in the next step to determine the optimal smoothing factor (kappa value) for this dataset.
-	<li> Explore your inversion results.  Using <a href="plotting/misfit_kappa.gmt"> misfit_kappa.gmt</a>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example dataset.
-    <center>
+	<li> Explore your inversion results.  Using <a href="plotting/GTdef_misfit_kappa.gmt"> GTdef_misfit_kappa.gmt</a>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example dataset.
+
+    <div class="code-wrapper"> <pre>
+      <c># in shell (command line)</c>
+
+      GTdef_misfit_kappa.gmt -M nicoya_camp_inv_inv.out</pre></div>
+      </ol>
       <br>
-      <img src="files/misfit_kappa_solomon_inv.png" width="700px"></img> </center>
-    </ol>
-    </br>
-<h6> Plotting results</h6>
-  <ol type="i">
-    <li> Finally, once you've chosen your optimal kappa value, run a new forward model, and repredict deformation. The new forward model input will be a modified version of the corresponding <c>'_kp.out'</c> file to the optimal kappa value determined from the step above. Remember, for a forward model, it is important that all slip parameter ranges for a given slip-type on a fault block have equal value (i.e. ss0=ssX, ds0=dsX, and ts0=tsX).
-    <li> You might want to look at your results in a geographic reference system.  I've created a GMT script (<a href="plotting/GTdef_slipmodel.gmt">GTdef_slipmodel.gmt</a>) to do this,
-           but you must modify it for your purposes. <a href= files/GTdef_slipmodel_solomon_kp750.png target="aux2">Here</a> is an example of a plot from the results obtained with an inversion with kappa=750.
+      <center><img src="files/GTdef_misfit_kappa_solomon_inv.png" width="700px"></img> </center>
+      </br>
+      <div> <b> Plotting results: </b></div>
+      <ol type="i">
+          <li> Finally, once you've chosen your optimal kappa value, run a new forward model, and repredict deformation. The new forward model input will be a modified version of the corresponding <c>'_kp.out'</c> file to the optimal kappa value determined from the step above. Remember, for a forward model, it is important that all slip parameter ranges for a given slip-type on a fault block have equal value (i.e. ss0=ssX, ds0=dsX, and ts0=tsX).
+          <li> You might want to look at your results in a geographic reference system.  I've created a GMT script (<a href="plotting/GTdef_slipmodel.gmt">GTdef_slipmodel.gmt</a>) to do this,
+           but you must modify it for your purposes.
+           <div class="code-wrapper"> <pre>
+             <c># in shell (command line)</c>
+             GTdef_slipmodel.gmt -M solomon.in -K750 -R157.0/157.7/-9/-8.3 -S0.1/1/0.1 -D </pre></div>
+           <a href= files/GTdef_slipmodel_solomon_kp750.png target="aux2">Here</a> is an example of a plot from the results obtained with an inversion with kappa=750.
          </ol>
 </section>
 
@@ -589,7 +597,7 @@ kappa 2 0  5000 11
    If everything works you will get your initial noise-free synthetics.
 
    <li>Using <gr>GTdef_slipmodel.gmt</gr>, plot the noise free model with the <c>nicoya_ckbd_fwd.out</c>
-   (the output from the forward run). Running the code without options will give brief usage information.
+   (the output from the forward run).
    <div class="code-wrapper"> <pre>
      <c># in shell (command line)</c>
      GTdef_slipmodel.gmt -M nicoya_ckbd.in -S100/100/10</pre></div>
@@ -601,7 +609,6 @@ kappa 2 0  5000 11
        Note, that because this program is written for real data, the labeling may not be accurate.  Here, 'observed' is arbitrary, and
        whatever was in your original input file.  Modeled data are the predicted results that will be used for subsequent inversions.
     </ol>
-
 
 
   <H3>Adding Noise: </H3>
@@ -680,8 +687,9 @@ kappa 2 0  5000 11
           GTdef_slipmodel.gmt -M nicoya_ckbd_fwd_lowNOISE.in -K 9000 -S100/100/10</pre></div>
 
         The figure should look like the example below.
+         <br></br>
          <center><img src="files/GTdef_slipmodel_nicoya_ckbd_3x4_fwd_lowNOISE_kp9000.png" width="700px"></center>
-     <br>
+
 <H3>Notes:</h3><ol type="i">
 <li><p>As you can see in the above figure, the checkerboards are well represented right at the coast, however, the model becomes very
   smooth with apparent larger patches both up-dip and down-dip.  The up-dip resolution problem comes from a lack of stations immediately overhead,
@@ -739,6 +747,7 @@ This will plot the dip-slip (-S D) component, at &Kappa;=7000, displaying the re
 <br>
 
 <p>The figure should look similar to the example below.
+  <br></br>
  <center><img src="files/GTdef_Rmodel_nicoya_ckbd_fwd_lowNOISE_kp7000_Rj.png" width="700px"></center>
 </p>
 <br>
@@ -764,7 +773,11 @@ This will plot the dip-slip (-S D) component, at &Kappa;=7000, displaying the re
 <section id= "ref">
 <li> <h2> <a href = "#TOC"> References: </a> </h2></li>
 <ul>
-    <li><r>Needs to include other papers referred to above.  Inc. Menke, Wang et al (2003), Santamarina., Funning et al., 2005; Kyriakopoulos and Newman, 2016</r>
+    <li><a href=http://geophysics.eas.gatech.edu/internal/papers/2005/Santamaria/Santamaria_Fratta_DiscreteSignalsInverseProblems_2005.pdf> Santamarina, J. C., & Fratta, D. (2005). Discrete signals and inverse problems. An Introduction for Engineers and Scientists. UK: Wiley & Sons.</a>
+    <li><a href=https://www.sciencedirect.com/science/article/pii/B9780123971609000035 > Menke, W. (2012). Describing inverse problems.</a>
+    <li><a href=https://www.sciencedirect.com/science/article/pii/S0098300402001115 > Wang, R., Martı́n, F. L., & Roth, F. (2003). Computation of deformation induced by earthquakes in a multi-layered elastic crust—FORTRAN programs EDGRN/EDCMP. Computers & Geosciences, 29(2), 195-207. </a>
+    <li><a href=https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2004JB003338>Funning, G. J., Parsons, B., Wright, T. J., Jackson, J. A., & Fielding, E. J. (2005). Surface displacements and source parameters of the 2003 Bam (Iran) earthquake from Envisat advanced synthetic aperture radar imagery. Journal of Geophysical Research: Solid Earth, 110(B9).</a>
+    <li><a href=https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2016JB012886>Kyriakopoulos, C., & Newman, A. V. (2016). Structural asperity focusing locking and earthquake slip along the Nicoya megathrust, Costa Rica. Journal of Geophysical Research: Solid Earth, 121(7), 5461-5476.</a>
     <li><a href=http://geophysics.eas.gatech.edu/internal/papers/1985/Okada/Okada_BSSA_1985.pdf> Okada, Y. (1985). Surface deformation due to shear and tensile faults in a half-space, Bull. Seism. Soc. Am. 75, 1135-1154.</a>
     <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Chen_etal_GRL_2009.pdf> Chen, T., A. V. Newman, L, Feng, H. M. Fritz (2009), Slip Distribution from the 1 April 2007 Solomon Islands Earthquake: A Unique Image of Near-Trench Rupture, Geophys. Res. Lett., 36, L16307, doi:10.1029/2009GL039496. </a>
     <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Feng_etal_JGR_2012.pdf> Feng, L., A. V. Newman, J. M. Protti, V. González, Y. Jiang, T. H. Dixon (2012), Active Deformation near the Nicoya Peninsula, Northwestern Costa Rica, Between 1996 and 2010: Interseismic Megathrust Coupling, J. Geophys. Res., 117, B06407, doi:10.1029/2012JB009230. </a>
