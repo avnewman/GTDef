@@ -23,7 +23,9 @@
 <li> <a href = "#nslip"> Non-Uniform Slip Modeling</a></li>
 <li> <a href = "#cbt"> Checkerboard Testing </a></li>
 <li> <a href = "#RES"> Resolution Spread Evaluation</a></li>
-<li> <a href = "#gf"> Ingesting External Green's Functions</a></li>
+<li> <a href = "#gf1"> Layered Models</a></li>
+<li> <a href = "#gf2"> Exporting & Reading Green's Functions</a></li>
+<li> <a href = "#gf3"> Ingesting External Green's Functions</a></li>
 <li> <a href = "#ref"> References</a></li>
 </ol>
 </H2>
@@ -763,10 +765,61 @@ This will plot the dip-slip (-S D) component, at &Kappa;=7000, displaying the re
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+<section id= "lm">
+	<li> <h2> <a href = "#TOC">Layered Models</a></h2></li>
+<p> In the examples above, we've been working with a homogeneous elastic half-space. In the proceding examples, we are going to explore two other algorithms that are part of GTDef with which we can create layered models. The two algorithms are <gr>GTdef_edgrn.m</gr> and <gr> GTdef_edcmp.m </gr>, these are adopted from Wang et al.,(2003) code, originally writen in FORTRAN.  </p>
+<h3> Input </h3>
+To build an input file to run an inversion of a layered model, we will have to make a couple changes go the input file, we will have to set the earth structure to be 'layered' and define appropriate parameters for the desired layers. From the program input file (<a href="files/GTdef_input" target=aux>click here to download/view</a>), the layer parameters are defined as follows;
+<div class="code-wrapper"> <pre>
+# nl       - number of lines of layers != number of layers
+#            each layer except the top layer (interface of halfspace) has two lines of records
+#            if upper & lower values are different, layers will be treated as constant gradient
+# obsz     - uniform depth of observation points [m]
+# nr       - number of radial points for green functions
+# minr     - minimum radial distance [m]
+# maxr     - maximum radial distance [m]
+# nz       - number of depth points for green functions
+# minz     - minimum depth (positive points down) [m]
+# maxz     - maximum depth (positive points down) [m]
+# srate    - sampling rate for wavenumber integration
+             the ratio between the Nyquist wavenumber and the really used wavenumber
+             suggested value 10-128 {12}
+             the larger the value is, the more accurate the results are, more time required
+</div>
 
+<h4> Run </h4>
+For this example, we will use a combination of Campaign and Continuous stations for the Nicoya dataset used in the above examples. The layers are defined by Vp, Vs, depth and rho(density), in this example we use a velocity model specific to the Nicoya peninsula as published in DeShon et al.,2006. Each layer is considered uniform from the shallowest and the deepest(i.e the last layer) defines everything underneath it. A complete input file can be found in the examples directory (.../v3.2/examples/Layered_models/Nicoya/All_stations/all_stations_inv.in). Here is how the first 5 layers to 9 km depth would be defined;
+
+<div class="code-wrapper"> <pre>
+  #layer id    depth  vp [m/s]    vs [m/s]    ro [kg/m^3]
+  layer  1      0.0e3   5.35e3      3.01e3    2646.291
+  layer  2      5.0e3   6.12e3      3.44e3    2736.762
+  layer  3      5.0e3   6.12e3      3.44e3    2736.762
+  layer  4      9.0e3   6.12e3      3.44e3    2736.762
+  layer  5      9.0e3   6.12e3      3.44e3    2736.762
+</div>
+After the model is set up, the model can be run as in the above examples (<c>GTdef('all_stations_inv.in')</c>)
+<h5> Output</h5>
+Since this is set up to run an inversion, the output files will be same type ('_kp*.out') but a major difference from the other models is the green's functions. When you run the inversion as set up in the preceeding step, the <gr>GTdef_edgrn.m</gr> algorithm will generate green's functions from the given layered model. The program will generate a <c>edgrnsfcts</c> directory that contains three large files that desribe the three source types; compensated linear vector dipole(CLVD),the dip-slip, and strike slip. Once the layered model is run and these are generated, they can be used for various fault geometries if the layer parameters are mentained.
+<br></br>
+<div> <b> Plotting results </b></div>
+<br></br>
+Using the gmt plotting programs introduced in the sections above, we can plot the misfit curve and the geographical representation of the slip estimates. For the Nicoya Dataset and the layered model, the plots would look like the examples below;
+<br></br>
+<img src= "files/GTdef_slipmodel_all_station_kp15000.png" width="700px"></center>
+<br></br>
+<a href= "files/GTdef_slipmodel_all_stations2_kp15000.png" target="aux2">Here</a> is a plot from non-stratified Okada model for comparison.
+</section>
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
+<section id= "er">
+	<li> <h2> <a href = "#TOC">Exporting & Reading Green's Functions</a></h2></li>
+</section>
+
+<hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 <section id= "gf">
 	<li> <h2> <a href = "#TOC">Ingesting External Green's Functions</a></h2></li>
 </section>
+
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
