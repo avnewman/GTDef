@@ -145,7 +145,7 @@ test "$MFLAG" || { echo "ERROR: Required -M flag missing, no input model selecte
 
 if [ "$KFLAG" ] ; then
 	if [[ "$( echo $KAPPA | tr '[a-z]' '[A-Z]')" == "ALL" ]] ; then
-		PATCHFILES=$(ls -1 $(basename $MODELIN .in)*_patches.out)
+          PATCHFILES=$(ls -1 $(basename $MODELIN .in)*_patches.out)
 	  echo "Running on all kappa for which there exists a _patches.out file"
 	  LOOP=1
 	else
@@ -162,7 +162,7 @@ MODbase="$(basename $MODELIN .in)"
 for PATCHES in $PATCHFILES
 do
    if [ "$KFLAG" ] ; then
-   	PMODEL=$(basename "$PATCHES" _patches.out).out  # contains inverse results and data in original model format
+    PMODEL=$(basename "$PATCHES" _patches.out).out  # contains inverse results and data in original model format
     PATCHsuf="_patches.out"
     KAPPA="$(echo $PATCHES | sed -e "s/^${MODbase}_kp//" -e "s/${PATCHsuf}$//")"
     TITLE="$MODbase @@ @~k@~ = $KAPPA"
