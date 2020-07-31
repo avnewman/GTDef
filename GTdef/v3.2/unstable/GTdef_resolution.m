@@ -1,7 +1,7 @@
 function [] = GTdef_resolution(finName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                               GTdef_resolution.m                              % 
+%                               GTdef_resolution.m                              %
 %                                                                               %
 % (1) Replacates the functionality of GTdef_project, but includes the model     %
 %     resolution matrix, by component as the last thee fields.                  %
@@ -12,7 +12,7 @@ function [] = GTdef_resolution(finName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,su
 %   finName  - its preferred to use the same prefix as kappa-specific ones      %
 %   flt?     - all fault types                                                  %
 %   subflt   - special subfault characterization                                %
-% OUTPUT								        %
+% OUTPUT                                                                        %
 % (1)  create an output file that contains the model resolution matrix (diags)  %
 %       format is the same as GTdef_project, but adds the resolution at end     %
 %      files are named '*_kp???_patches_R.out                                   %
@@ -28,6 +28,9 @@ function [] = GTdef_resolution(finName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,su
 % first created by Andrew Newman Thu May  5 09:21:55 AST 2016                   %
 % added fault6 lfeng Thu Jun  2 10:50:44 SGT 2016                               %
 % last modified by Andrew Newman Thu May  5 09:21:55 AST 2016                   %
+% removed data resolution output as it currently fails with point type          %
+% than 3                                                                        %
+% last modified by Andrew Newman Fri Jul 31 11:11:23 EDT 2020                   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 coord  = modspace.coord;
@@ -106,14 +109,14 @@ tic
     % output point file
     fpntName = strcat(basename,'_point.out');
     fpnt = fopen(fpntName,'w');
-    fprintf(fpnt,'#(1)point (2)3 (3)name (4)lon (5)lat (6)z (7)Ue (8)Un (9)Uv (10)eUe (11)eUn (12)eUv (13)weight (14)fault name (15)Dstr1  (16)Dstr2 (17)Ddip (18)Dvert\n'); 
+    fprintf(fpnt,'#(1)point (2)3 (3)name (4)lon (5)lat (6)z (7)Ue (8)Un (9)Uv (10)eUe (11)eUn (12)eUv (13)weight (14)fault name (15)Dstr1  (16)Dstr2 (17)Ddip (18)Dvert\n');
 toc
 end
 
 
 xsect = []; xsectName = {};
-prjfltAll = []; 
-fltAllName = {}; 
+prjfltAll = [];
+fltAllName = {};
 prjflt1  = []; prjflt2 = []; prjflt3 = []; prjflt4 = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault1 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if flt1.num~=0
@@ -144,13 +147,13 @@ tic
        % cross-section projection
        [ xsect1Name,xsect1 ] = GTdef_xsection(1,cfname,cflt,addon.dip(dipInd,:));
        xsect     = [ xsect; xsect1 ];
-       xsectName = [ xsectName; xsect1Name ];   
+       xsectName = [ xsectName; xsect1Name ];
        % surface projection
        [ ~,prjflt1,~ ] = GTdef_prjflt1dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
        prjfltAll = [ prjfltAll; prjflt1 ];
        name1    = cell(fltNum,1);
        for ii = 1:fltNum, name1{ii} = cfname; end
-       fltAllName = [ fltAllName; name1 ];   
+       fltAllName = [ fltAllName; name1 ];
     end
 toc
 end
@@ -189,13 +192,13 @@ tic
        % cross-section projection
        [ xsect2Name,xsect2 ] = GTdef_xsection(2,cfname,cflt,addon.dip(dipInd,:));
        xsect     = [ xsect; xsect2 ];
-       xsectName = [ xsectName; xsect2Name ];   
+       xsectName = [ xsectName; xsect2Name ];
        % surface projection
        [ ~,prjflt2,~ ] = GTdef_prjflt2dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
        prjfltAll = [ prjfltAll; prjflt2 ];
        name2    = cell(fltNum,1);
        for ii = 1:fltNum, name2{ii} = cfname; end
-       fltAllName = [ fltAllName; name2 ];   
+       fltAllName = [ fltAllName; name2 ];
     end
 toc
 end
@@ -230,13 +233,13 @@ tic
        % cross-section projection
        [ xsect3Name,xsect3 ] = GTdef_xsection(3,cfname,cflt,addon.dip(dipInd,:));
        xsect     = [ xsect; xsect3 ];
-       xsectName = [ xsectName; xsect3Name ];   
+       xsectName = [ xsectName; xsect3Name ];
        % surface projection
        [ ~,prjflt3,~ ] = GTdef_prjflt3dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
        prjfltAll = [ prjfltAll; prjflt3 ];
        name3 = cell(fltNum,1);
        for ii = 1:fltNum, name3{ii} = cfname; end
-       fltAllName = [ fltAllName; name3 ];   
+       fltAllName = [ fltAllName; name3 ];
     end
 toc
 end
@@ -275,13 +278,13 @@ tic
        % cross-section projection
        [ xsect4Name,xsect4 ] = GTdef_xsection(4,cfname,cflt,addon.dip(dipInd,:));
        xsect     = [ xsect; xsect4 ];
-       xsectName = [ xsectName; xsect4Name ];   
+       xsectName = [ xsectName; xsect4Name ];
        % surface projection
        [ ~,prjflt4,~ ] = GTdef_prjflt4dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
        prjfltAll = [ prjfltAll; prjflt4 ];
        name4 = cell(fltNum,1);
        for ii = 1:fltNum, name4{ii} = cfname; end
-       fltAllName = [ fltAllName; name4 ];   
+       fltAllName = [ fltAllName; name4 ];
     end
 toc
 end
@@ -299,7 +302,7 @@ tic
        colname = flt5.colname{ii};
        % find subfaults for the master fault
        subInd = strcmpi(cfname,subflt.name);
-       
+
        % point & cross-section projections do ont apply to fault5
 
        % surface projection
@@ -308,7 +311,7 @@ tic
        fltNum   = size(prjflt5,1);
        name5    = cell(fltNum,1);
        for ii = 1:fltNum, name5{ii} = cfname; end
-       fltAllName = [ fltAllName; name5 ];   
+       fltAllName = [ fltAllName; name5 ];
     end
 toc
 end
@@ -326,7 +329,7 @@ tic
        colname = flt6.colname{ii};
        % find subfaults for the master fault
        subInd = strcmpi(cfname,subflt.name);
-       
+
        % point & cross-section projections do ont apply to fault6
 
        % surface projection
@@ -335,13 +338,13 @@ tic
        fltNum   = size(prjflt6,1);
        name6    = cell(fltNum,1);
        for ii = 1:fltNum, name6{ii} = cfname; end
-       fltAllName = [ fltAllName; name6 ];   
+       fltAllName = [ fltAllName; name6 ];
     end
 toc
 end
-if ~isempty(pnt.crt)  
-    fclose(fpnt); 
-    fprintf(1,'GTdef_project output %s\n',fpntName); 
+if ~isempty(pnt.crt)
+    fclose(fpnt);
+    fprintf(1,'GTdef_project output %s\n',fpntName);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -367,7 +370,7 @@ if ~isempty(prjfltAll)
         lon = zeros(size(xx));         lat = zeros(size(yy));
         for ii=1:5
             [lon(:,ii),lat(:,ii)] = xy_to_latlon(xx(:,ii),yy(:,ii),lon0,lat0,0);
-        end        
+        end
         newprjfltAll = [ prjfltAll(:,1:2) lon(:,1) lat(:,1) prjfltAll(:,5) lon(:,2) lat(:,2) prjfltAll(:,8) lon(:,3) lat(:,3) prjfltAll(:,11) ...
 	                lon(:,4) lat(:,4) prjfltAll(:,14) lon(:,5) lat(:,5) prjfltAll(:,17) prjfltAll(:,18:22) ];
     end
@@ -381,7 +384,7 @@ if ~isempty(prjfltAll)
           name = fltAllName{ii};
           flt  = newprjfltAll(ii,:);
           Rd   = [Rdiag(ii),Rdiag(ii+rd3rd),Rdiag(ii+2*rd3rd)];
-          %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26   27  28	
+          %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26   27  28
           fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f  %6.4f %6.4f %6.4f\n',name,flt,Rd);
       end
     else
@@ -390,56 +393,56 @@ if ~isempty(prjfltAll)
           name = fltAllName{ii};
           flt  = newprjfltAll(ii,:);
           Rd   = [Rdiag(ii),Rdiag(ii+rd3rd),Rdiag(ii+2*rd3rd)];
-          %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26	
+          %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26
           fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f  %6.4f\n',name,flt,Rd);
       end
     end
 end
 
 fclose(fout);
-fprintf(1,'GTdef_resolution Model Resolution output %s\n',foutName); 
+fprintf(1,'GTdef_resolution Model Resolution output %s\n',foutName);
 obs=reshape(pnt.obs,pnt.num,3);
-%   Data Resolution File 
-foutName = strcat(basename,'_data_R.out');
-fout     = fopen(foutName,'w');
-prow=0; lrow=0; brow=0;
-
-if ( ~ pnt.num == 0 )
-    prow = pnt.num;
-    fprintf(fout,'#(1)pnt (2)lon (3)lat (4)elev (5)obs_e[m] (6)obs_n[m] (7)obs_u[m] (8)err_e[m] (9)err_n[m] (10)err_u[m] (11)wgt (12)pred_e[m] (13)pred_n[m] (14)pred_u[m] (15)Res_e  (16)Res_n (17)Res_u \n');
-    N3diag=reshape(Ndiag,pnt.num,3);
-     for ii =1:prow
-         nr=Ndiag(ii); 
-                %      1     2        3      4      5      6      7         8      9     10       11      12     13      14      15     16      17
-        fprintf(fout,'pnt   %12.5f %11.5f %12.2f   %12.5f %12.5f %12.5f   %11.5f %11.5f %11.5f   %6.3f   %12.5f %12.5f %12.5f   %6.4f   %6.4f   %6.4f \n',pnt.loc(ii,:),obs(ii,:), pnt.err(ii,:), pnt.wgt(ii), pnt.out(ii,[4:6]), N3diag(ii,:));
-    end
-end
-if ( ~ los.num == 0 )
-    lrow = los.num;
-    fprintf(fout,'#(1)los  (2)lon (3)lat (4)elev (5)obs[m] (6)err[m] (7)wgt (8)look_e (9)look_n  (10)look_u (11)pred[m] (12)Rdata\n');
-     for ii =1:lrow
-         nr=Ndiag(ii+prow);
-                %      1     2        3      4      5      6      7      8      9      10     11     12  
-        fprintf(fout,'los   %12.5f %11.5f %12.2f   %12.5f %11.5f %6.3f   %7.5f %7.5f %7.3f   %12.5f %6.4f \n',los.loc(ii,:),los.obs(ii), los.err(ii), los.wgt(ii), los.dir(ii,:),los.out(ii,4), nr);
-    end
-end
-% needs to be checked 
-if ( ~ bsl.num == 0 )
-    brow = bsl.num;
-    fprintf(fout,'#(1)bsl  (2)lon1 (3)lat1 (4)elev1   (5)lon2 (6)lat2 (7)elev2  (8)obs[m] (9)err[m] (10)wgt  (11)pred[m] (12)Rdata\n');
-     for ii =1:brow
-         nr=Ndiag(ii+prow+lrow);
-                %      1     2      3      4        5      6      7        8      9      10      11    12  
-        fprintf(fout,'bsl   %12.5f %11.5f %12.2f   %12.5f %11.5f %12.2f   %12.5f %11.5f %6.3f   %12.5f %6.4f \n',bsl.loc(ii,:),bsl.obs(ii), bsl.err(ii), bsl.wgt(ii),bsl.out(ii,4), nr);
-    end
-end
-
-fprintf(1,'GTdef_resolution Data Resolution output %s\n',foutName); 
+%   Data Resolution File   %%%%%
+%foutName = strcat(basename,'_data_R.out');
+%fout     = fopen(foutName,'w');
+%prow=0; lrow=0; brow=0;
+%
+%if ( ~ pnt.num == 0 )
+%    prow = pnt.num;
+%    fprintf(fout,'#(1)pnt (2)lon (3)lat (4)elev (5)obs_e[m] (6)obs_n[m] (7)obs_u[m] (8)err_e[m] (9)err_n[m] (10)err_u[m] (11)wgt (12)pred_e[m] (13)pred_n[m] (14)pred_u[m] (15)Res_e  (16)Res_n (17)Res_u \n');
+%    N3diag=reshape(Ndiag,pnt.num,3);
+%     for ii =1:prow
+%         nr=Ndiag(ii);
+%                %      1     2        3      4      5      6      7         8      9     10       11      12     13      14      15     16      17
+%        fprintf(fout,'pnt   %12.5f %11.5f %12.2f   %12.5f %12.5f %12.5f   %11.5f %11.5f %11.5f   %6.3f   %12.5f %12.5f %12.5f   %6.4f   %6.4f   %6.4f \n',pnt.loc(ii,:),obs(ii,:), pnt.err(ii,:), pnt.wgt(ii), pnt.out(ii,[4:6]), N3diag(ii,:));
+%    end
+%end
+%if ( ~ los.num == 0 )
+%     lrow = los.num;
+%     fprintf(fout,'#(1)los  (2)lon (3)lat (4)elev (5)obs[m] (6)err[m] (7)wgt (8)look_e (9)look_n  (10)look_u (11)pred[m] (12)Rdata\n');
+%      for ii =1:lrow
+%          nr=Ndiag(ii+prow);
+%                 %      1     2        3      4      5      6      7      8      9      10     11     12
+%         fprintf(fout,'los   %12.5f %11.5f %12.2f   %12.5f %11.5f %6.3f   %7.5f %7.5f %7.3f   %12.5f %6.4f \n',los.loc(ii,:),los.obs(ii), los.err(ii), los.wgt(ii), los.dir(ii,:),los.out(ii,4), nr);
+%     end
+% end
+% % needs to be checked
+% if ( ~ bsl.num == 0 )
+%     brow = bsl.num;
+%     fprintf(fout,'#(1)bsl  (2)lon1 (3)lat1 (4)elev1   (5)lon2 (6)lat2 (7)elev2  (8)obs[m] (9)err[m] (10)wgt  (11)pred[m] (12)Rdata\n');
+%      for ii =1:brow
+%          nr=Ndiag(ii+prow+lrow);
+%                 %      1     2      3      4        5      6      7        8      9      10      11    12
+%         fprintf(fout,'bsl   %12.5f %11.5f %12.2f   %12.5f %11.5f %12.2f   %12.5f %11.5f %6.3f   %12.5f %6.4f \n',bsl.loc(ii,:),bsl.obs(ii), bsl.err(ii), bsl.wgt(ii),bsl.out(ii,4), nr);
+%     end
+% end
+%
+% fprintf(1,'GTdef_resolution Data Resolution output %s\n',foutName);
 
 % Create a series of Resolution Spread files, showing the model-dependency
 % (row parameters of the Resolution Matrix, for a given model. Currently,
 % this is identified by a specific subfault number as described by a value
-% within the Ms vector 
+% within the Ms vector
 
 R=full(R); nres=0;
 if (isstr(res))
@@ -469,10 +472,10 @@ if (nres>0)
                Rd_ss   = [R(pt,ii),R(pt,ii+rd3rd),R(pt,ii+2*rd3rd)];  % full matrix spread relative to ss patch component.
                Rd_ds   = [R(pt+rd3rd,ii),R(pt+rd3rd,ii+rd3rd),R(pt+rd3rd,ii+2*rd3rd)];  % full matrix spread relative to ds patch component.
                Rd_ts   = [R(pt+2*rd3rd,ii),R(pt+2*rd3rd,ii+rd3rd),R(pt+2*rd3rd,ii+2*rd3rd)];  % full matrix spread relative to ts patch component.
-               %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26	
+               %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26
                fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f %6.4f\n',name,flt,full(Rd));
            end
            fclose(fout);
-           fprintf(1,'GTdef_resolution Model Resolution output %s\n',foutName); 
+           fprintf(1,'GTdef_resolution Model Resolution output %s\n',foutName);
 	end
 end

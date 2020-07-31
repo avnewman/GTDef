@@ -1,7 +1,7 @@
 function [] = GTdef(finName,wnum)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                              	     GTdef.m                                           %
+%                                    GTdef.m                                           %
 %                  Georgia Tech Matlab program for deformation                         %
 %                    Lujia Feng; Andrew V. Newman; Ting Chen                           %
 %                                                                                      %
@@ -22,9 +22,9 @@ function [] = GTdef(finName,wnum)
 % added 'dip' flag for bended faults lfeng Mon Dec  7 01:04:06 EST 2009                %
 % added 'freesurface' flag lfeng Wed Dec  9 17:00:58 EST 2009                          %
 % added fault type 5 lfeng Fri Dec 11 10:57:18 EST 2009                                %
-% changed 'freesurface' to 'surface' flag lfeng Wed Feb 24 12:46:01 EST 2010	       %
+% changed 'freesurface' to 'surface' flag lfeng Wed Feb 24 12:46:01 EST 2010           %
 % changed 'coord' to string flag lfeng Wed Feb 24 13:40:01 EST 2010                    %
-% allows input file name include multiple "." besides ".in" lfeng Oct 4 2010	       %
+% allows input file name include multiple "." besides ".in" lfeng Oct 4 2010           %
 % added matlabpool lfeng Wed Dec  1 12:12:00 EST 2010                                  %
 % edited the origin definition lfeng Thu Apr  7 18:45:35 EDT 2011                      %
 % v2:                                                                                  %
@@ -162,7 +162,7 @@ tic
           pxx = pnt.loc(:,1); pyy = pnt.loc(:,2);
     end
     pzz = pnt.loc(:,3);
-    zz_ind = pzz>0; pzz(zz_ind) = 0;                % positive depths are all set to be zero   
+    zz_ind = pzz>0; pzz(zz_ind) = 0;                % positive depths are all set to be zero
     pnt.crt = [pxx pyy pzz];                        % cartesian - n*3 matrix [xx yy zz]; it is just Xin'
     % prepare the point observation data
     pnt.obs = reshape(pnt.disp,[],1);               % (3*n)*1 observation vector [east;north;vertical]
@@ -187,7 +187,7 @@ tic
           pxx = los.loc(:,1); pyy = los.loc(:,2);
     end
     pzz = los.loc(:,3);
-    zz_ind = pzz>0; pzz(zz_ind) = 0;                % positive depths are all set to be zero   
+    zz_ind = pzz>0; pzz(zz_ind) = 0;                % positive depths are all set to be zero
     los.crt = [ pxx pyy pzz los.dir ];              % cartesian - n*3 matrix [xx yy zz] & add los dir from ground to satellite
     % prepare the los observation data
     los.obs     = los.disp;                         % (1*n)*1 observation vector [los]
@@ -234,17 +234,17 @@ tic
     if prf.num~=0
         for ii = 1:prf.num
             [ plon,plat,pname ] = GTdef_profile(prf.prf(ii,:),prf.name{ii});
-            nod_lon  = [ nod_lon; plon ]; 
+            nod_lon  = [ nod_lon; plon ];
             nod_lat  = [ nod_lat; plat ];
-            nod.name = [ nod.name; pname ];   
+            nod.name = [ nod.name; pname ];
         end
     end
     if grd.num~=0
         for ii = 1:grd.num
     	    [ glon,glat,gname ] = GTdef_grid(grd.grd(ii,:),grd.name{ii});
-    	    nod_lon  = [ nod_lon; glon ]; 
+    	    nod_lon  = [ nod_lon; glon ];
 	    nod_lat  = [ nod_lat; glat ];
-            nod.name = [ nod.name; gname ];   
+            nod.name = [ nod.name; gname ];
         end
     end
     nod_zz = nan(size(nod_lon));
@@ -382,7 +382,7 @@ tic
     	dipInd = strcmpi(cfname,addon.dipname);
         [ modspace,xyzflt,Xgrn1 ] = GTdef_fault1dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),...
 	                                            pnt.crt,los.crt,bsl.crt,nod.crt,earth);
-        flt1.xyzflt{ii} = xyzflt; 
+        flt1.xyzflt{ii} = xyzflt;
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
            [ ~,prjflt1,~ ] = GTdef_prjflt1dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
@@ -419,7 +419,7 @@ tic
     	strInd = strcmpi(cfname,addon.strname);
         [ modspace,xyzflt,Xgrn2 ] = GTdef_fault2dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:),...
                                                     pnt.crt,los.crt,bsl.crt,nod.crt,earth);
-        flt2.xyzflt{ii} = xyzflt; 
+        flt2.xyzflt{ii} = xyzflt;
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
             [ ~,prjflt2,~ ] = GTdef_prjflt2dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
@@ -451,7 +451,7 @@ tic
     	dipInd = strcmpi(cfname,addon.dipname);
         [ modspace,xyzflt,Xgrn3 ] = GTdef_fault3dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),...
                                                     pnt.crt,los.crt,bsl.crt,nod.crt,earth);
-        flt3.xyzflt{ii} = xyzflt; 
+        flt3.xyzflt{ii} = xyzflt;
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
             [ ~,prjflt3,~ ] = GTdef_prjflt3dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
@@ -488,7 +488,7 @@ tic
     	strInd = strcmpi(cfname,addon.strname);
         [ modspace,xyzflt,Xgrn4 ] = GTdef_fault4dif(modspace,cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:),...
                                                     pnt.crt,los.crt,bsl.crt,nod.crt,earth);
-        flt4.xyzflt{ii} = xyzflt; 
+        flt4.xyzflt{ii} = xyzflt;
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
             [ ~,prjflt4,~ ] = GTdef_prjflt4dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
@@ -515,7 +515,7 @@ tic
         [ modspace,xyzflt,Xgrn5,newflt ] = GTdef_fault5(modspace,geoname,colname,cflt,subflt.flt(subInd,:),pnt.crt,los.crt,bsl.crt,nod.crt,earth);
 
         flt5.out(ii,:)  = newflt; % update Nd & Ns if not provided
-        flt5.xyzflt{ii} = xyzflt; 
+        flt5.xyzflt{ii} = xyzflt;
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
             [ ~,prjflt5,~ ] = GTdef_prjflt5(modspace,geoname,colname,cflt,subflt.flt(subInd,:));
@@ -542,7 +542,7 @@ tic
         [ modspace,xyzflt,Xgrn6,newflt ] = GTdef_fault6(modspace,geoname,colname,cflt,subflt.flt(subInd,:),pnt.crt,los.crt,bsl.crt,nod.crt,earth);
 
         flt6.out(ii,:)  = newflt; % update Nd & Ns if not provided
-        flt6.xyzflt{ii} = xyzflt; 
+        flt6.xyzflt{ii} = xyzflt;
         % save green's functions
         if strcmpi(modspace.grnflag,'on')
             [ ~,prjflt6,~ ] = GTdef_prjflt6(modspace,geoname,colname,cflt,subflt.flt(subInd,:));
@@ -663,4 +663,3 @@ end
 if exist('wnum') && wnum~=0
    delete(localpool);
 end
-

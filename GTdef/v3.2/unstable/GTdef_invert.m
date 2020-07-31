@@ -17,15 +17,15 @@ function [ modspace ] = GTdef_invert(modspace,pnt,los,bsl,beta)
 % add .xx to modspace                                                     %
 % modspace.xx - final values for ss,ds,ts from inversion     [slip_num*1] %
 %                                                                         %
-% first created by Lujia Feng Tue May  5 20:21:47 EDT 2009		          %
+% first created by Lujia Feng Tue May  5 20:21:47 EDT 2009                %
 % used beta = beta^2 instead of beta lfeng Wed Dec  2 23:35:12 EST 2009   %
-% used structure lfeng Wed Feb 22 19:36:43 SGT 2012			              %
+% used structure lfeng Wed Feb 22 19:36:43 SGT 2012                       %
 % added modspace structure lfeng Thu Mar 19 17:32:29 SGT 2015             %
 % added condensing sm & sm_abs lfeng Fri Mar 20 20:28:15 SGT 2015         %
 % added InSAR los & Lgrn lfeng Tue Nov  3 23:17:37 SGT 2015               %
 % added Model and Data Resolution Matrices, output of weighted Green's    %
 %  function matrix (and other data into modspace)                         %
-%    anewman Tue May 10 11:55:42 EDT 2016
+%    anewman Tue May 10 11:55:42 EDT 2016                                 %
 %last modified by Andrew Newman Tue May 10 11:55:42 EDT 2016              %
 % added option for variable lsqlin control parameters                     %
 %last modified by Andrew Newman Tue May 19 09:58:52 EDT 2020              %

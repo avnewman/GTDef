@@ -53,6 +53,11 @@ Options:
                Choose a range over which to plot deformation. Results are the value used and
 	       will include the amplifcation used with -S flag.  If not selected, the program
 	       will attempt to autoselect range based on data.
+       -P   size
+               optionally choose a new size to plot data Points.  This will use the GMT defaults
+	       which are set as cm at GT (local config may override).
+       -Z   (continouous color grad?)
+               Include this flag if you'd like a continuous color gradient for your plot.
 
 9Programs Required:
        GMT v5 or greater
@@ -78,7 +83,8 @@ if  [ ${#} -lt "1" ] ; then
 fi
 DEFSCALE=0.001  # make km
 SCOMP="D"
-while getopts "M:K:S:T:R:D" OPT
+PSCALE=0.3
+while getopts "M:K:S:T:R:P:DZ" OPT
 do
    case ${OPT} in
        M) MODELIN=$OPTARG
@@ -112,6 +118,11 @@ do
         ;;
        D) DFLAG=1; # bring up display
         ;;
+       Z) ZFLAG="-Z"; # bring up display
+        ;;
+       P) PCOMP=$OPTARG
+	  PFLAG=1; # value for point sizes
+	;;
        *) echo "ERROR: unknown modifier flag used (${OPT}), exiting."  # if a bad modifier is used
            rm $USAGE;   exit 1 ;; # exit with error after removing temp file
    esac
@@ -148,6 +159,9 @@ else
 	COMP="Opening"
 fi
 
+if [[ $PFLAG ]] ; then
+	PSCALE=$PCOMP
+fi
 MODbase="$(basename $MODELIN .in)"
 
 for PATCHES in $PATCHFILES
@@ -284,10 +298,10 @@ do
 
    # create CPT file for slip model
    CPT=RES.cpt    # created within
-   echo $TMIN $TMAX $DT
+   #echo $TMIN $TMAX $DT
    #gmt makecpt -C#0088ff,#00ffff,#88ff88,#ff6600,#ffff00,#ffffaa,#ffffff -T"$TMIN/$TMAX/3"  -Qo -A20+a >$CPT
    #gmt makecpt -Cjet -I -T"$TMIN/$TMAX/3" -N -Qo >$CPT
-   gmt makecpt -C#ff2222,#ff6666,#ffaa44,#ffff00,#88ff00,#00ffff,#4499ff,#1144ff -T"$TMIN/$TMAX/3" -I -Qo  -N >$CPT
+   gmt makecpt -C#ff2222,#ff6666,#ffaa44,#ffff00,#88ff00,#00ffff,#4499ff,#1144ff -T"$TMIN/$TMAX/3" -I -Qo $ZFLAG -N >$CPT
    #echo "$TMIN/$TMAX/$DT"
 
    BGN="$RANGE $PROJ -K"
@@ -317,7 +331,7 @@ do
 
    # plot station locations
    awk '$1!~"#"&&$1~"point"{print $4,$5}' $MODELIN |  \
-   	gmt psxy  $MID  -Sc0.3 -Gblack -W0.1 >>$OUTFILE
+   	gmt psxy  $MID  -Sc$PSCALE -Gblack -W0.1 >>$OUTFILE
 
    # plot coast over model and data and add 100km scalebar
 
