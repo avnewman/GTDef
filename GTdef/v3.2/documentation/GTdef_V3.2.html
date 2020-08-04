@@ -767,9 +767,9 @@ This will plot the dip-slip (-S D) component, at &Kappa;=7000, displaying the re
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 <section id= "lm">
 	<li> <h2> <a href = "#TOC">Layered Models</a></h2></li>
-<p> In the examples above, we've been working with a homogeneous elastic half-space. In the proceding examples, we are going to explore two other algorithms that are part of GTDef with which we can create layered models. The two algorithms are <gr>GTdef_edgrn.m</gr> and <gr> GTdef_edcmp.m </gr>, these are adopted from Wang et al.,(2003) code, originally writen in FORTRAN.  </p>
+<p> In the examples above, we've been working with a homogeneous elastic half-space. In this section, we will explore two other algorithms that are part of GTDef with which we can create layered models. The two algorithms are <gr>GTdef_edgrn.m </gr> and <gr> GTdef_edcmp.m</gr>, these are adopted from the <a href=https://www.sciencedirect.com/science/article/pii/S0098300402001115 > Wang et al.(2003)</a> code, originally writen in FORTRAN.  </p>
 <h3> Input </h3>
-To build an input file to run an inversion of a layered model, we will have to make a couple changes go the input file, we will have to set the earth structure to be 'layered' and define appropriate parameters for the desired layers. From the program input file (<a href="files/GTdef_input" target=aux>click here to download/view</a>), the layer parameters are defined as follows;
+To build an input file to run an inversion of a layered model, set the earth structure to be 'layered' and define appropriate parameters for the desired layers. From the program input file (<a href="files/GTdef_input" target=aux>click here to download/view</a>), the layer parameters are defined as follows;
 <div class="code-wrapper"> <pre>
 # nl       - number of lines of layers != number of layers
 #            each layer except the top layer (interface of halfspace) has two lines of records
@@ -788,7 +788,7 @@ To build an input file to run an inversion of a layered model, we will have to m
 </div>
 
 <h4> Run </h4>
-For this example, we will use a combination of Campaign and Continuous stations for the Nicoya dataset used in the above examples. The layers are defined by Vp, Vs, depth and rho(density), in this example we use a velocity model specific to the Nicoya peninsula as published in DeShon et al.,2006. Each layer is considered uniform from the shallowest and the deepest(i.e the last layer) defines everything underneath it. A complete input file can be found in the examples directory (.../v3.2/examples/Layered_models/Nicoya/All_stations/all_stations_inv.in). Here is how the first 5 layers to 9 km depth would be defined;
+For this example, we will use a combination of Campaign and Continuous stations from the Nicoya dataset. The layers are defined by Vp, Vs, depth and density(rho), in this example we use a velocity model specific to the Nicoya peninsula as published in <a href="https://academic.oup.com/gji/article/164/1/109/631271">DeShon et al.(2006)</a>. Each layer is considered uniform from the preceeding shallow layer boundary and the deepest(i.e the last layer) defines everything underneath it. A complete input file can be found in the examples directory (.../v3.2/examples/Layered_models/Nicoya/All_stations/all_stations_inv.in). Here is how the first 5 layers to 9 km depth would be defined;
 
 <div class="code-wrapper"> <pre>
   #layer id    depth  vp [m/s]    vs [m/s]    ro [kg/m^3]
@@ -800,7 +800,7 @@ For this example, we will use a combination of Campaign and Continuous stations 
 </div>
 After the model is set up, the model can be run as in the above examples (<c>GTdef('all_stations_inv.in')</c>)
 <h5> Output</h5>
-Since this is set up to run an inversion, the output files will be same type ('_kp*.out') but a major difference from the other models is the green's functions. When you run the inversion as set up in the preceeding step, the <gr>GTdef_edgrn.m</gr> algorithm will generate green's functions from the given layered model. The program will generate a <c>edgrnsfcts</c> directory that contains three large files that desribe the three source types; compensated linear vector dipole(CLVD),the dip-slip, and strike slip. Once the layered model is run and these are generated, they can be used for various fault geometries if the layer parameters are mentained.
+Since this is set up to run an inversion, the output files will be same type ('_kp*.out') but a major difference from the other models is the green's functions. When you run the inversion as set up in the preceeding step, the <gr>GTdef_edgrn.m</gr> algorithm will generate green's functions from the given layered model. The program will generate a <c>edgrnsfcts</c> directory that contains three large files that describe the three source types; compensated linear vector dipole(CLVD),the dip-slip, and strike slip. Once the layered model is run and these are generated, they can be used for various fault geometries if the layer parameters are mentained.
 <br></br>
 <div> <b> Plotting results </b></div>
 <br></br>
@@ -831,9 +831,11 @@ Using the gmt plotting programs introduced in the sections above, we can plot th
     <li><a href=https://www.sciencedirect.com/science/article/pii/S0098300402001115 > Wang, R., Martı́n, F. L., & Roth, F. (2003). Computation of deformation induced by earthquakes in a multi-layered elastic crust—FORTRAN programs EDGRN/EDCMP. Computers & Geosciences, 29(2), 195-207. </a>
     <li><a href=https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2004JB003338>Funning, G. J., Parsons, B., Wright, T. J., Jackson, J. A., & Fielding, E. J. (2005). Surface displacements and source parameters of the 2003 Bam (Iran) earthquake from Envisat advanced synthetic aperture radar imagery. Journal of Geophysical Research: Solid Earth, 110(B9).</a>
     <li><a href=https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2016JB012886>Kyriakopoulos, C., & Newman, A. V. (2016). Structural asperity focusing locking and earthquake slip along the Nicoya megathrust, Costa Rica. Journal of Geophysical Research: Solid Earth, 121(7), 5461-5476.</a>
-    <li><a href=http://geophysics.eas.gatech.edu/internal/papers/1985/Okada/Okada_BSSA_1985.pdf> Okada, Y. (1985). Surface deformation due to shear and tensile faults in a half-space, Bull. Seism. Soc. Am. 75, 1135-1154.</a>
-    <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Chen_etal_GRL_2009.pdf> Chen, T., A. V. Newman, L, Feng, H. M. Fritz (2009), Slip Distribution from the 1 April 2007 Solomon Islands Earthquake: A Unique Image of Near-Trench Rupture, Geophys. Res. Lett., 36, L16307, doi:10.1029/2009GL039496. </a>
+    <li><a href=https://pubs.geoscienceworld.org/ssa/bssa/article/75/4/1135/118782?casa_token=K0P2D8Hmq8IAAAAA:AZ9GMda5DP8me5A4FChXKRYwL0qedoTtNo_jCPupDsfKtKIy2JQnc_qwE01OhLNqwp-sRg> Okada, Y. (1985). Surface deformation due to shear and tensile faults in a half-space, Bull. Seism. Soc. Am. 75, 1135-1154.</a>
+    <li><a href=hhttps://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2009GL039496> Chen, T., A. V. Newman, L, Feng, H. M. Fritz (2009), Slip Distribution from the 1 April 2007 Solomon Islands Earthquake: A Unique Image of Near-Trench Rupture, Geophys. Res. Lett., 36, L16307, doi:10.1029/2009GL039496. </a>
     <li><a href=http://geophysics.eas.gatech.edu/people/anewman/research/papers/Feng_etal_JGR_2012.pdf> Feng, L., A. V. Newman, J. M. Protti, V. González, Y. Jiang, T. H. Dixon (2012), Active Deformation near the Nicoya Peninsula, Northwestern Costa Rica, Between 1996 and 2010: Interseismic Megathrust Coupling, J. Geophys. Res., 117, B06407, doi:10.1029/2012JB009230. </a>
+    <li><a href= https://academic.oup.com/gji/article/164/1/109/631271> DeShon, Heather R., et al. "Seismogenic zone structure beneath the Nicoya Peninsula, Costa Rica, from three-dimensional local earthquake P-and S-wave tomography." Geophysical Journal International 164.1 (2006): 109-124.</a>
+
 </ul>
 
 
