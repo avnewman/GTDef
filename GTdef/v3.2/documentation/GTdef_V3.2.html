@@ -815,7 +815,7 @@ layer  5      9.0e3   6.12e3      3.44e3    2736.762
 After the model is set up, the model can be run the same way as other models:
 <div class="code-wrapper"> <pre>
   <c>% within matlab</c>
-  GTdef('all_stations_inv.in')</pre></div>
+  GTdef('nicoya_all_stations_inv.in')</pre></div>
 
 <h3> Output</h3>  <!-- changed this one too  -->
 Since this is set up to run an inversion, the output files will be the same type ('_kp*.out')
@@ -827,11 +827,17 @@ in the <c>earth layered</c> line.
 
 <h3>Plotting results </h3>
 
-Using the gmt plotting programs introduced in the sections above, we can plot the misfit curve and the geographical representation of the slip estimates. For the Nicoya Dataset and the layered model, the plots would look like the examples below;
+Using the gmt plotting programs introduced in the sections above,
+we can plot the misfit curve and the geographic representation of the slip and deformation estimates.
+<div class="code-wrapper"> <pre>
+  <c># in shell (command line)</c>
+  GTdef_slipmodel.gmt -M nicoya_allstations_layered_inv.in  -K15000 -D</pre></div>
+For the Nicoya Dataset and the layered model, a representative result is shown below.
 <br></br>
 <img src= "files/GTdef_slipmodel_nicoya_allstations_layered_inv_kp15000.png" width="700px"></center>
 <br></br>
-<a href= "files/GTdef_slipmodel_nicoya_allstations_Okada_inv_kp15000.png" target="aux2">Here</a> is a plot from non-stratified Okada model for comparison.
+For comparison, we include the <a href= "files/GTdef_slipmodel_nicoya_allstations_Okada_inv_kp15000.png" target="aux2">Okada solution</a>
+for the same fault geometry and data.
 </section>
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 <section id= "GFformat">
