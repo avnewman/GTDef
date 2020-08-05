@@ -23,10 +23,10 @@
 <li> <a href = "#nslip"> Non-Uniform Slip Modeling</a></li>
 <li> <a href = "#cbt"> Checkerboard Testing </a></li>
 <li> <a href = "#RES"> Resolution Spread Evaluation</a></li>
-<li> <a href = "#gf1"> Layered Models</a></li>
-<li> <a href = "#gf2"> Exporting & Reading Green's Functions</a></li>
-<li> <a href = "#gf3"> Ingesting External Green's Functions</a></li>
-<li> <a href = "#ref"> References</a></li>
+<li> <a href = "#LAYER"> Layered Models</a></li>
+<li> <a href = "#GFformat"> GTdef formats for Green's Functions</a></li>
+<li> <a href = "#GFexternal"> Ingesting External Green's Functions</a></li>
+<li> <a href = "#ref"> References </a></li>
 </ol>
 </H2>
 </section>
@@ -64,14 +64,14 @@ or some combination of both.</p>
 
 <section id= "DL">
 <li> <h2> <a href = "#TOC"> GTdef Code and How to Download it</a></li>
-<ul><b> Current Version </b> : GTDef 3.2 </ul>
+<ul><b> Current Version </b> : GTdef 3.2 </ul>
 <ul><b> Github Repository to Download/Clone </b>:
 <a href=https://github.gatech.edu/an77/GTDef.git>https://github.gatech.edu/an77/GTDef.git</a> </ul>
 <br>
 Set up Instructions:
 <ol type= "i">
-<li> In the selected directory, to clone GTDef run <div class= "code-wrapper"> <pre> git clone https://github.gatech.edu/an77/GTDef.git   #this will create a copy of the code which you can pull to every time there is an update to the master git repository </div></pre>
-<li> Be sure the current version of GTdef is in your path.  You can check this using the <gr>path</gr> function, and add it using <gr>addpath</gr>.
+<li> In the selected directory, to clone <gr>GTdef</gr> run <div class= "code-wrapper"> <pre> git clone https://github.gatech.edu/an77/GTDef.git   #this will create a copy of the code which you can pull to every time there is an update to the master git repository </div></pre>
+<li> Be sure the current version of the programs are in your path.  You can check this using the <gr>path</gr> function, and add it using <gr>addpath</gr>.
 <div class="code-wrapper"> <pre>
 <c> # within matlab</c>
 > addpath('/path/to/GTdef/v3.2/unstable/') <c>%replacing with your actual path</c>
@@ -765,13 +765,18 @@ This will plot the dip-slip (-S D) component, at &Kappa;=7000, displaying the re
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
-<section id= "lm">
+<section id= "LAYER">
 	<li> <h2> <a href = "#TOC">Layered Models</a></h2></li>
-<p> In the examples above, we've been working with a homogeneous elastic half-space. In this section, we will explore two other algorithms that are part of GTDef with which we can create layered models. The two algorithms are <gr>GTdef_edgrn.m </gr> and <gr> GTdef_edcmp.m</gr>, these are adopted from the <a href=https://www.sciencedirect.com/science/article/pii/S0098300402001115 > Wang et al.(2003)</a> code, originally writen in FORTRAN.  </p>
+<p> In the examples above, we've been working with a homogeneous elastic half-space. In this section, we will describe another set of algorithms for creating layered models within <gr>GTdef</gr>.
+The algorithms <gr>GTdef_edgrn.m </gr> and <gr> GTdef_edcmp.m</gr>, create the Green's functions and compute the expected deformation, respectively.
+The codes are adopted from <a href=https://www.sciencedirect.com/science/article/pii/S0098300402001115 > Wang et al.(2003)</a>, originally written in FORTRAN.  </p>
+
 <h3> Input </h3>
-To build an input file to run an inversion of a layered model, set the earth structure to be 'layered' and define appropriate parameters for the desired layers. From the program input file (<a href="files/GTdef_input" target=aux>click here to download/view</a>), the layer parameters are defined as follows;
+To build an input file to run the layered model it is necessary to set the earth structure to be <c>'layered'</c>
+and define appropriate parameters for the desired layers.
+Details are included in the <a href="files/GTdef_input" target=aux>example input file</a>. The layer parameters are defined as follows;
 <div class="code-wrapper"> <pre>
-# nl       - number of lines of layers != number of layers
+<c># nl       - number of lines of layer information (!= number of layers)
 #            each layer except the top layer (interface of halfspace) has two lines of records
 #            if upper & lower values are different, layers will be treated as constant gradient
 # obsz     - uniform depth of observation points [m]
@@ -782,28 +787,46 @@ To build an input file to run an inversion of a layered model, set the earth str
 # minz     - minimum depth (positive points down) [m]
 # maxz     - maximum depth (positive points down) [m]
 # srate    - sampling rate for wavenumber integration
-             the ratio between the Nyquist wavenumber and the really used wavenumber
-             suggested value 10-128 {12}
-             the larger the value is, the more accurate the results are, more time required
+#             the ratio between the Nyquist wavenumber and the really used wavenumber
+#             suggested value 10-128 {12}
+#             the larger the value is, the more accurate the results are, more time required
+#earth  layered  nl  obsz 	nr 	minr	maxr 	nz 	minz	maxz	srate</c>
+earth   layered  22  0.0	1201	0.0	300e3	326	0.0	65e3    12
 </div>
 
-<h4> Run </h4>
-For this example, we will use a combination of Campaign and Continuous stations from the Nicoya dataset. The layers are defined by Vp, Vs, depth and density(rho), in this example we use a velocity model specific to the Nicoya peninsula as published in <a href="https://academic.oup.com/gji/article/164/1/109/631271">DeShon et al.(2006)</a>. Each layer is considered uniform from the preceeding shallow layer boundary and the deepest(i.e the last layer) defines everything underneath it. A complete input file can be found in the examples directory (.../v3.2/examples/Layered_models/Nicoya/All_stations/all_stations_inv.in). Here is how the first 5 layers to 9 km depth would be defined;
+<h3> Run </h3>  <!-- All headers of the same level should have the same numbers.  I switched this back to h3 -->
+For this example, we use a combination of Campaign and Continuous stations from the Nicoya dataset.
+The layers are defined by Vp, Vs, depth and density (rho),
+in this example we use an initial 1-D best-fit velocity model specific to the region as published in
+<a href="https://academic.oup.com/gji/article/164/1/109/631271">DeShon et al.(2006)</a>.
+In this example, each layer has internally constant properties, and are described from shallowest to deepest.
+The bottom layer defines everything underneath it.
+Keep in mind that each line is the layer boundary conditions, and not conditions across the entire layer.
+A complete input file can be found in the examples directory (Layered_models). The first 5 lines are shown below:
 
 <div class="code-wrapper"> <pre>
-  #layer id    depth  vp [m/s]    vs [m/s]    ro [kg/m^3]
-  layer  1      0.0e3   5.35e3      3.01e3    2646.291
-  layer  2      5.0e3   6.12e3      3.44e3    2736.762
-  layer  3      5.0e3   6.12e3      3.44e3    2736.762
-  layer  4      9.0e3   6.12e3      3.44e3    2736.762
-  layer  5      9.0e3   6.12e3      3.44e3    2736.762
+<c>#layer id     depth   Vp [m/s]    Vs [m/s]  rho [kg/m^3]</c>
+layer  1      0.0e3   5.35e3      3.01e3    2646.291
+layer  2      5.0e3   6.12e3      3.44e3    2736.762
+layer  3      5.0e3   6.12e3      3.44e3    2736.762
+layer  4      9.0e3   6.12e3      3.44e3    2736.762
+layer  5      9.0e3   6.12e3      3.44e3    2736.762
 </div>
-After the model is set up, the model can be run as in the above examples (<c>GTdef('all_stations_inv.in')</c>)
-<h5> Output</h5>
-Since this is set up to run an inversion, the output files will be same type ('_kp*.out') but a major difference from the other models is the green's functions. When you run the inversion as set up in the preceeding step, the <gr>GTdef_edgrn.m</gr> algorithm will generate green's functions from the given layered model. The program will generate a <c>edgrnsfcts</c> directory that contains three large files that describe the three source types; compensated linear vector dipole(CLVD),the dip-slip, and strike slip. Once the layered model is run and these are generated, they can be used for various fault geometries if the layer parameters are mentained.
-<br></br>
-<div> <b> Plotting results </b></div>
-<br></br>
+After the model is set up, the model can be run the same way as other models:
+<div class="code-wrapper"> <pre>
+  <c>% within matlab</c>
+  GTdef('all_stations_inv.in')</pre></div>
+
+<h3> Output</h3>  <!-- changed this one too  -->
+Since this is set up to run an inversion, the output files will be the same type ('_kp*.out')
+however it too will create outputs for the algorithms' Green's functions by default.
+The <gr>GTdef_edgrn.m</gr> algorithm will generate these and store them in a subdirectory called <c>./edgrnsfcts</c>.
+The directory will contain three large files describing each strike-slip (ss), dip-slip (ds), and  the compensated linear vector dipole (cl).
+Once the files are created, you can change the fault and station geometry minding not to go beyond the depth and distance limits established
+in the <c>earth layered</c> line.
+
+<h3>Plotting results </h3>
+
 Using the gmt plotting programs introduced in the sections above, we can plot the misfit curve and the geographical representation of the slip estimates. For the Nicoya Dataset and the layered model, the plots would look like the examples below;
 <br></br>
 <img src= "files/GTdef_slipmodel_all_station_kp15000.png" width="700px"></center>
@@ -811,20 +834,19 @@ Using the gmt plotting programs introduced in the sections above, we can plot th
 <a href= "files/GTdef_slipmodel_all_stations2_kp15000.png" target="aux2">Here</a> is a plot from non-stratified Okada model for comparison.
 </section>
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
-<section id= "er">
-	<li> <h2> <a href = "#TOC">Exporting & Reading Green's Functions</a></h2></li>
+<section id= "GFformat">
+	<li> <h2> <a href = "#TOC">GTdef formats for Green's Functions</a></h2></li>
 </section>
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
-<section id= "gf">
+<section id= "GFexternal">
 	<li> <h2> <a href = "#TOC">Ingesting External Green's Functions</a></h2></li>
 </section>
 
 
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
-
 <section id= "ref">
-<li> <h2> <a href = "#TOC"> References: </a> </h2></li>
+<li> <h2> <a href = "#GFexternal"> References: </a> </h2></li>
 <ul>
     <li><a href=http://geophysics.eas.gatech.edu/internal/papers/2005/Santamaria/Santamaria_Fratta_DiscreteSignalsInverseProblems_2005.pdf> Santamarina, J. C., & Fratta, D. (2005). Discrete signals and inverse problems. An Introduction for Engineers and Scientists. UK: Wiley & Sons.</a>
     <li><a href=https://www.sciencedirect.com/science/article/pii/B9780123971609000035 > Menke, W. (2012). Describing inverse problems.</a>
