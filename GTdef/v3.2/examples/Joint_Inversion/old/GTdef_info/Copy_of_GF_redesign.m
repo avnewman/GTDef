@@ -34,6 +34,9 @@ load Copy_of_Ill_los_gps.mat
 kappa=linspace(10000,200000,10); % set up kappa range
 %kappa=100;  % or just rough version
 
+C_land=modspace.C;
+d_land=modspace.d;
+
 modspace.modinfo =[];
 modspace.beta=[];
 modspace.kappa=[];
@@ -57,8 +60,8 @@ d=(modspace.d);
 C = []; d = [];
 Lgrn=[];
 Xgrn=[];
-d=[  d_tsu];
-C=[  C_tsu];
+d=[  d_tsu;d_land];
+C=[  C_tsu;c_land];
 
 
 %% GTdef_fault1dif.m
