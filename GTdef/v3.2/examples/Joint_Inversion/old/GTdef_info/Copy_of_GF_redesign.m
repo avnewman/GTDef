@@ -61,7 +61,9 @@ C = []; d = [];
 Lgrn=[];
 Xgrn=[];
 d=[  d_tsu;d_land];
-C=[  C_tsu;c_land];
+%d=[ d_tsu];
+C=[  C_tsu;C_land];
+%C=[C_tsu];
 
 
 %% GTdef_fault1dif.m
@@ -212,8 +214,8 @@ image(TT,'CDataMapping','scaled'); title( ['Kp=' num2str(kappa(zz))]); caxis([0,
 
 
 
-%     subplot(5,5,zz)
-%     plot(tsu.obs,'k'); hold on; plot(tsu_mod,'r'); title( ['Kp=' num2str(kappa(zz))]);
+%subplot(5,5,zz)
+%plot(tsu.obs,'k'); hold on; plot(tsu_mod,'r'); title( ['Kp=' num2str(kappa(zz))]);
 
 end
 figure
