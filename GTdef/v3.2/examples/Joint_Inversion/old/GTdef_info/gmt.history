@@ -1,10 +1,10 @@
-# GMT 6 Session common arguments shelf
-BEGIN GMT 6.0.0
-B	1e-02/3e-04:dy/dx [km^2]:E
-J	X
-JX	X16
-R	0.03/0.16/-0.003/0
+# GMT 5 Session common arguments shelf
+BEGIN GMT 5.4.5
+B	1.28:Slip [m]:
+J	M
+JM	M16
+R	-74/-68/-33.5/-28
 X	2
 Y	10.5
-@L	10
+L	8
 END
