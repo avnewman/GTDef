@@ -113,11 +113,39 @@ fi
   END="$RANGE $PROJ -O"
 
   OUTFILE=$(basename $0 .gmt)_$(basename $SUMMARY .out).ps
+
+
+# Curvature analysis
+
+MAXC=`basename $SUMMARY .out`.curv
+maxcurve.py $SUMMARY >$MAXC
+#echo $MAXC created
 #######################################
 gmt set MAP_FRAME_TYPE plain  MAP_FRAME_PEN black
 
 #######################################
-gmt psbasemap  -X2  -Y10.5 $BGN -P -B"$DX":"Roughness [cm/km^2]":/"${DY}":"RMS Misfit [m]":"WeSn" >$OUTFILE
+gmt psbasemap  -X2  -Y10.5 $BGN -P -B"$DX":"Roughness [cm/km^2]":/"${DY}":"RMS Misfit [m]":"WSn" >$OUTFILE
+
+# 
+gmt set MAP_FRAME_TYPE plain  MAP_FRAME_PEN red
+
+#DY2="$(awk '$1!~"#"{print $4}'  $MAXC | gmt info -I1 -C | awk '{printf "%.0e", ($2-$1)/10}')"
+#YRANGE2="$(awk 'NR==1{print "0/"$6*1.05}' $MAXC )"
+# normalize by 1
+DY2=0.1
+Y2MAX=1.35
+YRANGE2="0/$Y2MAX"
+RANGE2="$(echo $RANGE | awk -F"/" '{print $1"/"$2"/"Y2}' Y2="$YRANGE2")"
+gmt psbasemap -O -K $RANGE2 $PROJ -B"$DX/${DY2}":"Curvature":"E" >>$OUTFILE
+rgmax=$( awk 'NR==1 {print $4}' $MAXC)
+# echo $rgmax $DX $Y2MAX
+echo $rgmax $DX $Y2MAX | awk '{printf "%f 0\n%f %f\n%f %f\n%f 0\n%f 0\n", $1-$2/8,$1-$2/8,$3,$1+$2/8,$3,$1+$2/8,$1-$2/8 }'  | \
+      gmt psxy $RANGE2 $PROJ -N -O -K -W1,pink -Gpink >>$OUTFILE
+
+awk 'NR==1{MX=$6}; $1!~"#"{print $2,$4/MX}' $MAXC | gmt psxy $RANGE2 $PROJ -O -K -W1,red >>$OUTFILE
+awk 'NR==1{MX=$6}; $1!~"#"{print $2,$4/MX}' $MAXC | gmt psxy $RANGE2 $PROJ -O -K -Sc0.2 -Gred -W0.2 >>$OUTFILE
+# set defaults back to black
+gmt set  MAP_FRAME_PEN black
 
 
 # plot station locations
@@ -127,35 +155,21 @@ awk '$1!~"#" {print $13,$7}' $SUMMARY |  \
 #green points
 awk '$1!~"#" {print $13,$7}' $SUMMARY |  \
 	gmt psxy  $MID  -Sc0.3 -G0/255/0 -W0.2 >>$OUTFILE
+
+#optimal
+awk 'NR==1 {print $4 ,$5}' $MAXC | \
+      gmt psxy  $MID  -Sc0.35 -G0/255/0 -W1 >>$OUTFILE
 #text
 awk '$1!~"#" {printf "%e %e %5.1e \n", $13+DX/5,$7+DY/5, $2}' DX="$DX" DY="$DY" $SUMMARY | \
 	gmt pstext -F+a0+jLB+f12p,Helvetica,black $MID  >>$OUTFILE
 
-# plot 2nd-order derivatives
-gmt set MAP_FRAME_TYPE plain  MAP_FRAME_PEN red
-#2ndorder
-#DRV=d2rmsdr2.txt
-#sort -g -k13 $SUMMARY | awk 'NR==2{X=$13;Y=$7} NR>2{dydx=($7-Y)/($13-X); print X,dydx ;X=$13;Y=$7}' |\
-#        awk 'NR==1{X=$1;Y=$2} NR>1{d2ydx2=($2-Y)/($1-X); print X,d2ydx2 ;X=$1;Y=$2}' > $DRV
-#1st order
-DRV=drmsdr.txt
-sort -g -k13 $SUMMARY | awk 'NR==2{X=$13;Y=$7} NR>2{if (X !=$13) {dydx=($7-Y)/100/($13-X); print X,dydx } ;X=$13;Y=$7}' >$DRV
-echo $DRV created
-DY2="$(awk '$1!~"#"{print $2}'  $DRV | gmt info -I.001 -C | awk '{printf "%.0e", ($2-$1)/10}')"
-YRANGE2="$(gmt info $DRV -I"$DX/$DY2" | awk -F"/" '{print $3"/"$4}' )"
-RANGE2="$(echo $RANGE | awk -F"/" '{print $1"/"$2"/"Y2}' Y2="$YRANGE2")"
-gmt psbasemap -O -K $RANGE2 $PROJ -B"$DX/${DY2}":"dy/dx [km^2]":"E" >>$OUTFILE
-gmt psxy $DRV  $RANGE2 $PROJ -O -K -W1,red >>$OUTFILE
-gmt psxy $DRV  $RANGE2 $PROJ -O -K -Sc0.2 -Gred -W0.2 >>$OUTFILE
-# set defaults back to black
-gmt set  MAP_FRAME_PEN black
-
 #
-gmt pslegend -Dx9.5/15/12 -F+p2p+g255/255/200+r10p+s -P -O $RANGE2 $PROJ << ...EOF >>$OUTFILE
+gmt pslegend -Dx11.5/15.8/12 -F+p2p+g255/255/200+r10p+s -P -O $RANGE2 $PROJ << ...EOF >>$OUTFILE
 L 14 Helvetica-Bold C $(basename $SUMMARY _inv.out)
 D 1.5c 2p 
 S 1c c 0.3 0/255/0 0.2  2c RMS/Roughness @@ Kappa (printed value) 
-S 1c c 0.2 red 0.2      2c d RMS@/d Roughness @@ Kappa
+S 1c c 0.2 red 0.2      2c Curvature (normalized by range)
+S 1c c 0.35 0/255/0 1   2c \"Optimal\" Kappa (from curvature)
 D 0.5c 2p 
 L 6 Helvetica-Oblique L  Created by ${USER} in ${PWD}
 L 6 Helvetica-Oblique L  Command: $(basename $0) $* 

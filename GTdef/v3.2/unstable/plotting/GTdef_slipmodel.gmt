@@ -29,7 +29,7 @@ UL="\e[4m" # turns on underline
 NM="\e[0m" #turns off underline
  printf "
 Usage: %s -M${UL}'model.in'${NM} [-K${UL}'kappa_value'${NM}] [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}] [-D]
-	 [-S${UL}deformation_scale[/data_scale][/faultvector_scale]${NM}] [-T${UL}TMIN/TMAX/DT${NM}]
+	 [-S${UL}deformation_scale[/data_scale][/faultvector_scale]${NM}] [-T${UL}TMIN/TMAX/DT${NM}] [-H] [-V]
 
 Requires:
        -M   Model_input_file
@@ -72,6 +72,10 @@ Options:
 	       will include the amplifcation used with -S flag.  If not selected, the program
 	       will attempt to autoselect range based on data.
 
+       -H   plot horizontal only
+       -V   plot vertical only
+
+
 Programs Required:
        GMT v5 or greater
        open or xdg-open (standard on mac and most linux distributions, respectively)
@@ -96,7 +100,7 @@ if  [ ${#} -lt "1" ] ; then
   exit 1 # exit with error after removing temp file
 fi
 DEFSCALE=1  # default that may be overriden with flag
-while getopts "M:K:S:T:R:D" OPT
+while getopts "M:K:S:T:R:DHV" OPT
 do
    case ${OPT} in
        M) MODELIN=$OPTARG
@@ -132,16 +136,27 @@ do
         ;;
        D) DFLAG=1; # bring up display
         ;;
+       H) HFLAG=1; # Horiz only data
+        ;;
+       V) VFLAG=1; # Vert only data
+        ;;
        *) echo "ERROR: unknown modifier flag used (${OPT}), exiting."  # if a bad modifier is used
            rm $USAGE;   exit 1 ;; # exit with error after removing temp file
    esac
 done
 rm $USAGE
 
+if [ "$HFLAG" ] &&  [ "$VFLAG" ] ; then  
+	echo "ERROR: cannot use both -H and -V flags.  Exiting." 
+	exit 1 
+fi
+
 test "$DATASCALE" || DATASCALE=$DEFSCALE     #set to DEFSCALE if empty
 test "$FVSCALE" || FVSCALE=$DATASCALE     #set to DATASCALE if empty
 
 test "$MFLAG" || { echo "ERROR: Required -M flag missing, no input model selected.  Exiting." ; exit 1; }
+
+MODbase="$(basename $MODELIN .in)"
 
 if [ "$KFLAG" ] ; then
 	if [[ "$( echo $KAPPA | tr '[a-z]' '[A-Z]')" == "ALL" ]] ; then
@@ -149,7 +164,7 @@ if [ "$KFLAG" ] ; then
 	  echo "Running on all kappa for which there exists a _patches.out file"
 	  LOOP=1
 	else
-	  PATCHFILES=$(ls -1 *_kp${KAPPA}_patches.out)
+	  PATCHFILES=$(ls -1 ${MODbase}_kp${KAPPA}_patches.out)
 	  echo "Inverse model results: Using $PATCHFILES."
 	fi
 else
@@ -157,7 +172,6 @@ else
    	echo "Assuming fwd model: Using $PATCHFILES."
 fi
 
-MODbase="$(basename $MODELIN .in)"
 
 for PATCHES in $PATCHFILES
 do
@@ -303,36 +317,48 @@ do
    POINT3="$(awk '$1=="point"&&$2=="3"{print "1"}' $PMODEL)"
    #echo "Point1="$POINT1" Point2="$POINT2" Point3="$POINT3" "
    # plot type 2 or 3. (Horizontal data)
+   if [ ! "$VFLAG" ]; then  
    if [ -s "$POINT2" ] || [ "$POINT3" ] ; then
-      awk '$1!~"#"&&$1=="point" {if($2=="2" || $2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $MODELIN | \
+	   awk '$1!~"#"&&$1=="point" {if($2=="2") print $4,$5, $7*DEF, $8*DEF, $9*DEF, $10*DEF, " 0" ; if($2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $MODELIN | \
    	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Ggreen -Se1/0.65/0 -L >>$OUTFILE
    fi
+   fi
      # plot type 1 or 3. (Vertical data)
+   if [ ! "$HFLAG" ]; then  
    if [ "$POINT1" ] || [ "$POINT3" ] ; then
       awk '$1!~"#"&&$1=="point" {if($2=="1"){Uz=$7*DEF; eUz=$8*DEF} if($2=="3"){Uz=$9*DEF; eUz=$12*DEF} print $4,$5, 0, Uz,eUz/10, eUz, " 0" }' DEF=$DATASCALE $MODELIN  | \
      	gmt psvelo -N  $MID -W0p -A0.05/0/0 -Ggreen -Se1/0.65/0 -L >>$OUTFILE
    fi
-   #plot predicted solutions (black arrows)
+   fi
+   #plot predicted solutions (magenta arrows)
    # plot Horizontal
+   if [ ! "$VFLAG" ]; then  
    if [ "$POINT2" ] || [ "$POINT3" ] ; then
-      awk '$1!~"#"&&$1=="point" {if($2=="2" || $2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $PMODEL | \
+      awk '$1!~"#"&&$1=="point" {if($2=="2") print $4,$5, $7*DEF, $8*DEF, $9*DEF, $10*DEF, " 0" ; if($2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $PMODEL | \
    	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1 -Gmagenta -Se1/0.0/0 -L >>$OUTFILE
    fi
+   fi
    # plot Vertical
+   if [ ! "$HFLAG" ]; then  
    if [ "$POINT1" ] || [ "$POINT3" ] ; then
       awk '$1!~"#"&&$1=="point" {if ($2=="1"){Uz=$7*DEF; eUz=$8*DEF} if($2=="3"){Uz=$9*DEF; eUz=$12*DEF} print $4,$5, 0, Uz, eUz/10, eUz, " 0" }' DEF=$DATASCALE $PMODEL | \
      	gmt psvelo -N  $MID -W0p -A0.05/0/0 -Gmagenta -Se1/0.0/0 -L >>$OUTFILE
    fi
+   fi
    #redraw outlines of arrow from observed data so that it may be seen over model outputs. Almost a repeat from above
    # plot type 2 or 3. (Horizontal data)
-   if [ "$POINT2" ] || [ "$POINT3" ] ; then
-      awk '$1!~"#"&&$1=="point" {if($2=="2" || $2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $MODELIN | \
-   	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1  -Se1/0.65/0 -L >>$OUTFILE
+   if [ ! "$VFLAG" ]; then  
+     if [ "$POINT2" ] || [ "$POINT3" ] ; then
+        awk '$1!~"#"&&$1=="point" {if($2=="2") print $4,$5, $7*DEF, $8*DEF, $9*DEF, $10*DEF, " 0" ; if($2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $MODELIN | \
+     	gmt psvelo -N  $MID -W0p -A0.05/0.15/0.1  -Se1/0.65/0 -L >>$OUTFILE
+     fi
    fi
      # plot type 1 or 3. (Vertical data)
-   if [ "$POINT1" ] || [ "$POINT3" ] ; then
-      awk '$1!~"#"&&$1=="point" {if($2=="1"){Uz=$7*DEF; eUz=$8*DEF} if($2=="3"){Uz=$9*DEF; eUz=$12*DEF} print $4,$5, 0, Uz,eUz/10, eUz, " 0" }' DEF=$DATASCALE $MODELIN  | \
-     	gmt psvelo -N  $MID -W0p -A0.05/0/0  -Se1/0.65/0 -L >>$OUTFILE
+   if [ ! "$HFLAG" ]; then  
+     if [ "$POINT1" ] || [ "$POINT3" ] ; then
+        awk '$1!~"#"&&$1=="point" {if($2=="1"){Uz=$7*DEF; eUz=$8*DEF} if($2=="3"){Uz=$9*DEF; eUz=$12*DEF} print $4,$5, 0, Uz,eUz/10, eUz, " 0" }' DEF=$DATASCALE $MODELIN  | \
+       	gmt psvelo -N  $MID -W0p -A0.05/0/0  -Se1/0.65/0 -L >>$OUTFILE
+     fi
    fi
 
    # plot station locations
