@@ -168,7 +168,7 @@ tic
     pnt.obs = reshape(pnt.disp,[],1);               % (3*n)*1 observation vector [east;north;vertical]
     pnt.obs_err = reshape(pnt.err,[],1);            % (3*n)*1 error vector [east;north;vertical]
     pnt.obs_wgt = [pnt.wgt;pnt.wgt;pnt.wgt];        % (3*n)*1 weight vector [east;north;vertical]
-    %pnt.coef = pnt.obs_wgt./pnt.obs_err.^2;        % (3*n)*1 coefficient vector
+    %pnt.coef = pnt.obs_wgt./pnt.obs_err.^2;        % (3*n)*1 coefficient vector  # v. used in fork by A. Williamson
     pnt.coef = sqrt(pnt.obs_wgt)./pnt.obs_err;      % (3*n)*1 coefficient vector
 toc
 end
