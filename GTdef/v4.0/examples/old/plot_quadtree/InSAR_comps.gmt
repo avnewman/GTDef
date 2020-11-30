@@ -1,0 +1,36 @@
+#!/bin/bash
+
+LATMIN=-32.7
+LATMIN=-33.5
+LATMAX=-29.9
+LONMIN=-72.0
+LONMAX=-70.0
+
+RANGE="-R$LONMIN/$LONMAX/$LATMIN/$LATMAX"
+PROJ="-JM10"
+BGN=" $RANGE $PROJ -K"
+MID=" $RANGE $PROJ -O -K"
+END=" $RANGE $PROJ -O"
+
+OUT=`basename $0 .gmt`.ps
+DCPT=test.cpt
+# created from convert_2_usable.m 
+DGRD=test.grd
+
+# quadtree outputs
+QTD=test.txt
+QTDbox=test.box
+##############
+
+
+gmtset PAPER_MEDIA letter+ BASEMAP_TYPE plain PLOT_DEGREE_FORMAT D
+makecpt -T-20/20/5 -Crainbow  > $DCPT
+grdimage $DGRD  $BGN  -C$DCPT -X3 -Y3 -P -B.25a1WeSn -E300 >$OUT
+awk '$7>5{print $4,$5,$1,1/($2)}' $QTD | psxy -W2/0 -Sc -C$DCPT $MID >> $OUT
+psxy $QTDbox -W1/255 -M -N  $MID >> $OUT
+pscoast $MID -W1 -Dh >>$OUT
+psscale -D11/13/10/0.5 -C$DCPT -O -K >> $OUT
+pstext $MID -N <<...EOF >>$OUT
+-70.875 -29.8 16 0 0 6 Displacement [cm]
+...EOF
+gv $OUT & 
