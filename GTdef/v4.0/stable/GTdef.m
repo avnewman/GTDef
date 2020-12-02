@@ -60,7 +60,7 @@ function [] = GTdef(finName,wnum)
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016   %
 % corrected fault type 7 bugs lfeng Fri Jun 10 01:04:06 SGT 2016                       %
 % added project option for runs. AVN: Thu Jun 18 20:25:58 EDT 2020                     %
-% last modified Andrew NEwman Thu Jun 18 20:25:58 EDT 2020                             %
+% last modified Andrew Newman Thu Jun 18 20:25:58 EDT 2020                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
