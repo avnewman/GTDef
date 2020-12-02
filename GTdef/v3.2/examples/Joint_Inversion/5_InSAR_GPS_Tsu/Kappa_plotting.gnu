@@ -166,5 +166,5 @@ set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
 ## Last datafile plotted: "InSAR_GPS_Tsu_inv.out"
-plot "Tsu_inv.out" using 13:7 w lp  title "Tsunami Data",      "InSAR_GPS_inv.out" using 13:7 w lp title "Land Data", "InSAR_GPS_Tsu_inv.out"  using 13:7 w lp title "Joint Inversion"
+plot "Tsu_inv.out" using 13:7 w lp  title "Tsunami Data","InSAR_GPS_inv.out"  using 13:7 w lp title "Land Data", "InSAR_GPS_Tsu_inv.out"  using 13:7 w lp title "Joint Inversion"
 #    EOF

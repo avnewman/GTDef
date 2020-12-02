@@ -1,0 +1,8 @@
+# GMT 6 Session common arguments shelf
+BEGIN GMT 6.0.0
+B	nan/0.1:Curvature:E
+J	X
+JX	X16
+X	2
+Y	10.5
+END
