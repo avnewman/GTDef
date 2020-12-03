@@ -1,8 +1,0 @@
-2 folders give two similar exmaples using unwrapped InSAR LOS and Vertical-only decomposed data.
-
-The examples include the extraction of data from a georeferenced geotiff image
-
-outputs include .in, .txt, and .box files.  
-  .in is to be included into an input file for modeling.
-  .txt is more human-readable (possibly)
-  .box is used to draw the bounds of the quadtree boxes made (in gmt multisegment file format)

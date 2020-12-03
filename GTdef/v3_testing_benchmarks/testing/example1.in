@@ -1,7 +1,0 @@
-#################################################################
-coord local
-#################################################################
-#fault type name        lon1      lat1     lon2      lat2    z1  z2   dip     ss     ds   ts   ss0  ssX      ds0  dsX   ts0  tsX   Nd  Ns
-fault  2    myfault     0         -10e3    0         10e3    5e3 15e3 90      1      0     0   0    0         0    0     0    0    1   1
-#grid name    Erot Nrot lon1      lat1    lon2      lat2       Ne  Nn
-grid 1kmx1km  0     0   -30e3     -30e3    30e3     30e3       31  31 
