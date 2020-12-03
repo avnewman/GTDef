@@ -534,7 +534,7 @@ kappa 2 0  5000 11
 <h5> Output </h5>
 <ol type ="i">
   <li> This time, you have two kinds of output files, those that end in <c>'_kp*'</c> correspond to each kappa value you set in step "i" above, and the other is a summary file <c>'_inv.out'</c>. The inversion summary file will be used in the next step to determine the optimal smoothing factor (kappa value) for this dataset.
-	<li> Explore your inversion results.  Using <a href="plotting/GTdef_misfit_kappa.gmt"> GTdef_misfit_kappa.gmt</a>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example dataset.
+	<li> Explore your inversion results.  Using <gr> GTdef_misfit_kappa.gmt</gr>, try plotting misfit vs. roughness to see how your choices in kappa affect these results. Looking at the L-curve, the 4th lowest kappa value is optimal for this example dataset.
 
     <div class="code-wrapper"> <pre>
       <c># in shell (command line)</c>
@@ -547,8 +547,8 @@ kappa 2 0  5000 11
       <div> <b> Plotting results: </b></div>
       <ol type="i">
           <li> Finally, once you've chosen your optimal kappa value, run a new forward model, and repredict deformation. The new forward model input will be a modified version of the corresponding <c>'_kp.out'</c> file to the optimal kappa value determined from the step above. Remember, for a forward model, it is important that all slip parameter ranges for a given slip-type on a fault block have equal value (i.e. ss0=ssX, ds0=dsX, and ts0=tsX).
-          <li> You might want to look at your results in a geographic reference system.  I've created a GMT script (<a href="plotting/GTdef_slipmodel.gmt">GTdef_slipmodel.gmt</a>) to do this,
-           but you must modify it for your purposes.
+          <li> You might want to look at your results in a geographic reference system.  We've created a GMT script (<gr>GTdef_slipmodel.gmt</gr>) to do this,
+           but you may need to modify it for your purposes.
            <div class="code-wrapper"> <pre>
              <c># in shell (command line)</c>
              GTdef_slipmodel.gmt -M solomon.in -K750 -R157.0/157.7/-9/-8.3 -S0.1/1/0.1 -D </pre></div>
