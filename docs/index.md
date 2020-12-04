@@ -16,6 +16,5 @@ addpath ('/path/to/GTdef/stable/') %replacing with your actual path
 GTdef('example.in')
 
 ```
-
-# the below does work, but pages would need to be redone, possibly using this style of markdown.
+## Documentation/Examples
 [Link to docs](./documentation/)
