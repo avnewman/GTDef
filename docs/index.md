@@ -17,4 +17,5 @@ GTdef('example.in')
 
 ```
 
-[Link to docs](./GTdef_V4.0.html)
+# the below does work, but pages would need to be redone, possibly using this style of markdown.
+[Link to docs](./documentation/)
