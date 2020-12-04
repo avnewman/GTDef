@@ -54,7 +54,7 @@ or some combination of both.</p>
 
 <br>
 <b>Requirements</b>: <ol>
-  <li> Algorithms are written in Matlab and require the <c>'Parameter estimation'</c> toolbox for inversions.
+  <li> Algorithms are written in <gr>Matlab</gr> and require the <gr>'Parameter estimation'</gr> toolbox for inversions.
   <li> If you wish to use parallel processors, your version needs to include <gr>parpool</gr>, which was implemented around 2015.
   <li> For plotting <a href="https://www.generic-mapping-tools.org/">GMT</a> version 5 or 6.</li>
 </ol>
@@ -63,14 +63,19 @@ or some combination of both.</p>
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id= "DL">
-<li> <h2> <a href = "#TOC"> GTdef Code and How to Download it</a></li>
-<ul><b> Current Version </b> : GTdef 4.0 </ul>
-<ul><b> Github Repository to Download/Clone </b>:
-<a href=https://github.gatech.edu/an77/GTDef.git>https://github.gatech.edu/an77/GTDef.git</a> </ul>
+<li> <h2> <a href = "#TOC">Getting/Installing Code</a></li>
+
+<ul>Current Version: 4.0.0 </ul>
+<ul><a href=https://avnewman.github.io/GTDef/>Github Website</a></ul>
 <br>
 Set up Instructions:
 <ol type= "i">
-<li> In the selected directory, to clone <gr>GTdef</gr> run <div class= "code-wrapper"> <pre> git clone https://github.gatech.edu/an77/GTDef.git   #this will create a copy of the code which you can pull to every time there is an update to the master git repository </div></pre>
+<li> In the selected directory, to clone <gr>GTdef</gr> run
+<div class= "code-wrapper">
+  <pre>
+<c>#this will create a copy of the code which you can pull to every time there is an update to the master git repository</c>
+git clone https://github.com/avnewman/GTDef.git</pre>
+  </div>
 <li> Be sure the current version of the programs are in your path.  You can check this using the <gr>path</gr> function, and add it using <gr>addpath</gr>.
 <div class="code-wrapper"> <pre>
 <c> # within matlab</c>
@@ -374,7 +379,7 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 
 <section id= "uslip">
 <li> <H2> <a href = "#TOC"> Uniform Slip Modeling: </a> </H2></li>
-
+(from <c>'examples/Uniformslip/Solomon'</c>)
 <h3>Input:</h3>
 We will need to build the model, including gathering the appropriate data and then estabishing an appropriate a priori interface. In this example, we will use the very small tsunami earthquake described in <a href="http://geophysics.eas.gatech.edu/people/anewman/research/papers/Newman_etal_GJI_2011.pdf">Newman et al. (2011)</a>.
 
@@ -504,6 +509,9 @@ w l lw 4 lt 7 -8 t "fault" </pre></div>
 
 <section id= "nslip">
 <li> <h2> <a href = "#TOC"> Non-uniform Slip Modeling: </a> </h2></li>
+(from <c>'examples/Non-uniformslip/Solomon'</c>)
+<br><br>
+
 		<p> This problem is a little more tricky, as we will quickly go from an overdetermined problem (more data than model paremeters),
 		     to an underdetermined problem.
 		     In order to get around this, and to solve for realistic slip, we constrain the interdependence between individual slip patches.
@@ -538,7 +546,6 @@ kappa 2 0  5000 11
 
     <div class="code-wrapper"> <pre>
       <c># in shell (command line)</c>
-
       GTdef_misfit_kappa.gmt -M nicoya_camp_inv_inv.out</pre></div>
       </ol>
       <br>
@@ -560,6 +567,8 @@ kappa 2 0  5000 11
 
 <section id= "cbt">
 <li> <h2> <a href = "#TOC"> Checkerboard Testing: </a> </h2></li>
+(from <c>'examples/Non-uniformslip/Nicoya/Checkboard'</c>)
+<br>
 
   <H3>Develop a Synthetic Forward Model:</H3>
     <ol type="i">
@@ -691,20 +700,21 @@ kappa 2 0  5000 11
         The figure should look like the example below.
          <br></br>
          <center><img src="files/GTdef_slipmodel_nicoya_ckbd_3x4_fwd_lowNOISE_kp9000.png" width="700px"></center>
-
+</ol>
 <H3>Notes:</h3><ol type="i">
-<li><p>As you can see in the above figure, the checkerboards are well represented right at the coast, however, the model becomes very
-  smooth with apparent larger patches both up-dip and down-dip.  The up-dip resolution problem comes from a lack of stations immediately overhead,
-  however, the down-dip problem is because our patches are too small, and the earth between the data and the fault is "smoothing it out".
+<li><p>As you can see in the above figure, the checkerboards are only replicated near the coast, and the predicted model becomes
+  smooth with apparent larger patches both up-dip and down-dip, denoting loss of resolvability from a lack of stations immediately overhead (updip),
+  and insufficiently large patches sizes (downdip).
 
   <p>To improve on the down-dip problem, it is possible to make a hybrid checkerboard model with larger down-dip patches
-    (maybe 40x40 km), to test the resolution of larger slip features.  For comparison, here are the
-    <a href="files/GTdef_slipmodel_nicoya_ckbd_6x8_fwd.png" target="aux2">input checkerboard</a>,
-    <a href="files/GTdef_misfit_kappa_nicoya_ckbd_6x8_fwd_lowNOISE_inv.png" target="aux2">trade-off curve</a>,
-     and
-    <a href="files/GTdef_slipmodel_nicoya_ckbd_6x8_fwd_lowNOISE_kp9000.png" target="aux2">inversion results</a>
-    for these patches.
-  </p>
+    (maybe 40x40 km), to test the resolution of larger slip features.
+    When doubling the patch sizes, features are much better resolved (in <c>'examples/Non-uniformslip/Nicoya/Checkboard/Nicoya6x8patches'</c>).
+    <ol type="a">
+    <li><a href="files/GTdef_slipmodel_nicoya_ckbd_6x8_fwd.png" target="aux2">input checkerboard</a>
+    <li><a href="files/GTdef_misfit_kappa_nicoya_ckbd_6x8_fwd_lowNOISE_inv.png" target="aux2">trade-off curve</a>
+    <li><a href="files/GTdef_slipmodel_nicoya_ckbd_6x8_fwd_lowNOISE_kp9000.png" target="aux2">inversion results</a>
+    </ol>
+    </p>
 <li>Checkerboard testing is relatively straightforward, but a somewhat cumbersome problem with a visual and not very quantitative
   assessment of the model quality given data.  Instead, it may be much better to look at the <a href="#RES">output of the resolution matrix</a>, itself.
 <li>The examples used in the checkerboard tests above use campaign data from the <a href = "https://nicoya.eas.gatech.edu/sites/nicoya/files/datasets/Protti_etal_2014_Campaign_results.txt">Nicoya Seismic Cycle Observatory GPS data.</a>
@@ -716,6 +726,8 @@ kappa 2 0  5000 11
 
 <section id="RES">
 	<li> <h2> <a href = "#TOC">Resolution Spread Evaluation:</a></h2></li>
+
+  <H3>Theory:</H3>
   <p>If you've ran inversions with the <c>'resolution'</c> flag set to one (see option in <a href="#cbt">Checkerboard Testing section</a>), we
   should have outputs with the tail <c>'_patches_R.out'</c> for each of the kappa values in our models. This file describes the output of
   the diagonals of the model resolution matrix, <c>R<sub>jj</sub></c>, as the product of the Generalized Inverse Matrix and the Green's function (see <a href="#THEORY">Theory</a> section).
@@ -738,6 +750,10 @@ kappa 2 0  5000 11
   <p>Because <c><b>R</b></c> doesn't depend on the actual values of the data, but only its location and weighted errors, relative to the model,
     the same is true for <c><i>r<sub>j</sub></i></c>.</p>
 <br>
+
+<H3>Evaluation:</H3>
+(from <c>'examples/Non-uniformslip/Nicoya/Checkboard'</c>)
+<br><br>
 <p>We've created a program that calculates <c><i>L<sub>j</sub></i></c>, and <c><i>r<sub>j</sub></i></c> for a selected component of slip.
  The program <gr>GTdef_Rmodel.gmt</gr> uses similar inputs to <gr>GTdef_slipmodel.gmt</gr>, but requires Kappa (-K) and Slip components (-C) to be described.
  As noted above, the program requires the respective <c>'_patches_R.out'</c> files that are created with the c>'resolution'</c> flag set to 1 before an inversion.
@@ -759,7 +775,7 @@ This will plot the dip-slip (-S D) component, at &Kappa;=7000, displaying the re
 <br>
 <p> While plotting <c><i>r<sub>j</sub></i></c> gives a direct image of all patches average spread, you can use <c>resolution 2</c> to
   get information on the off-diagonal components of the model resolution matrix to plot the actual spatial smearing of individual
-  patches, per component (see Kyriakopoulos and Newman, 2016).  You may need to develop your own plotting algoritm for this.
+  patches, per component (see Kyriakopoulos and Newman, 2016).  You may need to develop your own plotting algorithm for this.
 
 
 </section>
@@ -772,6 +788,9 @@ The algorithms <gr>GTdef_edgrn.m </gr> and <gr> GTdef_edcmp.m</gr>, create the G
 The codes are adopted from <a href=https://www.sciencedirect.com/science/article/pii/S0098300402001115 > Wang et al.(2003)</a>, originally written in FORTRAN.  </p>
 
 <h3> Input </h3>
+(from <c>'examples/Layered_Models/Nicoya/All_stations'</c>)
+<br><br>
+
 To build an input file to run the layered model it is necessary to set the earth structure to be <c>'layered'</c>
 and define appropriate parameters for the desired layers.
 Details are included in the <a href="files/GTdef_input" target=aux>example input file</a>. The layer parameters are defined as follows;
