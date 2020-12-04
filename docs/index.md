@@ -16,3 +16,5 @@ addpath ('/path/to/GTdef/stable/') %replacing with your actual path
 GTdef('example.in')
 
 ```
+
+[Link to docs](./GTdef_V4.0.html)
