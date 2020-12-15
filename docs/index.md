@@ -4,6 +4,9 @@ _GTDef_ is a set of algorithms created in Matlab for modeling kinematically-desc
 
 Created by the [Newman Research Group at Georgia Tech](http://geophysics.eas.gatech.edu/anewman).
 
+## Current version
+[![DOI](https://zenodo.org/badge/283332126.svg)](https://zenodo.org/badge/latestdoi/283332126)
+
 ## Getting started
 Within each version (starting with v4.0), there is a documentation directory that contains step-by-step information on how to run the code, with specific case examples.
 
