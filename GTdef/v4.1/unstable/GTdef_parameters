@@ -1,0 +1,256 @@
+# () - matlab data type
+# {} - default values
+# [] - units
+# *  - internal parameters
+
+# Conventions
+# length & slip [m]
+# angles [degree]
+# depth positive downward
+
+# (1) Controlling Parameters:
+coord (string) {geo}
+      geo           - geographic coordiante
+      geo_polyconic - geographic coordiante using polyconic projection
+      local         - cartesian coordinate
+
+smooth (string) {2d}
+      1d2pc         - 1st derivative 2-point central
+      1d3pf         - 1st derivative 3-point forward
+      1d3pb         - 1st derivative 3-point backward
+      2d            - 2nd derivative 3-point central
+
+surf (string) {free}
+      free          - assume free-surface
+      fixed         - no free-surface
+
+kappa (1*kappa_num) {0} [unitless]
+                    - good for 2nd derivative
+beta  (1*beta_num)  {0} [unitless] = kappa.^2 = kappa*kappa
+                    - good for 1st derivative
+
+# (2) Earth Structure:
+earth (string) {homogeneous}
+      homogeneous   - homogeneous Okada earth model
+      layered       - layered EDGRN/EDCMP earth model
+
+# if earth = homogeneous
+rigidity (scalar) {30e9} [Pa]
+poisson	 (scalar) {0.25}
+
+# if earth = layered
+edgrn (structure)
+      edgrn.nl (scalar)
+           - number of lines of layers != number of layers
+             each layer except the top layer (interface of halfspace) has two lines of records
+             if upper & lower values are different, layers will be treated as constant gradient
+      edgrn.obsz (scalar) [m]
+           - uniform depth of observation points
+      edgrn.nr (scalar)
+           - number of radial points for green functions
+      edgrn.minr (scalar) [m]
+           - minimum radial distance
+      edgrn.maxr (scalar) [m]
+           - maximum radial distance
+      edgrn.nz (scalar)
+           - number of depth points for green functions
+      edgrn.minz (scalar) [m]
+           - minimum depth (positive down)
+      edgrn.maxz (scalar) [m]
+           - maximum depth (positive down)
+      edgrn.srate (scalar)
+           - sampling rate for wavenumber integration
+             the ratio between the Nyquist wavenumber and the really used wavenumber
+             suggested value 10-128 {12}; the larger the value is, the more accurate the results are, more time required
+     *edgrn.dr = (maxr-minr)/(nr-1);
+     *edgrn.dz = (maxz-minz)/(nz-1);
+
+layer (nn*5 matrix) = [ id depth vp vs ro ]
+      id   - id number for each layer increasing with depth
+ 	     layer is ordered according to the ascending id
+      depth- layer depth [m]
+      vp   - P wave velocity [m/s]
+      vs   - S wave velocity [m/s]
+      ro   - density [kg/m^3]
+
+edgrnfcts (structure)
+# displacements: Uz - vertical; Ur - radial; Ut - transverse
+# strain: Ezz Err Ett Ezr=Erz Ert=Etr Etz=Ezt
+# derivative: duz/dr
+      # strike-slip point source
+      edgrnfcts.ssdisp 3*(nr+2)*(nz+2) = [Uz Ur Ut]
+      edgrnfcts.ssstrn 6*(nr+2)*(nz+2) = [Ezz Err Ett Ezr Ert Etz]
+      edgrnfcts.ssuzr  (nr+2)*(nz+2)   = dUz/dr
+      # dip-slip point source
+      edgrnfcts.dsdisp 3*(nr+2)*(nz+2) = [Uz Ur Ut]
+      edgrnfcts.dsstrn 6*(nr+2)*(nz+2) = [Ezz Err Ett Ezr Ert Etz]
+      edgrnfcts.dsuzr  (nr+2)*(nz+2)   = dUz/dr
+      # clvd source point source
+      edgrnfcts.cldisp 2*(nr+2)*(nz+2) = [Uz Ur] (Ut=0)
+      edgrnfcts.clstrn 4*(nr+2)*(nz+2) = [Ezz Err Ett Ezr] (Ert=Etr=Etz=Ezt=0)
+      edgrnfcts.cluzr  (nr+2)*(nz+2)   = dUz/dr
+
+# (3) Faults:
+# main fault:
+flt? (structure)
+      flt?.num  (scalar)     - number of faults
+      flt?.name (cell array) - fault names
+      flt?.sdrop (scalar)    - slip-averaged stress drop
+      flt?.flt  (flt_num*18/11) - fault parameters
+
+      flt1.flt = [lon1 lat1 z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]
+      flt2.flt = [lon1 lat1 lon2 lat2 z1 z2 dip ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]
+      flt3.flt = [lon1 lat1 z1 z2 len str dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]
+      flt4.flt = [lon1 lat1 lon2 lat2 z1 z2 dip rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]
+      flt5.flt = [ss ds ts ss0 ssX ds0 dsX ts0 tsX Nd Ns]
+      flt6.flt = [rake rs ts rake0 rakeX rs0 rsX ts0 tsX Nd Ns]
+
+     *flt?.out              - similar to flt?.flt
+     *flt?.Min (matrix)     - subflt info in cartesian coordinate
+               (flt_num*10) - Okada   = [len width depth dip str east north ss ds ts]
+               (flt_num*9)  - layered = [slip north east depth length width str dip rake]
+     *flt?.xyzflt (structure) - fault patch info in cartesian coordinate
+           xyzflt.xyzctr (flt_num*3)  - location of center points in cartesian coordinate     = [xx yy zz]
+           xyzflt.xyztop1 (flt_num*3) - location of top upper corners in cartesian coordinate = [xx yy zz]
+           xyzflt.suv (flt_num*3)     - unit vector in the strike direction                   = [xx yy zz]
+           xyzflt.duv(flt_num*3)      - unit vector in the dip direction                      = [xx yy zz]
+           xyzflt.nuv(flt_num*3)      - normal unit vector                                    = [xx yy zz]
+      Note: zz elevation positive upward
+
+      # below only for fault type 5 & 6
+      flt?.geoname (cell array) - geometry file names
+      flt?.colname (cell array) - column descriptions
+
+      # below only for fault type 7
+      flt?.grname (cell array)  - green function file names
+
+# subfault:
+subflt (structure)
+      subflt.num  (scalar)        - number of subfaults
+      subflt.name (cell array)    - main fault names
+      subflt.flt  (subflt_num*11) - subfault parameters
+      # flt1 & flt2 & flt5
+      subflt.flt = [dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX]
+      # flt3 & flt4 & flt6
+      subflt.flt = [dnum snum rake rs ts rake0 rakeX rs0 rsX ts0 tsX]
+
+# addon features variation in dip
+addon (structure)
+      addon.dipnum  (scalar)     - number of dips
+      addon.dipname (cell array) - main fault names
+      addon.dip     (dip_num*4)  - dip parameters     = [dip z1 z2 rows]
+            rows    (scalar)     - number of layers for each dip
+
+      addon.strnum  (scalar)     - number of strikes
+      addon.strname (cell array) - main fault names
+      addon.str     (str_num*5)  - strike parameters  = [x1 y1 x2 y2 columns sweepAngle]
+            columns (scalar)     - number of layers for each strike
+	    sweepAngle (scalar)  - angle between normal direction of fault trace and east (E=0 N=90 W=180 S=270 [deg])
+
+     *addon.crt (matrix)         = [sx1 sy1 sx2 sy2 addon.str(:,[5 6])]
+
+# to be modified
+bndry structure: bndry.name bndry.num & bndry.bd
+
+# (4) Data:
+# Point:
+pnt (structure)
+      pnt.num     (scalar)     - number of points
+      pnt.name    (cell array) - names of points
+      pnt.loc     (nn*3)       - location of points     = [lon lat z]
+      pnt.disp    (nn*3)       - observed displacements = [east north vert]
+      pnt.err     (nn*3)       - observed errors        = [east north vert]
+      pnt.wgt     (nn*1)       - weight for points      = [weight]  %we should allow differential weighting for points
+     *pnt.crt     (nn*3)       - cartesian location     = [xx yy zz] = Xin
+     *pnt.obs     (3*nn)*1     - observation vector     = [east;north;vertical]
+     *pnt.obs_err (3*nn)*1     - error vector           = [east;north;vertical]
+     *pnt.obs_wgt (3*nn)*1     - weight vector          = [east;north;vertical]
+     *pnt.coef                                          = sqrt(pnt.obs_wgt)./pnt.obs_err;
+
+# InSAR LOS Point:
+los (structure)
+      los.num     (scalar)     - number of points
+      los.name    (cell array) - names of points
+      los.loc     (nn*3)       - location of points     = [lon lat z]
+      los.disp    (nn*1)       - observed displacements = [los]
+      los.err     (nn*1)       - observed errors        = [los]
+      los.wgt     (nn*1)       - weight for points      = [weight]
+     *los.crt     (nn*6)       - cartesian location     = [xx yy zz dirE dirN dirV] = Lin
+                                 & los direction
+     *los.obs     (nn)*1       - observation vector     = [los]
+     *los.obs_err (nn)*1       - error vector           = [los]
+     *los.obs_wgt (nn)*1       - weight vector          = [los]
+     *los.coef                                          = sqrt(los.obs_wgt)./los.obs_err;
+
+# Baseline:
+bsl (structure)
+      bsl.num     (scalar)     - number of baselines
+      bsl.name    (cell array) - names of baselines
+      bsl.loc     (nn*6)       - location of baselines  = [lon1 lat1 z1 lon2 lat2 z2]
+      bsl.disp    (nn*4)       - observed length change = [east north vert absolute]
+      bsl.err     (nn*4)       - observed errors        = [east north vert absolute]
+      bsl.wgt     (nn*1)       - weight for baselines   = [weight]
+     *bsl.crt     (nn*6)       - cartesian location     = [bx1 by1 bz1 bx2 by2 bz2] = Bin
+     *bsl.obs     (4*nn)*1     - observation vector     = [east;north;vertical:length]
+     *bsl.obs_err (4*nn)*1     - error vector           = [east;north;vertical:length]
+     *bsl.obs_wgt (4*nn)*1     - weight vector          = [east;north;vertical:length]
+     *bsl.coef                                          = sqrt(bsl.obs_wgt)./bsl.obs_err
+
+# Profile:
+prf (structure)
+      prf.num     (scalar)     - number of profiles
+      prf.name    (cell array) - names of profiles
+      prf.prf     (nn*5)       - profile parameters     = [lon1 lat1 lon2 lat2 N]
+
+# Grd:
+grd (structure)
+      grd.num     (scalar)     - number of grids
+      grd.name    (cell array) - names of grids
+      grd.grd     (nn*8)       - grid parameters        = [Erot Nrot lon1 lat1 lon2 lat2 Ne Nn]
+
+     *nod.name    (cell array)
+     *nod.loc     (nn*3)       - location of baselines  = [lon lat z]
+     *nod.crt     (nn*3)       - cartesian location     = [xx yy zz] = Nin
+
+# (5) Stress:
+# Point:
+sspnt (structure)
+    sspnt.num     (scalar)     - number of points for stress calculation
+    sspnt.name    (cell array) - names of points
+    sspnt.loc     (nn*3)       - location of points = [lon lat z]
+    sspnt.str     (nn*1)       - strike             = [strike]
+    sspnt.dip     (nn*1)       - dip                = [dip]
+    sspnt.rake    (nn*1)       - rake               = [rake]
+    sspnt.fric    (nn*1)       - friction           = [friction]
+
+   *sspnt.crt     (3*nn)       - cartesian location     = Xin = [xx;yy;zz]
+   *sspnt.shear   (nn*3)       - shear stress
+   *sspnt.normal  (nn*3)       - normal stress
+   *sspnt.coulomb (nn*3)       - coulomb stress
+# Fault:
+ssflt? (structure)
+    ssflt?.fltnum (scalar)     - number of faults for stress calculation
+    ssflt?.fltname(cell array) - names of faults
+    ssflt?.flt    (flt_num*11) - fault parameters
+
+    ssflt1.flt = [lon1 lat1 z1   z2   len str dip rake fric Nd Ns]
+    ssflt2.flt = [lon1 lat1 lon2 lat2 z1  z2  dip rake fric Nd Ns]
+
+   *ssflt?.num    (scalar)     - number of points for stress calculation on faults
+   *ssflt?.name   (cell array) - names of points on faults
+   *ssflt?.loc    (nn*3)       - location of points = [lon lat z]
+   *ssflt?.str    (nn*1)       - strike             = [strike]
+   *ssflt?.dip    (nn*1)       - dip                = [dip]
+   *ssflt?.rake   (nn*1)       - rake               = [rake]
+   *ssflt?.fric   (nn*1)       - friction           = [friction]
+   *ssflt?.dnum   (nn*1)       - dnum
+   *ssflt?.snum   (nn*1)       - snum
+
+   *ssflt?.crt    (3*nn)       - cartesian location     = Xin = [xx;yy;zz]
+   *ssflt?.shear  (nn*3)       - shear stress
+   *ssflt?.normal (nn*3)       - normal stress
+   *ssflt?.coulomb(nn*3)       - coulomb stress
+
+# (6) Outputs:
+prjflt = [ dnum snum xtop1 ytop1 ztop1 xbot1 ybot1 zbot1 xbot2 ybot2 zbot2 xtop2 ytop2 ztop2
+           xctr yctr zctr ss ds ts rake rs ]

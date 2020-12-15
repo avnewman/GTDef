@@ -1,0 +1,5 @@
+1. Internally, all point-type data use 3 components (regardless of whether its type 1,2, or 3).  This causes issues when using
+non-type 3 (3 component) data for programs like GTDef_resolution that requires real values for every component of the data.
+
+2. Weighting is only a single parameter per site within point type data. Thus, if you have GNSS and would like to differentially weight.
+Internally it is written out to 3 values of same size.  The only issue I see is that some programs, like the resolution may need to be modified.
