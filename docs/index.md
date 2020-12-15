@@ -24,8 +24,8 @@ GTdef('example.in')
 
 
 ## Contributors
-Ting Chen, [School of Geodesy and Geomatics, Wuhan University](https://en.whu.edu.cn)
-Lujia Feng, [Earth Observatory of Singapore](https://www.earthobservatory.sg/people/feng-lujia)
-Derrick Murekezi, [School of Earth and Atmospheric Sciences] (http://geophysics.eas.gatech.edu/dmurekezi)
-Andrew Newman, [School of Earth and Atmospheric Sciences](http://geophysics.eas.gatech.edu/anewman) (maintainer)
-Amy Williamson, [National Tsunami Warning Center, NOAA](https://www.tsunami.gov/)
+Ting Chen, [School of Geodesy and Geomatics, Wuhan University](https://en.whu.edu.cn)  
+Lujia Feng, [Earth Observatory of Singapore](https://www.earthobservatory.sg/people/feng-lujia)  
+Derrick Murekezi, [School of Earth and Atmospheric Sciences](http://geophysics.eas.gatech.edu/dmurekezi)  
+Andrew Newman, [School of Earth and Atmospheric Sciences](http://geophysics.eas.gatech.edu/anewman) (maintainer)  
+Amy Williamson, [National Tsunami Warning Center, NOAA](https://www.tsunami.gov/)  
