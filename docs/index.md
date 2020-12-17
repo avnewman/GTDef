@@ -8,7 +8,7 @@ Created by the [Newman Research Group at Georgia Tech](http://geophysics.eas.gat
 [![DOI](https://zenodo.org/badge/283332126.svg)](https://zenodo.org/badge/latestdoi/283332126)
 
 ## Getting started
-Within each version (starting with v4.0), there is a documentation directory that contains web-based step-by-step information on how to run the code, with specific case examples.  The [examples and documentation are also linked here.](./documentation)
+Within each version (starting with v4.0), there is a documentation directory that contains web-based step-by-step information on how to run the code, with specific case examples.  The [examples and documentation are also linked here](./documentation/).
 
 ### running code is easy
 ```markdown
