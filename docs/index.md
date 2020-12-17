@@ -1,6 +1,6 @@
 # Welcome to GTDef
 
-_GTDef_ is a set of algorithms created in Matlab for modeling kinematically-described deformation from rectangular dislocations within a half-space, or layer_d medium.
+_GTDef_ is a set of algorithms created in Matlab for modeling kinematically-described deformation from rectangular dislocations within a half-space, or layered medium.
 
 Created by the [Newman Research Group at Georgia Tech](http://geophysics.eas.gatech.edu/anewman).
 
