@@ -1,11 +1,13 @@
 # GTDef
 GTDef: Georgia Tech Ground Deformation Software suite
 
-Maintained by [Andrew Newman](http://geophysics.eas.gatech.edu) (@Bent_Earth) at Georgia Tech
+Maintained by [Andrew Newman](http://geophysics.eas.gatech.edu) ([@Bent_Earth](https://twitter.com/Bent_Earth)) at [Georgia Tech](www.gatech.edu).
 
 GitHub landing page is [here](https://avnewman.github.io/GTDef/).
 
 ## Latest version
+Version: 4.0.0  
+Released: 12/16/2020  
 [![DOI](https://zenodo.org/badge/283332126.svg)](https://zenodo.org/badge/latestdoi/283332126)
 
 -----------
