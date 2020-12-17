@@ -27,6 +27,3 @@ Lujia Feng, [Earth Observatory of Singapore](https://www.earthobservatory.sg/peo
 Derrick Murekezi, [School of Earth and Atmospheric Sciences](http://geophysics.eas.gatech.edu/dmurekezi)  
 Andrew Newman, [School of Earth and Atmospheric Sciences](http://geophysics.eas.gatech.edu/anewman) (maintainer)  
 Amy Williamson, [National Tsunami Warning Center, NOAA](https://www.tsunami.gov/)  
-
-
-date: "Page updated: `r format(Sys.time(), '%d %B, %Y')`"
