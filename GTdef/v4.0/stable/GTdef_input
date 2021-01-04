@@ -1,5 +1,7 @@
 #################################################################
-# 			INPUT FILE FOR GTdef
+# 			EXAMPL INPUT FILE FOR GTdef  *DO NOT RUN THIS FILE*
+#   instead, please follow documentation for instructions at
+#      https://avnewman.github.io/GTDef/documentation/
 #----------------------------------------------------------------
 # (1) Model parameters and data are combined in one input file
 # (2) Forward and inverse models are mixed and distinguished by the range [min max]

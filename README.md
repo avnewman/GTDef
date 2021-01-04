@@ -5,9 +5,11 @@ Maintained by [Andrew Newman](http://geophysics.eas.gatech.edu) ([@Bent_Earth](h
 
 GitHub landing page is [here](https://avnewman.github.io/GTDef/).
 
-## Latest version
-Version: 4.0.0  
-Released: 12/16/2020  
+Program documentation and example runs are [here](https://avnewman.github.io/GTDef/documentation/).
+
+## Latest stable version
+Version: 4.0.1  
+Released: 01/04/2021  
 [![DOI](https://zenodo.org/badge/283332126.svg)](https://zenodo.org/badge/latestdoi/283332126)
 
 -----------
