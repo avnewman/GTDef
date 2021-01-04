@@ -1,5 +1,8 @@
 function [] = GTdef(finName,wnum)
 
+%   Please follow documentation for instructions at
+%      https://avnewman.github.io/GTDef/documentation/
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                    GTdef.m                                           %
 %                  Georgia Tech Matlab program for deformation                         %
