@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-
+# v1.5 redone to normalize by own parameter, not oposite.
+# AVN 21 Jan 2021
 import pandas as pd
 from numpy import max,min,abs,gradient
 import sys
@@ -11,8 +12,12 @@ invout=pd.read_table(fin,sep=r"\s+", header=1, names=['beta', 'kappa', 'data_num
 
 x=invout.r2d.values
 y=invout.rms.values
-ynorm=y*(max(x)-min(x))
-xnorm=x*(max(y)-min(y))
+#old
+#ynorm=y*(max(x)-min(x))
+#xnorm=x*(max(y)-min(y))
+#new
+ynorm=y/(max(y)-min(y))
+xnorm=x/(max(x)-min(x))
 k=invout.kappa.values
 
 yp=gradient(ynorm,xnorm) #y-prime
@@ -38,4 +43,3 @@ print(invout_sm.to_string(index=False,header=False))
 # yi=f(xi)
 # yip=gradient(yi,dx)
 # yipp=gradient(yip,dx)
-
