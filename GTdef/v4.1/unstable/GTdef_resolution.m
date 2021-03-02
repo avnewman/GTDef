@@ -379,7 +379,7 @@ if ~isempty(prjfltAll)
     end
     [ row,~ ] = size(newprjfltAll);
     if length(newprjfltAll(ii,:)) == 24 ;
-      fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zcrt (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m]   (24) ?   (25) ?  (26)Rss (27)Rds  (28)Rts\n');
+      fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zctr (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m]   (24) ?   (25) ?  (26)Rss (27)Rds  (28)Rts\n');
       for ii =1:row
           name = fltAllName{ii};
           flt  = newprjfltAll(ii,:);
@@ -388,7 +388,7 @@ if ~isempty(prjfltAll)
           fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f  %6.4f %6.4f %6.4f\n',name,flt,Rd);
       end
     else
-      fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zcrt (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)Rss (25)Rds  (26)Rts\n');
+      fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zctr (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)Rss (25)Rds  (26)Rts\n');
       for ii =1:row
           name = fltAllName{ii};
           flt  = newprjfltAll(ii,:);
@@ -463,7 +463,7 @@ if (nres>0)
            end
            foutName = strcat(basename,'_patches_R_',num2str(pt),'.out');
            fout     = fopen(foutName,'w');
-           fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zcrt (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)Rss (25)Rds  (26)Rts\n');
+           fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zctr (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)Rss (25)Rds  (26)Rts\n');
            [ row,~ ] = size(newprjfltAll);
            for ii =1:row
                name = fltAllName{ii};

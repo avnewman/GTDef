@@ -1,7 +1,7 @@
 function [] = GTdef_project(finName)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                       	GTdef_project.m                                 % 
+%                       	GTdef_project.m                                 %
 %									        %
 % (1) Project fault geometry and slip information onto surface geographic       %
 % coordinate								        %
@@ -137,14 +137,14 @@ tic
     % output point file
     fpntName = strcat(basename,'_point.out');
     fpnt = fopen(fpntName,'w');
-    fprintf(fpnt,'#(1)point (2)3 (3)name (4)lon (5)lat (6)z (7)Ue (8)Un (9)Uv (10)eUe (11)eUn (12)eUv (13)weight (14)fault name (15)Dstr1  (16)Dstr2 (17)Ddip (18)Dvert\n'); 
+    fprintf(fpnt,'#(1)point (2)3 (3)name (4)lon (5)lat (6)z (7)Ue (8)Un (9)Uv (10)eUe (11)eUn (12)eUv (13)weight (14)fault name (15)Dstr1  (16)Dstr2 (17)Ddip (18)Dvert\n');
 toc
 end
 
 
 xsect = []; xsectName = {};
-prjfltAll = []; 
-fltAllName = {}; 
+prjfltAll = [];
+fltAllName = {};
 prjflt1  = []; prjflt2 = []; prjflt3 = []; prjflt4 = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fault1 data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if flt1.num~=0
@@ -175,13 +175,13 @@ tic
        % cross-section projection
        [ xsect1Name,xsect1 ] = GTdef_xsection(1,cfname,cflt,addon.dip(dipInd,:));
        xsect     = [ xsect; xsect1 ];
-       xsectName = [ xsectName; xsect1Name ];   
+       xsectName = [ xsectName; xsect1Name ];
        % surface projection
        [ ~,prjflt1,~ ] = GTdef_prjflt1dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
        prjfltAll = [ prjfltAll; prjflt1 ];
        name1    = cell(fltNum,1);
        for ii = 1:fltNum, name1{ii} = cfname; end
-       fltAllName = [ fltAllName; name1 ];   
+       fltAllName = [ fltAllName; name1 ];
     end
 toc
 end
@@ -220,13 +220,13 @@ tic
        % cross-section projection
        [ xsect2Name,xsect2 ] = GTdef_xsection(2,cfname,cflt,addon.dip(dipInd,:));
        xsect     = [ xsect; xsect2 ];
-       xsectName = [ xsectName; xsect2Name ];   
+       xsectName = [ xsectName; xsect2Name ];
        % surface projection
        [ ~,prjflt2,~ ] = GTdef_prjflt2dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
        prjfltAll = [ prjfltAll; prjflt2 ];
        name2    = cell(fltNum,1);
        for ii = 1:fltNum, name2{ii} = cfname; end
-       fltAllName = [ fltAllName; name2 ];   
+       fltAllName = [ fltAllName; name2 ];
     end
 toc
 end
@@ -261,13 +261,13 @@ tic
        % cross-section projection
        [ xsect3Name,xsect3 ] = GTdef_xsection(3,cfname,cflt,addon.dip(dipInd,:));
        xsect     = [ xsect; xsect3 ];
-       xsectName = [ xsectName; xsect3Name ];   
+       xsectName = [ xsectName; xsect3Name ];
        % surface projection
        [ ~,prjflt3,~ ] = GTdef_prjflt3dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:));
        prjfltAll = [ prjfltAll; prjflt3 ];
        name3 = cell(fltNum,1);
        for ii = 1:fltNum, name3{ii} = cfname; end
-       fltAllName = [ fltAllName; name3 ];   
+       fltAllName = [ fltAllName; name3 ];
     end
 toc
 end
@@ -306,13 +306,13 @@ tic
        % cross-section projection
        [ xsect4Name,xsect4 ] = GTdef_xsection(4,cfname,cflt,addon.dip(dipInd,:));
        xsect     = [ xsect; xsect4 ];
-       xsectName = [ xsectName; xsect4Name ];   
+       xsectName = [ xsectName; xsect4Name ];
        % surface projection
        [ ~,prjflt4,~ ] = GTdef_prjflt4dif(cflt,subflt.flt(subInd,:),addon.dip(dipInd,:),addon.crt(strInd,:));
        prjfltAll = [ prjfltAll; prjflt4 ];
        name4 = cell(fltNum,1);
        for ii = 1:fltNum, name4{ii} = cfname; end
-       fltAllName = [ fltAllName; name4 ];   
+       fltAllName = [ fltAllName; name4 ];
     end
 toc
 end
@@ -330,7 +330,7 @@ tic
        colname = flt5.colname{ii};
        % find subfaults for the master fault
        subInd = strcmpi(cfname,subflt.name);
-       
+
        % point & cross-section projections do ont apply to fault5
 
        % surface projection
@@ -339,7 +339,7 @@ tic
        fltNum   = size(prjflt5,1);
        name5    = cell(fltNum,1);
        for ii = 1:fltNum, name5{ii} = cfname; end
-       fltAllName = [ fltAllName; name5 ];   
+       fltAllName = [ fltAllName; name5 ];
     end
 toc
 end
@@ -357,7 +357,7 @@ tic
        colname = flt6.colname{ii};
        % find subfaults for the master fault
        subInd = strcmpi(cfname,subflt.name);
-       
+
        % point & cross-section projections do ont apply to fault6
 
        % surface projection
@@ -366,14 +366,14 @@ tic
        fltNum   = size(prjflt6,1);
        name6    = cell(fltNum,1);
        for ii = 1:fltNum, name6{ii} = cfname; end
-       fltAllName = [ fltAllName; name6 ];   
+       fltAllName = [ fltAllName; name6 ];
     end
 toc
 end
 
-if ~isempty(pnt.crt)  
-    fclose(fpnt); 
-    fprintf(1,'\nGTdef_project output %s\n',fpntName); 
+if ~isempty(pnt.crt)
+    fclose(fpnt);
+    fprintf(1,'\nGTdef_project output %s\n',fpntName);
 end
 
 % surface file
@@ -394,14 +394,14 @@ if ~isempty(prjfltAll)
         lon = zeros(size(xx));         lat = zeros(size(yy));
         for ii=1:5
             [lon(:,ii),lat(:,ii)] = xy_to_latlon(xx(:,ii),yy(:,ii),lon0,lat0,0);
-        end        
+        end
         newprjfltAll = [ prjfltAll(:,1:2) lon(:,1) lat(:,1) prjfltAll(:,5) lon(:,2) lat(:,2) prjfltAll(:,8) lon(:,3) lat(:,3) prjfltAll(:,11) ...
 	                lon(:,4) lat(:,4) prjfltAll(:,14) lon(:,5) lat(:,5) prjfltAll(:,17) prjfltAll(:,18:24) ];
     end
     if strcmpi(coord,'local')
         newprjfltAll = prjfltAll;
     end
-    fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zcrt (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)es[m] (25)ns[m]\n');
+    fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zctr (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)es[m] (25)ns[m]\n');
     [ row,col ] = size(newprjfltAll);
     for ii =1:row
         name = fltAllName{ii};
@@ -412,21 +412,21 @@ if ~isempty(prjfltAll)
 end
 
 fclose(fout);
-fprintf(1,'\nGTdef_project output %s\n',foutName); 
+fprintf(1,'\nGTdef_project output %s\n',foutName);
 
 % cross-section file
 if ~isempty(xsect)
     foutName = strcat(basename,'_xsection.out');
     fout     = fopen(foutName,'w');
-    
-    fprintf(fout,'# (1)fault name (2)index (3)dip (4)x1[m] (5)z1[m] (6)x2[m] (7)z2[m] (8)width[m] (9)rows\n'); 
+
+    fprintf(fout,'# (1)fault name (2)index (3)dip (4)x1[m] (5)z1[m] (6)x2[m] (7)z2[m] (8)width[m] (9)rows\n');
     row = size(xsect,1);
-    
+
     for ii =1:row
         name = xsectName{ii};
         sct = xsect(ii,:);
         fprintf(fout,'%-10s  %5d  %6.2f    %12.4e   %14.6e   %12.4e %14.6e    %14.6e  %d\n',name,sct);
     end
     fclose(fout);
-    fprintf(1,'\nGTdef_project output %s\n',foutName); 
+    fprintf(1,'\nGTdef_project output %s\n',foutName);
 end
