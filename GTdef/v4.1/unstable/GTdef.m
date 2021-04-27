@@ -594,6 +594,13 @@ if modspace.lb==-Inf
         toc
     end
 
+    if (strcmpi(modspace.proj,'on'))  % write out porjections
+      ldir=pwd;
+      myFiles=dir(fullfile(ldir,strcat(basename,'_fwd.out'))); % added to inlcude any fwd model
+      GTdef_project(myFiles.name)
+    end
+
+
     % stress calculation
 %    if sspnt.num~=0 || ssflt1.fltnum~=0 || ssflt2.fltnum~=0
 %        fstressName = [ basename '_stress.out' ];
@@ -652,12 +659,12 @@ fprintf(1,'\n............. doing inversion .............\t');
 	save(fmatName);
     end
 
-    if (strcmpi(modspace.proj,'on'))
-    	ldir=pwd;
-	myFiles=dir(fullfile(ldir,strcat(basename,'_kp*00.out')));
-	for k=1:length(myFiles)
-		GTdef_project(myFiles(k).name)
-	end
+    if (strcmpi(modspace.proj,'on'))  % write out porjections
+      ldir=pwd;
+      myFiles=dir(fullfile(ldir,strcat(basename,'_kp*.out')));
+      for k=1:length(myFiles)
+        GTdef_project(myFiles(k).name)
+      end
     end
 
 end
