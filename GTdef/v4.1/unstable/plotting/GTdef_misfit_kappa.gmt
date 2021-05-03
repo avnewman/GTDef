@@ -91,7 +91,7 @@ test -r "$SUMMARY" || { echo "ERROR: Cannot find $SUMMARY. Exiting." ;  exit 1 ;
 
 # is there a range in results (does rms change?  If not, error out)
 if [ $(echo $(awk '$1!~"#"{print $7}' $SUMMARY | gmt gmtinfo -C ) | awk '$1>=$2{print "bad"}') ] ; then
-  echo "  No range of RMS values (there may have a problem with your inversion)...Exiting"
+  echo "  No range of RMS values (there may have been a problem with your inversion)...Exiting"
   exit 1
 fi
 
