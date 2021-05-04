@@ -1,5 +1,5 @@
 function [] = GTdef_output(filename,earth,modspace,beta,...
-           		   flt1,flt2,flt3,flt4,flt5,flt6,flt7,...   
+           		   flt1,flt2,flt3,flt4,flt5,flt6,flt7,...
                            subflt,addon,...
           		   pnt,los,bsl,prf,grd,nod)
 
@@ -62,7 +62,7 @@ modinfo   = modspace.modinfo(end,:);
 sdropflag = modspace.sdropflag;
 
 fout = fopen(filename,'w');
-                                                                                
+
 %%%%%%%%%% coordinates %%%%%%%%%%
 if ~isempty(coord)
     fprintf(fout,'coord   \t%s\n',coord);
@@ -96,7 +96,7 @@ end
 %%%%%%%%%% smooth parameters %%%%%%%%%%
 if ~isempty(beta)
     kappa = sqrt(beta);
-    fprintf(fout,'kappa   \t%-12.5f\nbeta     \t%-12.5f\n\n',kappa,beta);
+    fprintf(fout,'kappa   \t 1  \t%-12.2f\nbeta     \t  1   \t%-12.2f\n\n',kappa,beta);
 end
 
 if ~isempty(smooth)
@@ -266,7 +266,7 @@ for ii =1:prf.num
     name_len = length(name);
     fprintf(fout,'#profile %s  %-14.8f %-12.8f  %14.8f %-12.8f    %d\n',name,prf.prf(ii,:));
     ind = strncmpi(name,nod.name,name_len);
-    num = sum(ind); 
+    num = sum(ind);
     cnod_name = nod.name(ind);
     cnod_out  = nod.out(ind,:);
     if strcmp(coord,'local')
@@ -286,7 +286,7 @@ for ii =1:grd.num
     name_len = length(name);
     fprintf(fout,'#grid %s %-5.2f %-5.2f    %12.8f %-12.8f  %10.4f %-8.4f    %d  %d\n',name,grd.grd(ii,:));
     ind = strncmpi(name,nod.name,name_len);
-    num = sum(ind); 
+    num = sum(ind);
     cnod_name = nod.name(ind);
     cnod_out  = nod.out(ind,:);
     if strcmp(coord,'local')
@@ -296,7 +296,7 @@ for ii =1:grd.num
     else
         for jj = 1:num
         	fprintf(fout,'point 3 %s\t%14.8f %12.8f %12.5e  %10.5f %10.5f %10.5f  %10.5f %10.5f %10.5f  %-5.2f\n',cnod_name{jj},cnod_out(jj,:));
-    
+
         end
     end
 end

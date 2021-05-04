@@ -614,23 +614,33 @@ else
 fprintf(1,'\n............. doing inversion .............\t');
     % do inversion for each beta
     betaNum = length(modspace.beta);
+    kappa= {};  beta = {};  % get struct of kappa and betas as used in filenames
     for ii = 1:betaNum
         bt = modspace.beta(ii);
-        fprintf(1,'\n............. beta = %10d .............\t',bt);
         tic
         if strcmp(modspace.smooth,'2d')
             kp = sqrt(bt);
+            fprintf(1,'\n............ kappa = %10d .............\t',kp);
             if kp>=1
-                foutName = strcat(basename,'_kp',num2str(kp,'%-.0f'),'.out');
+                kpstr=num2str(kp,'%-.0f');
+                foutName = strcat(basename,'_kp',kpstr,'.out');
             else
-                foutName = strcat(basename,'_kp',num2str(kp,'%-.5f'),'.out');
+                kpstr=num2str(kp,'%-.5f');
+                foutName = strcat(basename,'_kp',kpstr,'.out');
             end
+            kappa=[kappa; kpstr];
         else
+            fprintf(1,'\n............. beta = %10d .............\t',bt);
+            kappa=[kappa; kpstr];
+
             if bt>=1
-                foutName = strcat(basename,'_bt',num2str(bt,'%-.0f'),'.out');
+                btstr=num2str(bt,'%-.0f');
+                foutName = strcat(basename,'_bt',btstr,'.out');
             else
-                foutName = strcat(basename,'_bt',num2str(bt,'%-.5f'),'.out');
+                btstr=num2str(bt,'%-.5f');
+                foutName = strcat(basename,'_bt',btstr,'.out');
             end
+            beta=[beta; btstr];
         end
         % inversion
         [ modspace ] = GTdef_invert(modspace,pnt,los,bsl,bt);
@@ -644,7 +654,7 @@ fprintf(1,'\n............. doing inversion .............\t');
         end
         % output results
         GTdef_output(foutName,earth,modspace,bt,flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt,addon,pnt,los,bsl,prf,grd,nod);
-	% output resolution matrix
+        % output resolution matrix
         if ~isempty(modspace.res)
             GTdef_resolution(foutName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl);
         end
@@ -656,16 +666,21 @@ fprintf(1,'\n............. doing inversion .............\t');
 
     if (strcmpi(modspace.mat,'on'))
         fmatName = [ basename '.mat' ];
-	save(fmatName);
+        save(fmatName);
     end
 
-    if (strcmpi(modspace.proj,'on'))  % write out porjections
-      ldir=pwd;
-      myFiles=dir(fullfile(ldir,strcat(basename,'_kp*.out')));
-      for k=1:length(myFiles)
-        GTdef_project(myFiles(k).name)
+      if (strcmpi(modspace.proj,'on'))  % write out porjections
+%       w =waitforbuttonpress;
+        ldir=pwd;
+        for i = 1: length(kappa)  % iterate over  kappa results
+          filename=dir(fullfile(ldir,strcat(basename,'_kp',kappa{i},'.out')));
+          GTdef_project(filename.name)
+        end
+        for i = 1: length(beta)  % iterate over  kappa results
+          filename=dir(fullfile(ldir,strcat(basename,'_bt',beta{i},'.out')));
+          GTdef_project(filename.name)
+        end
       end
-    end
 
 end
 
