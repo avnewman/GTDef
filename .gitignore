@@ -4,3 +4,6 @@
 ~*
 # all mac noise
 *.DS_Store
+
+# baselevel benchmarks directory
+benchmarks/

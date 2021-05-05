@@ -1,11 +1,10 @@
 # GMT 5 Session common arguments shelf
 BEGIN GMT 5.4.5
-B	3e-03/9e-04:dy/dx [km^2]:E
+B	3e-03/0.1:Curvature:E
 J	X
-JM	M16
 JX	X16
-R	0/0.027/-0.009/0
+R	0/0.027/0/1.35
 X	2
 Y	10.5
-L	10
+L	12
 END
