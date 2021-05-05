@@ -1,31 +1,31 @@
 function [ flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt ] = GTdef_update_slips(earth,modspace,flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                                   GTdef_update_slips				             %
+%                                   GTdef_update_slips                                       %
 % Update the final values for the slips                                                      %
-% Put back the slips in the same format as the input file		  		     %
-%									                     %
-% INPUT:					  		  	                     %
+% Put back the slips in the same format as the input file                                    %
+%                                                                                            %
+% INPUT:                                                                                     %
 % earth    - earth structure                                                                 %
 % modspace - model structure                                                                 %
-% flt?     - fault structure	  	                                                     %
+% flt?     - fault structure                                                                 %
 % subflt   - subfault structure                                                              %
-%									                     %
+%                                                                                            %
 % OUTPUT:                                                                                    %
 % ------------------------------------------------------------------------------------------ %
 % (1) add .out to fault structures                                                           %
-% flt?.out - with ss, ds, ts replaced by inverted values			             %
-%									                     %
-% (2) update flt?.Min, flt?.slip, and flt?.rake                                              %
-%									                     %
-% (3) add .out & .outname to subfault structures                                             %
-% subflt.outname - master-fault names						             %
-% subflt.out     = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]			     %
+% flt?.out - with ss, ds, ts replaced by inverted values                                     %
 %                                                                                            %
-% first created by Lujia Feng Wed May  6 16:21:17 EDT 2009		                     %
-% added fault5 lfeng Fri Dec 11 12:57:14 EST 2009				             %
-% used cell array of strings for names lfeng Wed Dec  1 17:50:08 EST 2010	             %
-% used structure lfeng Wed Feb 22 19:45:15 SGT 2012				             %
+% (2) update flt?.Min, flt?.slip, and flt?.rake                                              %
+%                                                                                            %
+% (3) add .out & .outname to subfault structures                                             %
+% subflt.outname - master-fault names                                                        %
+% subflt.out     = [ dnum snum ss ds ts ss0 ssX ds0 dsX ts0 tsX ]                            %
+%                                                                                            %
+% first created by Lujia Feng Wed May  6 16:21:17 EDT 2009                                   %
+% added fault5 lfeng Fri Dec 11 12:57:14 EST 2009                                            %
+% used cell array of strings for names lfeng Wed Dec  1 17:50:08 EST 2010                    %
+% used structure lfeng Wed Feb 22 19:45:15 SGT 2012                                          %
 % merged flt1 & flt3 and flt2 & flt4 lfeng Wed May  9 10:40:55 SGT 2012                      %
 % added flt5 lfeng Sat Dec  1 22:00:47 SGT 2012                                              %
 % corrected flt3 & flt4 lfeng Mon Mar 11 20:27:58 SGT 2013                                   %
@@ -36,6 +36,7 @@ function [ flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt ] = GTdef_update_slips(eart
 % added fault5 lfeng Tue Jun 23 17:29:48 SGT 2015                                            %
 % added fault6, changed old fault6 to fault7 lfeng Wed Jun  1 18:48:36 SGT 2016              %
 % last modified by Lujia Feng Thu Jun  2 10:29:27 SGT 2016                                   %
+% last modified by Andrew Newman Wednesday, May 5, 2021 4:50 PM                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 lb    = modspace.lb;
@@ -68,20 +69,20 @@ if flt1.num~=0
             slp1 = reshape(xx(first:last),[],compNum);
             lb1  = reshape(lb(first:last),[],compNum);
             ub1  = reshape(ub(first:last),[],compNum);
-	    dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
-	    slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
+            dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
+            slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
             newsubflt  = [ dnum snum slp1 lb1(:,1) ub1(:,1) lb1(:,2) ub1(:,2) lb1(:,3) ub1(:,3) ];
-	    subflt.out = [ subflt.out; newsubflt ];
+            subflt.out = [ subflt.out; newsubflt ];
 
-	    fltName = flt1.name{ii};
+            fltName = flt1.name{ii};
             name     = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
-	    subflt.outname = [ subflt.outname; name ];   
-	end
+            for jj = 1:fltNum, name{jj} = fltName; end
+            subflt.outname = [ subflt.outname; name ];
+        end
 
         % update flt1.slip & flt1.rake
-        ss = slp1(:,1); 
-        ds = slp1(:,2); 
+        ss = slp1(:,1);
+        ds = slp1(:,2);
         slip = sqrt(ss.^2+ds.^2);
         rake = atan2(ds,ss).*180/pi;
         %flt1.slip{ii} = slip;
@@ -110,28 +111,28 @@ if flt2.num~=0
         Nd = flt2.flt(ii,17); Ns = flt2.flt(ii,18); fltNum = Nd*Ns;
         first = last+1; last = last+fltNum*compNum;
         % single fault
-	if fltNum==1
+        if fltNum==1
             slp2 = reshape(xx(first:last),[],compNum);
             flt2.out(ii,8:10) = slp2;
         % multiple subfaults
-	else
+        else
             slp2 = reshape(xx(first:last),[],compNum);
             lb2  = reshape(lb(first:last),[],compNum);
             ub2  = reshape(ub(first:last),[],compNum);
-	    dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
-	    slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
-	    newsubflt  = [ dnum snum slp2 lb2(:,1) ub2(:,1) lb2(:,2) ub2(:,2) lb2(:,3) ub2(:,3) ];
-	    subflt.out = [ subflt.out; newsubflt ];
+            dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
+            slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
+            newsubflt  = [ dnum snum slp2 lb2(:,1) ub2(:,1) lb2(:,2) ub2(:,2) lb2(:,3) ub2(:,3) ];
+            subflt.out = [ subflt.out; newsubflt ];
 
-	    fltName = flt2.name{ii};
+            fltName = flt2.name{ii};
             name = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
-	    subflt.outname = [ subflt.outname; name ];   
-	end
+            for jj = 1:fltNum, name{jj} = fltName; end
+            subflt.outname = [ subflt.outname; name ];
+        end
 
         % update flt2.slip & flt2.rake
-        ss = slp2(:,1); 
-        ds = slp2(:,2); 
+        ss = slp2(:,1);
+        ds = slp2(:,2);
         slip = sqrt(ss.^2+ds.^2);
         rake = atan2(ds,ss).*180/pi;
         %flt2.slip{ii} = slip;
@@ -178,16 +179,16 @@ if flt3.num~=0
             % subfault names
             fltName = flt3.name{ii};
             name = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
-            subflt.outname = [ subflt.outname; name ];   
+            for jj = 1:fltNum, name{jj} = fltName; end  % was using ii and trashing my prior index
+            subflt.outname = [ subflt.outname; name ];
     	    % rake of subfaults
     	    sub_ind  = strcmpi(fltName,subflt.name);
             subflt3  = subflt.flt(sub_ind,:);
             numT = size(subflt3,1);
-            for ii=1:numT
-                dd  = subflt3(ii,1); ss = subflt3(ii,2);
+            for kk=1:numT
+                dd  = subflt3(kk,1); ss = subflt3(kk,2);
                 ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
-                newsubflt(ind,[3 6 7])  = subflt3(ii,[3 6 7]);
+                newsubflt(ind,[3 6 7])  = subflt3(kk,[3 6 7]);
             end
             subflt.out = [ subflt.out; newsubflt ];
         end
@@ -205,7 +206,7 @@ if flt3.num~=0
         %                1    2     3    4     5      6     7   8   9
         % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
         if strcmpi(etype,'homogeneous')
-            ss = rs.*cosd(rake); 
+            ss = rs.*cosd(rake);
             ds = rs.*sind(rake);
             flt3.Min{ii}(:,8:10) = [ss ds ts];
         else
@@ -232,29 +233,29 @@ if flt4.num~=0
             slp4 = reshape(xx(first:last),[],compNum);
             lb4  = reshape(lb(first:last),[],compNum);
             ub4  = reshape(ub(first:last),[],compNum);
-	    dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
-	    slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
-	    % rake of master faults
-	    rake  = flt4.flt(ii,8);  rlin  = ones(fltNum,1)*rake;
-	    rake0 = flt4.flt(ii,11); rlin0 = ones(fltNum,1)*rake0;
-	    rakeX = flt4.flt(ii,12); rlinX = ones(fltNum,1)*rakeX;
-	    newsubflt = [ dnum snum rlin slp4 rlin0 rlinX lb4(:,1) ub4(:,1) lb4(:,2) ub4(:,2) ];
-	    % subfault names
-	    fltName = flt4.name{ii};
+            dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
+            slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
+            % rake of master faults
+            rake  = flt4.flt(ii,8);  rlin  = ones(fltNum,1)*rake;
+            rake0 = flt4.flt(ii,11); rlin0 = ones(fltNum,1)*rake0;
+            rakeX = flt4.flt(ii,12); rlinX = ones(fltNum,1)*rakeX;
+            newsubflt = [ dnum snum rlin slp4 rlin0 rlinX lb4(:,1) ub4(:,1) lb4(:,2) ub4(:,2) ];
+            % subfault names
+            fltName = flt4.name{ii};
             name = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
-	    subflt.outname = [ subflt.outname; name ];   
-    	    % rake of subfaults
-    	    sub_ind  = strcmpi(fltName,subflt.name);
-	    subflt4  = subflt.flt(sub_ind,:);
-	    numT = size(subflt4,1);
-	    for ii=1:numT
-	        dd = subflt4(ii,1); ss = subflt4(ii,2);
-		ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
-		newsubflt(ind,[3 6 7])  = subflt4(ii,[3 6 7]);
-	    end
-	    subflt.out = [ subflt.out; newsubflt ];
-	end
+            for jj = 1:fltNum, name{jj} = fltName; end
+            subflt.outname = [ subflt.outname; name ];
+            % rake of subfaults
+            sub_ind  = strcmpi(fltName,subflt.name);
+            subflt4  = subflt.flt(sub_ind,:);
+            numT = size(subflt4,1);
+            for kk=1:numT
+              dd = subflt4(kk,1); ss = subflt4(kk,2);
+              ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
+              newsubflt(ind,[3 6 7])  = subflt4(kk,[3 6 7]);
+            end
+            subflt.out = [ subflt.out; newsubflt ];
+        end
 
         % update flt4.slip & flt4.rake
         rs   = slp4(:,1); % rake slip
@@ -269,7 +270,7 @@ if flt4.num~=0
         %                1    2     3    4     5      6     7   8   9
         % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
         if strcmpi(etype,'homogeneous')
-            ss = rs.*cosd(rake); 
+            ss = rs.*cosd(rake);
             ds = rs.*sind(rake);
             flt4.Min{ii}(:,8:10) = [ss ds ts];
         else
@@ -301,13 +302,13 @@ if flt5.num~=0
 
             fltName = flt5.name{ii};
             name     = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
-            subflt.outname = [ subflt.outname; name ];   
-	end
+            for jj = 1:fltNum, name{jj} = fltName; end
+            subflt.outname = [ subflt.outname; name ];
+        end
 
         % update flt5.slip & flt5.rake
-        ss = slp5(:,1); 
-        ds = slp5(:,2); 
+        ss = slp5(:,1);
+        ds = slp5(:,2);
         slip = sqrt(ss.^2+ds.^2);
         rake = atan2(ds,ss).*180/pi;
         %flt5.slip{ii} = slip;
@@ -335,15 +336,15 @@ if flt6.num~=0
     for ii = 1:flt6.num
         Nd = flt6.flt(ii,10); Ns = flt6.flt(ii,11); fltNum = Nd*Ns;
         first = last+1; last = last+fltNum*compNum;
-	if fltNum==1
+        if fltNum==1
             slp6 = reshape(xx(first:last),[],compNum);
             flt6.out(ii,2:3) = slp6;
-	else
+        else
             slp6 = reshape(xx(first:last),[],compNum);
             lb6  = reshape(lb(first:last),[],compNum);
             ub6  = reshape(ub(first:last),[],compNum);
-	    dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
-	    slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
+            dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
+            slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
             % rake of master faults
             rake  = flt6.flt(ii,1);  rlin  = ones(fltNum,1).*rake;
             rake0 = flt6.flt(ii,4);  rlin0 = ones(fltNum,1).*rake0;
@@ -352,19 +353,19 @@ if flt6.num~=0
             % subfault names
             fltName = flt6.name{ii};
             name = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
-            subflt.outname = [ subflt.outname; name ];   
-    	    % rake of subfaults
-    	    sub_ind  = strcmpi(fltName,subflt.name);
+            for jj = 1:fltNum, name{jj} = fltName; end
+            subflt.outname = [ subflt.outname; name ];
+            % rake of subfaults
+            sub_ind  = strcmpi(fltName,subflt.name);
             subflt6  = subflt.flt(sub_ind,:);
             numT = size(subflt6,1);
-            for ii=1:numT
-                dd  = subflt6(ii,1); ss = subflt6(ii,2);
+            for kk=1:numT
+                dd  = subflt6(kk,1); ss = subflt6(kk,2);
                 ind = newsubflt(:,1)==dd & newsubflt(:,2)==ss;
-                newsubflt(ind,[3 6 7])  = subflt6(ii,[3 6 7]);
+                newsubflt(ind,[3 6 7])  = subflt6(kk,[3 6 7]);
             end
             subflt.out = [ subflt.out; newsubflt ];
-	end
+        end
 
         % update flt6.slip & flt6.rake
         rs   = slp6(:,1); % rake slip
@@ -379,7 +380,7 @@ if flt6.num~=0
         %                1    2     3    4     5      6     7   8   9
         % layered Min = [slip north east depth length width str dip rake] [flt_num*9]
         if strcmpi(etype,'homogeneous')
-            ss = rs.*cosd(rake); 
+            ss = rs.*cosd(rake);
             ds = rs.*sind(rake);
             flt6.Min{ii}(:,8:10) = [ss ds ts];
         else
@@ -397,22 +398,22 @@ if flt7.num~=0
     for ii = 1:flt7.num
         Nd = flt7.flt(ii,10); Ns = flt7.flt(ii,11); fltNum = Nd*Ns;
         first = last+1; last = last+fltNum*compNum;
-	if fltNum==1
+        if fltNum==1
             slp5 = reshape(xx(first:last),[],compNum);
             flt7.out(ii,1:3) = slp5;
-	else
+        else
             slp5 = reshape(xx(first:last),[],compNum);
             lb5  = reshape(lb(first:last),[],compNum);
             ub5  = reshape(ub(first:last),[],compNum);
-	    dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
-	    slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
-	    newsubflt     = [ dnum snum slp5 lb5(:,1) ub5(:,1) lb5(:,2) ub5(:,2) lb5(:,3) ub5(:,3) ];
-	    subflt.out = [ subflt.out; newsubflt ];
+            dlin = [ 1:Nd ]'; dmat = dlin(:,ones(Ns,1)); dnum = reshape(dmat,[],1);
+            slin = [ 1:Ns ];  smat = slin(ones(Nd,1),:); snum = reshape(smat,[],1);
+            newsubflt     = [ dnum snum slp5 lb5(:,1) ub5(:,1) lb5(:,2) ub5(:,2) lb5(:,3) ub5(:,3) ];
+            subflt.out = [ subflt.out; newsubflt ];
 
-	    fltName = flt7.name{ii};
+            fltName = flt7.name{ii};
             name     = cell(fltNum,1);
-            for ii = 1:fltNum, name{ii} = fltName; end
-	    subflt.outname = [ subflt.outname; name ];   
-	end
+            for jj = 1:fltNum, name{jj} = fltName; end
+            subflt.outname = [ subflt.outname; name ];
+        end
     end
 end
