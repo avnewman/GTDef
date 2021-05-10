@@ -14,7 +14,7 @@ Released: 05/05/2021
 [![DOI](https://zenodo.org/badge/283332126.svg)](https://zenodo.org/badge/latestdoi/283332126)
 
 ### Version 4.0 is the first public release. 
-* Future versioning will use [semantic versioning](https://semver.org/) (major.minor.patch; e.g. 0.0.0).  
+* Future edits will use [semantic versioning](https://semver.org/) (major.minor.patch; e.g. 0.0.0).  
 * _Patches_ are minor bug fixes, as long as they don't change the expected functionality of existing codes(e.g. 4.0.**1**). 
 * _Minor_ modifications, including feature additions and more substantial fixes will go to sub-version (e.g. 4.**1**.0).
 * _Major_ feature change that creates different functionality for existing tools will get a full new version number (e.g. **5**.0.0).
