@@ -20,3 +20,11 @@ Released: 01/04/2021
 * Use only standard (non-greek/non-accented characters for file names and variables)
 * Do not use spaces in filenames (CamelCaseIsPreferred).
 * *Always Pull then Push!*  This will substantially reduce conflict.
+
+
+## Release Notes
+### Version 4.0 is the first public release. 
+Future versioning will go with order Version.sub-version.patch (e.g. 4.0.**1**).  
+Minor bug fixes will go as patches, as long as they don't change the expected functionality of existing codes. 
+Feature additions and major bug fixes will go to sub-version (e.g. 4.**1**).
+Any feature change that creates different functionality for existing tools will go in a major version (e.g. **5**.0).
