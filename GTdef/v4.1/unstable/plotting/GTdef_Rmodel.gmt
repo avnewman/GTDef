@@ -1,10 +1,9 @@
 #!/bin/bash
 # program to plot the model resolution spread of patches as read in from a model_kp###_patches_R.out file with data
-# V1.0  AVN
-# Tue Jun 23 17:14:23 EDT 2020
+# V1.1  AVN
+# Tue May 11 11:12:44 EDT 2021
 
 #########################################
-
 PATCHsuf="_patches_R.out"
 #######################################
 # tempdir
@@ -313,7 +312,7 @@ do
    gmt set MAP_FRAME_TYPE plain  FORMAT_GEO_MAP D
    #######################################
    if [ $LFLAG ] ; then
-   	gmt psbasemap  -X2 -Y10.5 $BGN -P -B${DXY}f${XYTICS}WeSn >$OUTFILE
+   	gmt psbasemap  -X2 -Y13.5 $BGN -P -B${DXY}f${XYTICS}WeSn >$OUTFILE
    else
    	COASTSCALE=$(echo $DXY | awk '{if ($1 <= .5) print " -Df " ; else if ($1 <= 2) print " -Dh -A10 " ; else print " -Di -A100 " }')
    	#echo COASTSCALE = $COASTSCALE
@@ -337,10 +336,10 @@ do
 
    if [ ! $LFLAG ] ; then  # replot coast if not local scale
    	LBAR=$(echo $DXY | awk '{print $1*100}')
-   	gmt pscoast -Lx3/2+c157/-7+w${LBAR}+atl $COASTSCALE -W0.51,gray  $MID >>$OUTFILE
+   	gmt pscoast -Lx2/1+c157/-7+w${LBAR}+atl $COASTSCALE -W0.51,gray  $MID >>$OUTFILE
    fi
 
-   gmt pslegend -Dx8/-1/16 -F+p2p+g255/255/200+r10p+s -P  $MID << ...EOF >>$OUTFILE
+   gmt pslegend -Dx8/-3/16 -F+p2p+g255/255/200+r10p+s -P  $MID << ...EOF >>$OUTFILE
 L 12 Helvetica-Bold C $TITLE
 D 1.5c 2p
 S 4c c 0.2 black 0.1  1c Station
@@ -352,7 +351,8 @@ L 6 Helvetica-Oblique L  Date: $(date)
 
    PSTITLE="Resolution Spread [km]"
    #gmt psscale -D16.5/5/10/0.4 -Baf+l"$PSTITLE" -C"$CPT" -O  >>$OUTFILE
-   gmt psscale -D16.5/5/10/0.4 -B+l"$PSTITLE" -C"$CPT" -O  >>$OUTFILE
+   gmt set FONT_LABEL  "12p,Helvetica,black"
+   gmt psscale -D5/-1/10/0.4h -B+l"$PSTITLE" -C"$CPT" -Q -O  >>$OUTFILE
 
    ####################################################################
    # END PS Creation
