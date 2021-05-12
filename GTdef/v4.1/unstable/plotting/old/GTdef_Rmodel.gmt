@@ -1,0 +1,383 @@
+#!/bin/bash
+# program to plot the model resolution spread of patches as read in from a model_kp###_patches_R.out file with data
+# V1.1  AVN
+# Tue May 11 11:12:44 EDT 2021
+
+#########################################
+PATCHsuf="_patches_R.out"
+#######################################
+# tempdir
+######################################
+if [ $TMPDIR ] ;then
+   USAGE=$TMPDIR/$$.usage
+   else
+   USAGE=$$.usage
+fi
+
+# create a usage display that will be shown if command is run with no arguements
+UL="\e[4m" # turns on underline
+NM="\e[0m" #turns off underline
+ printf "
+Usage: %s -M${UL}'model.in'${NM} -K${UL}'kappa_value'${NM} -S${UL}'slip_component'${NM}
+         [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}] [-D] [-T${UL}TMIN/TMAX/DT${NM}]
+
+Requires:
+       -M   Model_input_file
+	       Should be the original input model used for building model.  Must end in '.in'
+
+       -K   Kappa
+	       Value written in the same format as used in the filenames of model output files.
+	       (e.g. model_kp###.out where ### = Kappa).
+
+	       If Kappa = 'ALL', the program will run through all Kappa values for which there are
+	       appropriate $PATCHsuf files (created using GTDef_project).
+
+	       Model files needed: (all files are in current directory)
+	          model_kp###.out: The corresponding output at the kappa requested.
+	          model_kp###${PATCHsuf}: The corresponding model resolution patches file created
+		     using the 'resolutoin 1' flag within your GTdef input file.
+
+       -S   Slip_component (S=Strike-slip, D=Dip-Slip, T=Tension)
+               The component of slip for which resolution spread is plotted.
+
+Options:
+       -R   Rectangular_bounds
+       	       Bounds for plot using XMIN/XMAX/YMIN/YMAX.  Alternatively will use 10
+	       percent greater than the model geometry on all sides.
+
+       -D   (display?)
+       	       If flag is included, program will bring up display, otherwise it will silently make .ps and .png files
+
+       -T   resolution_range
+               Choose a range over which to plot deformation. Results are the value used and
+	       will include the amplifcation used with -S flag.  If not selected, the program
+	       will attempt to autoselect range based on data.
+       -P   size
+               optionally choose a new size to plot data Points.  This will use the GMT defaults
+	       which are set as cm at GT (local config may override).
+       -Z   (continouous color grad?)
+               Include this flag if you'd like a continuous color gradient for your plot.
+
+9Programs Required:
+       GMT v5 or greater
+       open or xdg-open (standard on mac and most linux distributions, respectively)
+       A few standard gnu commands (awk, test, echo, basename; likely on your system already)
+
+Output:
+      New files labeled %s_'model'_kp'Kappa'.ps and .png. The .png is displayed with -D option.
+
+Caveats:
+      Program expects that dips are down and to the right from starting point (internal
+      assumption made when createing ${PATCHsuf} files).  In other words, its best to
+      define dips less than 90°, though the program works up to 180°.
+
+Example: (plotting model at kappa = 750000 with 100x amplification on all vectors and contour, displaying the results)
+       %s -Mnicoya_camp_7x10.in -K750000 -S D -D
+" $(basename "$0") $(basename "$0") $(basename "$0") >$USAGE
+
+if  [ ${#} -lt "1" ] ; then
+  cat $USAGE  # display usage
+  rm $USAGE
+  exit 1 # exit with error after removing temp file
+fi
+DEFSCALE=0.001  # make km
+SCOMP="D"
+PSCALE=0.2
+while getopts "M:K:S:T:R:P:DZ" OPT
+do
+   case ${OPT} in
+       M) MODELIN=$OPTARG
+  	  MFLAG=1; # flag for inclusion of model
+        ;;
+       K) KAPPA=$OPTARG
+  	  KFLAG=1; # flag for plotting specific Kappa inversion
+        ;;
+       S) SCOMP=$OPTARG
+	  SFLAG=1; # flag for slip component
+	;;
+       T) TMIN=$(echo $OPTARG | awk -F"/" '{print $1}')
+	  TMAX=$(echo $OPTARG | awk -F"/" '{print $2}')
+	  DT=$(echo $OPTARG | awk -F"/" '{print $3}')
+  	  TFLAG=1; # flag for Slip Range
+        ;;
+       R) XMIN=$(echo $OPTARG | awk -F"/" '{print $1}')
+	  XMAX=$(echo $OPTARG | awk -F"/" '{print $2}')
+	  if [ $(echo $XMIN $XMAX | awk '$1>$2{print "bad"}') ] ; then
+	       echo "ERROR with '-R' option"
+	       echo "   XMIN must be lower than XMAX. Exiting..."
+	       rm $USAGE; exit 1
+	  fi
+	  YMIN=$(echo $OPTARG | awk -F"/" '{print $3}')
+	  YMAX=$(echo $OPTARG | awk -F"/" '{print $4}')
+	  if [ $(echo $YMIN $YMAX | awk '$1>$2{print "bad"}') ] ; then
+	       echo "ERROR with '-R' option\n YMIN must be lower than YMAX"
+	       rm $USAGE; exit 1
+	  fi
+  	  RFLAG=1; # flag for rectangular bounds.
+        ;;
+       D) DFLAG=1; # bring up display
+        ;;
+       Z) ZFLAG="-Z"; # bring up display
+        ;;
+       P) PCOMP=$OPTARG
+	  PFLAG=1; # value for point sizes
+	;;
+       *) echo "ERROR: unknown modifier flag used (${OPT}), exiting."  # if a bad modifier is used
+           rm $USAGE;   exit 1 ;; # exit with error after removing temp file
+   esac
+done
+rm $USAGE
+
+test "$DATASCALE" || DATASCALE=$DEFSCALE     #set to DEFSCALE if empty
+test "$FVSCALE" || FVSCALE=$DATASCALE     #set to DATASCALE if empty
+
+test "$MFLAG" || { echo "ERROR: Required -M flag missing, no input model selected.  Exiting." ; exit 1; }
+test "$KFLAG" || { echo "ERROR: Required -K flag missing, no Kappa value selected.  Exiting." ; exit 1; }
+test "$SFLAG" || { echo "ERROR: Required -S flag missing, no component selected.  Exiting." ; exit 1; }
+
+if [[ "$( echo $KAPPA | tr '[a-z]' '[A-Z]')" == "ALL" ]] ; then
+  PATCHFILES=$(ls -1 $(basename $MODELIN .in)*$PATCHsuf)
+  echo "Running on all kappa for which there exists a $PATCHsuf file"
+else
+  PATCHFILES=$(ls -1 *_kp${KAPPA}${PATCHsuf})
+  #echo "Resolution Spread model results:   Using $PATCHFILES."
+  echo "Running single solution for kappa:     $KAPPA."
+fi
+
+SCOMP=$(echo $SCOMP | tr '[a-z]' '[A-Z]')   # convert to caps
+if [[ $SCOMP == "S" || $SCOMP == "D" || $SCOMP == "T" ]] ; then
+	echo "Slip Component:    $SCOMP "
+else
+	echo "ERROR: Slip Component = $SCOMP is not recognized; must be S, D, or T.  Exiting "
+	exit 1
+fi
+if [[ $SCOMP == "S" ]] ; then
+	COMP="Strike-Slip"
+elif [[ $SCOMP == "D" ]] ; then
+	COMP="Dip-Slip"
+else
+	COMP="Opening"
+fi
+
+if [[ $PFLAG ]] ; then
+	PSCALE=$PCOMP
+fi
+MODbase="$(basename $MODELIN .in)"
+
+for PATCHES in $PATCHFILES
+do
+#   PMODEL=$(basename "$PATCHES" ${PATCHsuf}).out  # contains inverse results and data in original model format
+   KAPPA="$(echo $PATCHES | sed -e "s/^${MODbase}_kp//" -e "s/${PATCHsuf}$//")"
+   TITLE="Resolution Spread ($COMP): $MODbase @@ @~k@~ = $KAPPA"
+   echo "Running:   $PATCHES ($KAPPA)"
+   PATCHES_Rj=$(basename "$PATCHES" ${PATCHsuf})_Rj.out ; # repeat of $PATCHES but with res spread param.
+
+   # check to see if the required files exist and are readable
+   test -r "$MODELIN" || { echo "ERROR: Cannot find $MODELIN. Exiting." ;  exit 1 ; }
+   test -r "$PATCHES" || { echo "ERROR: Cannot find $PATCHES. Exiting." ;  exit 1 ; }
+#   test -r "$PMODEL" || { echo "ERROR: Cannot find $PMODEL. Exiting." ;  exit 1 ; }
+
+   # first things first
+   # how big is this thing?
+   if [ $RFLAG ] ; then
+           echo "Using user supplied map boundaries "
+   else
+   	# bounding boxes are 10% larger on either side
+   	# Xs
+   	XMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
+   	XMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $4,$7,$10,$13}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
+   	# Ys
+   	YMIN=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $1-0.1*($2-$1)}')
+   	YMAX=$(awk '$1!~"#" {printf "%f\n%f\n%f\n%f\n", $5,$8,$11,$14}' $PATCHES | gmt info  -C | awk '{printf "%.1f", $2+0.1*($2-$1)}')
+      	if [ "$XMIN" == "$XMAX" ] ; then
+   	   XMIN=$(echo $XMIN $YMIN $YMAX | awk '{print $1-($3-$2)/2}')
+   	   XMAX=$(echo $XMAX $YMIN $YMAX | awk '{print $1+($3-$2)/2}')
+   	elif [ "$YMIN" == "$YMAX" ] ; then
+   	   YMIN=$(echo $YMIN $XMIN $XMAX | awk '{print $1-($3-$2)/2}')
+   	   YMAX=$(echo $YMAX $XMIN $XMAX | awk '{print $1+($3-$2)/2}')
+   	fi
+   fi
+
+   # scale DXY with xrange
+   DXY=$(echo $XMIN $XMAX | awk '{XR=($2-$1)}
+   	{if (XR<1)
+   		print "0.1";
+   	else if (XR>=1 && XR<2)
+   		print "0.25";
+   	else if (XR>=2 && XR<5)
+   		print "0.5";
+   	else if (XR>=5 && XR<10)
+   		print "1";
+   	else if (XR>=10 && XR<20)
+   		print "5";
+   	else if (XR>=20 && XR<100)
+   		print "10";
+   	else if (XR>=100 && XR<1000)
+   		print "100";
+   	else if (XR>=1000 && XR<10000)
+   		print "1000";
+   	else if (XR>=10000 && XR<100000)
+   		print "10000";
+   	else if (XR>=100000 && XR<1000000)
+   		print "100000";
+   	else
+   		print "1000000";
+   	}')
+   XYTICS=$(echo $DXY | awk '{XT=$1}
+          {if ( XT==0.25 || XT==0.5 || XT==5 )
+                  print XT/5 ;
+          else
+                  print XT/4 ;
+          }')
+   #echo "Plot tics are $XYTICS annotated at $DXY"
+
+   RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"  ;#: echo RANGE = $RANGE
+   #echo DXY=$DXY
+
+   XSCALE=16
+   ISLOCAL="$(awk '$1=="coord"&&$2=="local"{print "1"}' $MODELIN)"
+   if [ $ISLOCAL ] ; then
+   	LFLAG=1   # is a local coord system
+   	PROJ="-JX$XSCALE"
+   	#echo "Local Coords: Projection is $PROJ"
+   else
+   	PROJ="-JM$XSCALE"
+   	#echo "Geographic Coords: Projection is $PROJ"
+   fi
+
+   # create table with r_j
+
+   awk 'NR=="1" {print $0, "(27)Psize[m] (28)Rjss[m] (29)Rjds[m] (30)Rjts[m]"}
+        $1!~"#"{
+        RE=6378.137 ; #equatorial radius
+        pi=4*atan2(1,1) ; rad=2*pi/360
+        flattening=1/298.257  ; # earth flattening
+        mlat=($5+$14)/2 ; mlatr=mlat*rad;
+        Rl=RE*1000.*(1-flattening*sin(mlatr)**2)   ; #earth rad at lat
+        mpd=Rl*rad  ; # m per degree
+        dx=($13-$4)*mpd*cos(mlatr);
+        dy=($14-$5)*mpd;
+        len_strike=(dx*dx+dy*dy)**0.5 ; # length
+        rotr=atan2(dx,dy);
+        rot=rotr/rad ; # rotation in degrees
+	# downdip
+        dx=($7-$4)*mpd*cos(mlatr);
+        dy=($8-$5)*mpd;
+	dz=($9-$6); # in m
+        dl_h=(dx*dx+dy*dy)**0.5 ; # length
+        rotr=atan2(dx,dy);
+        rot=rotr/rad ; # rotation in degrees
+	len_ddip=(dl_h*dl_h+dz*dz)**0.5 ; downdip length
+	nominal_length=((len_strike+len_ddip)/2)
+	Rjss=nominal_length/($24+0.000001)**0.5  ;
+	Rjds=nominal_length/($25+0.000001)**0.5  ;
+	Rjts=nominal_length/($26+0.000001)**0.5  ;
+        print $0, nominal_length, Rjss, Rjds, Rjts}' $PATCHES >$PATCHES_Rj
+
+   echo "Created:   $PATCHES_Rj"
+
+   # Determine Resolution Range
+   #results are scaled by DEFSCALE [=1 default-unused].  If TMIN=TMAX at 1-decimal place, use exact range.
+   # only outputs for component defined.
+   if [ ! $TFLAG ] ; then
+      TMIN=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -El | awk '{printf "%.0e", $1*DEF}'  DEF=$DEFSCALE )
+      TMAX=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -Eh | awk '{printf "%.0e", $1*DEF}'  DEF=$DEFSCALE )
+      DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
+      if [ $TMIN == $TMAX ] ; then
+        TMIN=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -El | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )
+        TMAX=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -Eh | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )
+        DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
+           if [ $TMIN == $TMAX ] ; then  # if it still doesn't work
+   	  echo "Slip has no range in values. Adding 10 pct. on either side."
+   	  TMIN=$(echo $TMIN | awk '{printf "%.1e",  $1-(.1*$1)**2**.5}')
+   	  TMAX=$(echo $TMAX | awk '{printf "%.1e",  $1+(.1*$1)**2**.5}')
+             DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
+           fi
+      fi
+   fi
+
+   # create CPT file for slip model
+   CPT=RES.cpt    # created within
+   #echo $TMIN $TMAX $DT
+   #gmt makecpt -C#0088ff,#00ffff,#88ff88,#ff6600,#ffff00,#ffffaa,#ffffff -T"$TMIN/$TMAX/3"  -Qo -A20+a >$CPT
+   #gmt makecpt -Cjet -I -T"$TMIN/$TMAX/3" -N -Qo >$CPT
+   gmt makecpt -C#ff2222,#ff6666,#ffaa44,#ffff00,#88ff00,#00ffff,#4499ff,#1144ff -T"$TMIN/$TMAX/3" -I -Qo $ZFLAG -N >$CPT
+   #echo "$TMIN/$TMAX/$DT"
+
+   BGN="$RANGE $PROJ -K"
+   MID="$RANGE $PROJ -O -K"
+   END="$RANGE $PROJ -O"
+
+   OUTFILE=$(basename "$0" .gmt)_$(basename "$PATCHES" ${PATCHsuf})_Rj.ps ; #echo $OUTFILE
+   #######################################
+   # GMT DEFAULTS
+   gmt set MAP_FRAME_TYPE plain  FORMAT_GEO_MAP D
+   gmt set FONT_LABEL  "10p,Helvetica,black" FONT_ANNOT_PRIMARY "8p,Helvetica,black"
+   #######################################
+   if [ $LFLAG ] ; then
+   	gmt psbasemap  -X2 -Y13.5 $BGN -P -B${DXY}f${XYTICS}WeSn >$OUTFILE
+   else
+   	COASTSCALE=$(echo $DXY | awk '{if ($1 <= .5) print " -Df " ; else if ($1 <= 2) print " -Dh -A10 " ; else print " -Di -A100 " }')
+   	#echo COASTSCALE = $COASTSCALE
+   	gmt pscoast  -X2 $COASTSCALE -W0.1 -S235/255/255 -G235/255/235 -Y10.5 $BGN -P -B${DXY}f${XYTICS}WeSn >$OUTFILE
+   fi
+
+   # grab individual subfault bounding boxes and plot them as lines colored by their slip magnitude
+   awk '$1!~"#" {
+          if (CP=="S"){Rj=$28} else if (CP=="D"){Rj=$29} else {Rj=$30}
+	  }{
+	  printf ">-Z%f\n%f %f\n%f %f\n%f %f\n%f %f\n%f %f\n",DEF*Rj, $4,$5, $7,$8, $10,$11, $13,$14, $4,$5
+	  }' CP=$SCOMP DEF=$DEFSCALE $PATCHES_Rj \
+   	 | gmt psxy  $MID -A -L -W -C"$CPT" >>$OUTFILE
+
+
+   # plot station locations
+   awk '$1!~"#"&&$1~"point"{print $4,$5}' $MODELIN |  \
+   	gmt psxy  $MID  -Sc$PSCALE -Gblack -W0.1,white >>$OUTFILE
+
+   # plot coast over model and data and add 100km scalebar
+
+   if [ ! $LFLAG ] ; then  # replot coast if not local scale
+   	LBAR=$(echo $DXY | awk '{print $1*100}')
+   	gmt pscoast -Lx2/1+c157/-7+w${LBAR}+atl $COASTSCALE -W0.51,gray  $MID >>$OUTFILE
+   fi
+
+   gmt pslegend -Dx8/-3/16 -F+p2p+g255/255/200+r10p+s -P  $MID << ...EOF >>$OUTFILE
+L 12 Helvetica-Bold C $TITLE
+D 1.5c 2p
+S 4c c 0.2 black 0.1  1c Station
+D 0.5c 1p
+L 6 Helvetica-Oblique L  Created by ${USER} in ${PWD}
+L 6 Helvetica-Oblique L  Command: $(basename $0) $*
+L 6 Helvetica-Oblique L  Date: $(date)
+...EOF
+
+   PSTITLE="Resolution Spread [km]"
+   #gmt psscale -D16.5/5/10/0.4 -Baf+l"$PSTITLE" -C"$CPT" -O  >>$OUTFILE
+   gmt psscale -D$(echo $XSCALE | awk '{print $1/2}')/-1/$XSCALE/0.2h -B+l"$PSTITLE" -C"$CPT" -Q -O  >>$OUTFILE
+
+   ####################################################################
+   # END PS Creation
+   ####################################################################
+
+   # create PNG output from PS file
+     OUTPNG=$(basename $OUTFILE .ps).png
+     # 600dpi 0.3cm margin on all sides and 50%scale
+     gmt psconvert $OUTFILE -E600 -A0.3c+S0.5 -Tg -F$OUTPNG
+
+   if [ $DFLAG ] ; then
+      if [ -x $( which open ) ] ; then
+           open $OUTPNG
+      elif  [ -x $( which xdg-open ) ] ; then
+           xdg-open $OUTPNG &> /dev/null &
+      else
+           echo "WARNING: cannot open $OUTPNG, no viewer available"
+      fi
+   fi
+
+   ###############################################
+   # put hidden stamp in file that will denote its source
+   echo " %%%  created $(date) by ${USER} using ${HOST}:${PWD}/$0 $* " >>$OUTFILE
+done
+rm $CPT
+#gv -scale=2  $OUTFILE &

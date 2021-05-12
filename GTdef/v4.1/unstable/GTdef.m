@@ -17,7 +17,7 @@ function [] = GTdef(finName,wnum)
 %      but number of workers will be determined by the system                          %
 %    : if option is excluded, will use open pool, if available                         %
 %                                                                                      %
-% v1:                                                                                  %
+% v1:                                                    nepal_2x2_ckbd_v3_fwd_wNOISE_kp9000_Rj.out                              %
 % first created by Lujia Feng Mon Apr 20 14:15:52 EDT 2009                             %
 % added coordiante type flag 'coord' lfeng Thu Nov 5 17:12:59 EST 2009                 %
 % added first derivative modes lfeng Tue Dec  1 14:31:10 EST 2009                      %
@@ -668,7 +668,6 @@ fprintf(1,'\n............. doing inversion .............\t');
         fmatName = [ basename '.mat' ];
         save(fmatName);
     end
-
       if (strcmpi(modspace.proj,'on'))  % write out porjections
 %       w =waitforbuttonpress;
         ldir=pwd;
@@ -681,7 +680,6 @@ fprintf(1,'\n............. doing inversion .............\t');
           GTdef_project(filename.name)
         end
       end
-
 end
 
 % close up parpool for parallel computing

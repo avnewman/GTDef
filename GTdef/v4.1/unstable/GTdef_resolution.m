@@ -473,7 +473,7 @@ if (nres>0)
                Rd_ds   = [R(pt+rd3rd,ii),R(pt+rd3rd,ii+rd3rd),R(pt+rd3rd,ii+2*rd3rd)];  % full matrix spread relative to ds patch component.
                Rd_ts   = [R(pt+2*rd3rd,ii),R(pt+2*rd3rd,ii+rd3rd),R(pt+2*rd3rd,ii+2*rd3rd)];  % full matrix spread relative to ts patch component.
                %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26
-               fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f %6.4f\n',name,flt,full(Rd));
+               fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %9.3e %9.3e %9.3e\n',name,flt,full(Rd));
            end
            fclose(fout);
            fprintf(1,'GTdef_resolution Model Resolution output %s\n',foutName);

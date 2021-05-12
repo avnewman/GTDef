@@ -66,11 +66,11 @@ function [ modspace,earth,...
 % added fault6 for external geometry, changed old fault6 to fault7 lfeng Jun 1 SGT 2016  %
 % last modified Lujia Feng Wed Jun  1 17:18:32 SGT 2016                                  %
 % added options for reading lsqlin params for fitting                                    %
-%  default values are now considerably lower (20, 1e-20)
+%  default values are now considerably lower (20, 1e-20)                                 %
 %last modified by Andrew Newman Tue May 19 09:58:52 EDT 2020                             %
 %last modified by Andrew Newman Tue Jun 16 12:40:00 EDT 2020                             %
 %last modified by Andrew Newman Thu Jun 18 18:54:03 EDT 2020                             %
-% added project line for input
+% added project line for input                                                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(filename,'file'), error('GTdef_open ERROR: %s does not exist!',filename); end
@@ -255,17 +255,17 @@ while(1)
 	    beta_num=1;
 	    beta=0;
 	end
-    %%%%% resolution %%%%%
+   %%%%% resolution %%%%%
     elseif strncmpi(flag,'res',3)
         [method,remain] = strtok(remain);
-	%% method 1 %%
-	if strcmp(method,'1')
-	    modspace.res='diags';
-	%% method 2 %%
-	elseif strcmp(method,'2')
+        %% method 1 %%
+        if strcmp(method,'1')
+          modspace.res='diags';
+        %% method 2 %%
+        elseif strcmp(method,'2')
            rr = strtok(remain);
            if GTdef_skip(rr)   % process on all data (if empty, or starts with # or %)
-	      modspace.res='all';
+             modspace.res='all';
            else
              while (~isempty(remain))
                 [rr,remain] = strtok(remain);
@@ -274,10 +274,11 @@ while(1)
              end
            end
         else
-	    warning('Line %d, of %s: Input resolution method "%s" not recognised. Continuing with resolution method = 1',ln,filename,method)
-	    modspace.res='diags';
+          warning('Line %d, of %s: Input resolution method "%s" not recognised. Continuing with resolution method = 1',ln,filename,method)
+          modspace.res='diags';
         end
-     %%%%% resolution %%%%%
+    %%%%% resolution %%%%%
+
     %%%%% projection %%%%%
     elseif strncmpi(flag,'proj',4)
         [modspace.proj,remain] = strtok(remain);
