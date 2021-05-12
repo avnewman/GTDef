@@ -18,7 +18,7 @@ fi
 UL="\e[4m" # turns on underline
 NM="\e[0m" #turns off underline
  printf "
-Usage: %s -M${UL}'model.in'${NM} -K${UL}'kappa_value'${NM} -S${UL}'slip_component'${NM} 
+Usage: %s -M${UL}'model.in'${NM} -K${UL}'kappa_value'${NM} -S${UL}'slip_component'${NM}
          [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}] [-D] [-T${UL}TMIN/TMAX/DT${NM}]
 
 Requires:
@@ -34,12 +34,12 @@ Requires:
 
 	       Model files needed: (all files are in current directory)
 	          model_kp###.out: The corresponding output at the kappa requested.
-	          model_kp###${PATCHsuf}: The corresponding model resolution patches file created 
+	          model_kp###${PATCHsuf}: The corresponding model resolution patches file created
 		     using the 'resolutoin 1' flag within your GTdef input file.
 
        -S   Slip_component (S=Strike-slip, D=Dip-Slip, T=Tension)
                The component of slip for which resolution spread is plotted.
- 
+
 Options:
        -R   Rectangular_bounds
        	       Bounds for plot using XMIN/XMAX/YMIN/YMAX.  Alternatively will use 10
@@ -82,7 +82,7 @@ if  [ ${#} -lt "1" ] ; then
 fi
 DEFSCALE=0.001  # make km
 SCOMP="D"
-PSCALE=0.3
+PSCALE=0.2
 while getopts "M:K:S:T:R:P:DZ" OPT
 do
    case ${OPT} in
@@ -140,15 +140,16 @@ if [[ "$( echo $KAPPA | tr '[a-z]' '[A-Z]')" == "ALL" ]] ; then
   echo "Running on all kappa for which there exists a $PATCHsuf file"
 else
   PATCHFILES=$(ls -1 *_kp${KAPPA}${PATCHsuf})
-  echo "Resolution Spread model results: Using $PATCHFILES."
+  #echo "Resolution Spread model results:   Using $PATCHFILES."
+  echo "Running single solution for kappa:     $KAPPA."
 fi
 
 SCOMP=$(echo $SCOMP | tr '[a-z]' '[A-Z]')   # convert to caps
 if [[ $SCOMP == "S" || $SCOMP == "D" || $SCOMP == "T" ]] ; then
-	echo "Slip Component = $SCOMP "
+	echo "Slip Component:    $SCOMP "
 else
-	echo "ERROR: Slip Component = $SCOMP is not recognized; must be S, D, or T.  Exiting " 
-	exit 1 
+	echo "ERROR: Slip Component = $SCOMP is not recognized; must be S, D, or T.  Exiting "
+	exit 1
 fi
 if [[ $SCOMP == "S" ]] ; then
 	COMP="Strike-Slip"
@@ -168,7 +169,7 @@ do
 #   PMODEL=$(basename "$PATCHES" ${PATCHsuf}).out  # contains inverse results and data in original model format
    KAPPA="$(echo $PATCHES | sed -e "s/^${MODbase}_kp//" -e "s/${PATCHsuf}$//")"
    TITLE="Resolution Spread ($COMP): $MODbase @@ @~k@~ = $KAPPA"
-   echo "  running:  $PATCHES ($KAPPA)"
+   echo "Running:   $PATCHES ($KAPPA)"
    PATCHES_Rj=$(basename "$PATCHES" ${PATCHsuf})_Rj.out ; # repeat of $PATCHES but with res spread param.
 
    # check to see if the required files exist and are readable
@@ -233,17 +234,17 @@ do
    RANGE="-R$XMIN/$XMAX/$YMIN/$YMAX"  ;#: echo RANGE = $RANGE
    #echo DXY=$DXY
 
-   SCALE=16
+   XSCALE=16
    ISLOCAL="$(awk '$1=="coord"&&$2=="local"{print "1"}' $MODELIN)"
    if [ $ISLOCAL ] ; then
    	LFLAG=1   # is a local coord system
-   	PROJ="-JX$SCALE"
+   	PROJ="-JX$XSCALE"
    	#echo "Local Coords: Projection is $PROJ"
    else
-   	PROJ="-JM$SCALE"
+   	PROJ="-JM$XSCALE"
    	#echo "Geographic Coords: Projection is $PROJ"
    fi
-    
+
    # create table with r_j
 
    awk 'NR=="1" {print $0, "(27)Psize[m] (28)Rjss[m] (29)Rjds[m] (30)Rjts[m]"}
@@ -259,7 +260,7 @@ do
         len_strike=(dx*dx+dy*dy)**0.5 ; # length
         rotr=atan2(dx,dy);
         rot=rotr/rad ; # rotation in degrees
-	# downdip	
+	# downdip
         dx=($7-$4)*mpd*cos(mlatr);
         dy=($8-$5)*mpd;
 	dz=($9-$6); # in m
@@ -271,9 +272,9 @@ do
 	Rjss=nominal_length/($24+0.000001)**0.5  ;
 	Rjds=nominal_length/($25+0.000001)**0.5  ;
 	Rjts=nominal_length/($26+0.000001)**0.5  ;
-        print $0, nominal_length, Rjss, Rjds, Rjts}' $PATCHES >$PATCHES_Rj		
+        print $0, nominal_length, Rjss, Rjds, Rjts}' $PATCHES >$PATCHES_Rj
 
-   echo "Created $PATCHES_Rj"
+   echo "Created:   $PATCHES_Rj"
 
    # Determine Resolution Range
    #results are scaled by DEFSCALE [=1 default-unused].  If TMIN=TMAX at 1-decimal place, use exact range.
@@ -309,7 +310,9 @@ do
 
    OUTFILE=$(basename "$0" .gmt)_$(basename "$PATCHES" ${PATCHsuf})_Rj.ps ; #echo $OUTFILE
    #######################################
+   # GMT DEFAULTS
    gmt set MAP_FRAME_TYPE plain  FORMAT_GEO_MAP D
+   gmt set FONT_LABEL  "10p,Helvetica,black" FONT_ANNOT_PRIMARY "8p,Helvetica,black"
    #######################################
    if [ $LFLAG ] ; then
    	gmt psbasemap  -X2 -Y13.5 $BGN -P -B${DXY}f${XYTICS}WeSn >$OUTFILE
@@ -321,16 +324,16 @@ do
 
    # grab individual subfault bounding boxes and plot them as lines colored by their slip magnitude
    awk '$1!~"#" {
-          if (CP=="S"){Rj=$28} else if (CP=="D"){Rj=$29} else {Rj=$30} 
+          if (CP=="S"){Rj=$28} else if (CP=="D"){Rj=$29} else {Rj=$30}
 	  }{
-	  printf ">-Z%f\n%f %f\n%f %f\n%f %f\n%f %f\n%f %f\n",DEF*Rj, $4,$5, $7,$8, $10,$11, $13,$14, $4,$5 
+	  printf ">-Z%f\n%f %f\n%f %f\n%f %f\n%f %f\n%f %f\n",DEF*Rj, $4,$5, $7,$8, $10,$11, $13,$14, $4,$5
 	  }' CP=$SCOMP DEF=$DEFSCALE $PATCHES_Rj \
    	 | gmt psxy  $MID -A -L -W -C"$CPT" >>$OUTFILE
 
 
    # plot station locations
    awk '$1!~"#"&&$1~"point"{print $4,$5}' $MODELIN |  \
-   	gmt psxy  $MID  -Sc$PSCALE -Gblack -W0.1 >>$OUTFILE
+   	gmt psxy  $MID  -Sc$PSCALE -Gblack -W0.1,white >>$OUTFILE
 
    # plot coast over model and data and add 100km scalebar
 
@@ -351,8 +354,7 @@ L 6 Helvetica-Oblique L  Date: $(date)
 
    PSTITLE="Resolution Spread [km]"
    #gmt psscale -D16.5/5/10/0.4 -Baf+l"$PSTITLE" -C"$CPT" -O  >>$OUTFILE
-   gmt set FONT_LABEL  "12p,Helvetica,black"
-   gmt psscale -D5/-1/10/0.4h -B+l"$PSTITLE" -C"$CPT" -Q -O  >>$OUTFILE
+   gmt psscale -D$(echo $XSCALE | awk '{print $1/2}')/-1/$XSCALE/0.2h -B+l"$PSTITLE" -C"$CPT" -Q -O  >>$OUTFILE
 
    ####################################################################
    # END PS Creation
