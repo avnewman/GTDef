@@ -43,7 +43,7 @@ Requires:
 Options:
        -N   Patch_Number
        	       Using this flag will alter the output to report the resolution (not spread)
-       	       at the described 'patch_number'. 
+       	       at the described 'patch_number'.
 	       A 'patch_number' refers to the count on a singular fault counting down-dip then
 	       along strike from the initial position of the fault.  To create the required input
 	       files, use the 'resolution 2 Patch_Number' call in your GTDef input.
@@ -61,7 +61,7 @@ Options:
        -T   resolution_range
                Choose a range over which to plot deformation. Results are the value used and
 	       will include the amplifcation used with -S flag.  If not selected, the program
-	       will attempt to autoselect range based on data. Note that if using '-N' flag, 
+	       will attempt to autoselect range based on data. Note that if using '-N' flag,
 	       range will be in terms of resolution (value <1) rather than distance in km.
        -P   size
                optionally choose a new size to plot data Points.  This will use the GMT defaults
@@ -326,11 +326,11 @@ do
    # create CPT file for slip model
    CPT=RES.cpt    # created within
 
-   #if [ $NFLAG ] ; then
+   if [ $NFLAG ] ; then
        gmt makecpt -C#ff2222,#ff6666,#ffaa44,#ffff00,#88ff00,#00ffff,#4499ff,#1144ff -T"$TMIN/$TMAX/3" -I -Qo $ZFLAG >$CPT
-   #else
+   else
        gmt makecpt -C#ff2222,#ff6666,#ffaa44,#ffff00,#88ff00,#00ffff,#4499ff,#1144ff -T"$TMIN/$TMAX/3" -I -Qo $ZFLAG -N >$CPT
-   #fi
+   fi
    #echo $TMIN $TMAX $DT
    #gmt makecpt -C#0088ff,#00ffff,#88ff88,#ff6600,#ffff00,#ffffaa,#ffffff -T"$TMIN/$TMAX/3"  -Qo -A20+a >$CPT
    #gmt makecpt -Cjet -I -T"$TMIN/$TMAX/3" -N -Qo >$CPT
