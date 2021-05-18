@@ -128,8 +128,9 @@ else
     Gg=inv(G'*G+e2I)*G'; % overdetermined and damped least squares (eqn 4.21 Menke).
 end
     %Gg = G'*inv(G*G'+e2I);  %  (eqn 4.22 Menke) damped least squares minimizing resolution spread and covarience size
-R=Gg*G ;            % Model Resolution Matrix
+R=Gg*G ;            % Model Resolution Matrix  (can/will have off-axis negatives loosely tied to correlation values)
 N=G*Gg ;            % Data Resolution Matrix
+CV=Gg*Gg' ;          % Covarience Matrix (eqn 4.10 Menke)
 
 
 modspace.resnorm = resnorm;
@@ -140,3 +141,4 @@ modspace.G = G;
 modspace.e2I = e2I;
 modspace.N = N;
 modspace.R = R;
+modspace.CV = CV;
