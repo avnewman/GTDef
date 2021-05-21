@@ -1,8 +1,8 @@
 function [lon,lat] = ckm2LL(xx,yy,lon0,lat0,rot)
 
-%  This matlab program 
-%  (1) rotates the cartesian coordinate by rot [degree]
-%      to the coordinate with horizontal x-axis 
+%  This matlab program
+%  (1) rotates the cartesian coordinate by rot [rads]
+%      to the coordinate with horizontal x-axis
 %  (2) transforms local Cartesian coordinate to lon,lat
 %      using (lon0,lat0) as origin
 %  Input:
@@ -16,7 +16,7 @@ function [lon,lat] = ckm2LL(xx,yy,lon0,lat0,rot)
 %  Output:
 %  (1) lon,lat [degree] may be scalars, vectors or matrices
 %      depending on the input xx,yy [m]
-%  Note: usually used with LL2ckm()  
+%  Note: usually used with LL2ckm()
 %  (1) use the same (lon0,lat0) for both
 %  (2) use rot for LL2ckm(); use -rot for ckm2LL()
 %  Other related functions: ckm2LLd(), LL2ckmd() and rotateckmd()
