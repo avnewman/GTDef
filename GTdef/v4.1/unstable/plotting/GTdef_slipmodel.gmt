@@ -268,17 +268,25 @@ do
       TMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -Eh | awk '{printf "%.1f", $1*DEF}'  DEF=$DEFSCALE )
       DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
       if [ $TMIN == $TMAX ] ; then
-        TMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -El | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )
-        TMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -Eh | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )
+        TMIN=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -El | awk '{printf "%.1g", $1*DEF}'  DEF=$DEFSCALE )
+        TMAX=$(awk '$1!~"#" {print ($19**2+$20**2+$21**2)**.5}' $PATCHES | gmt info -Eh | awk '{printf "%.1g", $1*DEF}'  DEF=$DEFSCALE )
         DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
            if [ $TMIN == $TMAX ] ; then  # if it still doesn't work
    	  echo "Slip has no range in values. Adding 10 pct. on either side."
-   	  TMIN=$(echo $TMIN | awk '{printf "%.1e",  $1-(.1*$1)**2**.5}')
-   	  TMAX=$(echo $TMAX | awk '{printf "%.1e",  $1+(.1*$1)**2**.5}')
+   	  TMIN=$(echo $TMIN | awk '{printf "%.1g",  $1-(.1*$1)**2**.5}')
+   	  TMAX=$(echo $TMAX | awk '{printf "%.1g",  $1+(.1*$1)**2**.5}')
              DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
            fi
       fi
    fi
+
+
+  if [ $TMIN == 0 ] ; then 
+	  TMIN="0"
+  fi
+  if [ $TMAX == 0 ] ; then 
+	  TMAX="0"
+  fi
 
    # create CPT file for slip model
    CPT=slip.cpt    # created within
@@ -429,7 +437,7 @@ L 6 Helvetica-Oblique L  Date: $(date)
    # create PNG output from PS file
      OUTPNG=$(basename $OUTFILE .ps).png
      # 600dpi 0.3cm margin on all sides and 50%scale
-     gmt psconvert $OUTFILE -E600 -A0.3c+S0.5 -Tg -F$OUTPNG
+     gmt psconvert $OUTFILE -E600 -A0.3c+S0.5 -Tg  #  -F$OUTPNG
 
    if [ $DFLAG ] ; then
       if [ -x $( which open ) ] ; then

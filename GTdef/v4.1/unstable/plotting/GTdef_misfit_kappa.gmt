@@ -103,13 +103,13 @@ SCALE=16
 if [ $RFLAG ] ; then
    echo "Using user supplied plot boundaries "
    #echo XMIN=$XMIN YMIN=$YMIN
-   DX="$(printf "%e\n%e\n" $XMIN $XMAX | gmt info -I.001 -C | awk '{printf" %1.0e", ($2-$1)/10}')"
-   DY="$(printf "%e\n%e\n" $YMIN $YMAX | gmt info -I.001 -C | awk '{printf" %1.0e", ($2-$1)/10}')"
+   DX="$(printf "%e\n%g\n" $XMIN $XMAX | gmt info -I.001 -C | awk '{printf" %1.0g", ($2-$1)/10}')"
+   DY="$(printf "%e\n%g\n" $YMIN $YMAX | gmt info -I.001 -C | awk '{printf" %1.0g", ($2-$1)/10}')"
    #echo DX=$DX DY=$DY
-   RANGE="$(printf "%e %e\n%e %e\n" $XMIN $YMIN $XMAX $YMAX | gmt info -I"$DX/$DY" )"
+   RANGE="$(printf "%g %g\n%g %g\n" $XMIN $YMIN $XMAX $YMAX | gmt info -I"$DX/$DY" )"
 else
-   DX="$(awk '$1!~"#"{print $13}' $SUMMARY | gmt info -I.001 -C | awk '{printf" %1.0e", ($2-$1)/10}')"
-   DY="$(awk '$1!~"#"{print $7}'  $SUMMARY | gmt info -I.001 -C | awk '{printf" %1.0e", ($2-$1)/20}')"
+   DX="$(awk '$1!~"#"{print $13}' $SUMMARY | gmt info -I.001 -C | awk '{printf" %1.0g", ($2-$1)/10}')"
+   DY="$(awk '$1!~"#"{print $7}'  $SUMMARY | gmt info -I.001 -C | awk '{printf" %1.0g", ($2-$1)/20}')"
    RANGE="$(awk '$1!~"#"{print $13,$7}' $SUMMARY | gmt info -I"$DX/$DY" )"
    if [ $(echo $RANGE | cut -c3- | awk -F"/" '$1>=$2{print "bad"}') ] ; then
      echo "ERROR with '-R' option"
@@ -144,8 +144,6 @@ gmt psbasemap  -X2  -Y10.5 $BGN -P -B"$DX":"Roughness [cm/km^2]":/"${DY}":"RMS M
 #
 gmt set MAP_FRAME_TYPE plain  MAP_FRAME_PEN red
 
-#DY2="$(awk '$1!~"#"{print $4}'  $MAXC | gmt info -I1 -C | awk '{printf "%.0e", ($2-$1)/10}')"
-#YRANGE2="$(awk 'NR==1{print "0/"$6*1.05}' $MAXC )"
 # normalize by 1
 DY2=0.1
 Y2MAX=1.35
@@ -200,7 +198,7 @@ L 6 Helvetica-Oblique L  Date: $(date)
 # create PNG output from PS file
   OUTPNG=$(basename $OUTFILE .ps).png
   # 600dpi 0.3cm margin on all sides and 50%scale
-  gmt psconvert $OUTFILE -E600 -A1c+S0.5 -Tg -F$OUTPNG
+  gmt psconvert $OUTFILE -E600 -A1c+S0.5 -Tg # -F$OUTPNG
 
 if [ -x $( which open ) ] ; then
      open $OUTPNG

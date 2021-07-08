@@ -298,26 +298,26 @@ do
       if [ $NFLAG ] ; then
       	TMAX=$(awk '$1!~"#" {if (CP=="S"){print $24} else if (CP=="D"){print $25} else {print $26} }' CP=$SCOMP $PATCHES_Rn | gmt info -Eh | awk '{print $1}' )
 	#echo $TMAX
-      	TMAX=$(echo $TMAX | awk '{printf "%.0e", $1*1.5}' )
+      	TMAX=$(echo $TMAX | awk '{printf "%.0g", $1*1.5}' )
 	#echo $TMAX
-      	TMIN=$(echo $TMAX | awk '{printf "%.2e", $1/1e2}' )
+      	TMIN=$(echo $TMAX | awk '{printf "%.2g", $1/1e2}' )
       else
-      	TMIN=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -El | awk '{printf "%.0e", $1*DEF}'  DEF=$DEFSCALE )
-      	TMAX=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -Eh | awk '{printf "%.0e", $1*DEF}'  DEF=$DEFSCALE )
+      	TMIN=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -El | awk '{printf "%.0g", $1*DEF}'  DEF=$DEFSCALE )
+      	TMAX=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -Eh | awk '{printf "%.0g", $1*DEF}'  DEF=$DEFSCALE )
       fi
       DT=$(echo $TMIN $TMAX | awk '{printf "%.0e", ($2-$1)/10.}')
       if [ $TMIN == $TMAX ] ; then
         if [ $NFLAG ] ; then
-	   TMAX=$(awk '$1!~"#" {if (CP=="S"){print $24} else if (CP=="D"){print $25} else {print $26} }' CP=$SCOMP $PATCHES_Rn | gmt info -Eh | awk '{printf "%.4e", $1*DEF}'  DEF=$DEFSCALE )
+	   TMAX=$(awk '$1!~"#" {if (CP=="S"){print $24} else if (CP=="D"){print $25} else {print $26} }' CP=$SCOMP $PATCHES_Rn | gmt info -Eh | awk '{printf "%.4g", $1*DEF}'  DEF=$DEFSCALE )
         else
-           TMIN=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -El | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )
-	   TMAX=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -Eh | awk '{printf "%.1e", $1*DEF}'  DEF=$DEFSCALE )
+           TMIN=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -El | awk '{printf "%.1g", $1*DEF}'  DEF=$DEFSCALE )
+	   TMAX=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -Eh | awk '{printf "%.1g", $1*DEF}'  DEF=$DEFSCALE )
 	fi
         DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
            if [ $TMIN == $TMAX ] ; then  # if it still doesn't work
    	  echo "Slip has no range in values. Adding 10 pct. on either side."
-   	  TMIN=$(echo $TMIN | awk '{printf "%.1e",  $1-(.1*$1)**2**.5}')
-   	  TMAX=$(echo $TMAX | awk '{printf "%.1e",  $1+(.1*$1)**2**.5}')
+   	  TMIN=$(echo $TMIN | awk '{printf "%.1g",  $1-(.1*$1)**2**.5}')
+   	  TMAX=$(echo $TMAX | awk '{printf "%.1g",  $1+(.1*$1)**2**.5}')
              DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
            fi
       fi
@@ -422,7 +422,7 @@ L 6 Helvetica-Oblique L  Date: $(date)
    # create PNG output from PS file
      OUTPNG=$(basename $OUTFILE .ps).png
      # 600dpi 0.3cm margin on all sides and 50%scale
-     gmt psconvert $OUTFILE -E600 -A0.3c+S0.5 -Tg -F$OUTPNG
+     gmt psconvert $OUTFILE -E600 -A0.3c+S0.5 -Tg # -F$OUTPNG
 
    if [ $DFLAG ] ; then
       if [ -x $( which open ) ] ; then
