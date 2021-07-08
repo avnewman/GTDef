@@ -17,9 +17,9 @@
 #################################################################
 # CONTROLLING VARIABLES
 # coord	   - coordinate system {geo}
-# 		geo   = geographic
-# 		geo_polyconic = geographic using polyconic projection
-#             	local = cartesian
+#     geo   = geographic
+#     geo_polyconic = geographic using polyconic projection
+#     local = cartesian
 # origin   - origin of local coordinate [lon0 lat0]
 # smooth   - smoothing algorithm {2d}
 #         	1d2pc = 1st derivative using 2-point central finite-difference approximation

@@ -594,6 +594,12 @@ if modspace.lb==-Inf
         toc
     end
 
+
+    foutName = [ basename '_fwd.out' ];
+    GTdef_output(foutName,earth,modspace,0,flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt,addon,pnt,los,bsl,prf,grd,nod);
+
+    
+%% extra outputs
     if (strcmpi(modspace.proj,'on'))  % write out porjections
       ldir=pwd;
       myFiles=dir(fullfile(ldir,strcat(basename,'_fwd.out'))); % added to inlcude any fwd model
@@ -607,8 +613,7 @@ if modspace.lb==-Inf
 %        [ sspnt,ssflt1,ssflt2 ] = GTdef_calc_stress(sspnt,ssflt1,ssflt2,Min0,earth);
 %        GTdef_output_stress(fstressName,sspnt,ssflt1,ssflt2);
 %    end
-    foutName = [ basename '_fwd.out' ];
-    GTdef_output(foutName,earth,modspace,0,flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt,addon,pnt,los,bsl,prf,grd,nod);
+
 else
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% inversion %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'\n............. doing inversion .............\t');
