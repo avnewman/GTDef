@@ -69,7 +69,7 @@ Options:
        -Z   (continouous color grad?)
                Include this flag if you'd like a continuous color gradient for your plot.
 
-9Programs Required:
+Programs Required:
        GMT v5 or greater
        open or xdg-open (standard on mac and most linux distributions, respectively)
        A few standard gnu commands (awk, test, echo, basename; likely on your system already)
@@ -81,6 +81,10 @@ Caveats:
       Program expects that dips are down and to the right from starting point (internal
       assumption made when createing ${PATCHsuf} files).  In other words, its best to
       define dips less than 90°, though the program works up to 180°.
+
+      There appears to be an issue with GMT6 that doesn't like exponentials with '+' symbols as 
+      range values for 'makecpt' used by this program.  Thus, it may be beneficial to force a range 
+      that uses integers or exponentials w/o the '+' (e.g. -T3e6/5e6/3)
 
 Example: (plotting model at kappa = 750000 with 100x amplification on all vectors and contour, displaying the results)
        %s -Mnicoya_camp_7x10.in -K750000 -S D -D
@@ -176,6 +180,8 @@ fi
 if [[ $PFLAG ]] ; then
 	PSCALE=$PCOMP
 fi
+
+ISLOCAL="$(awk '$1=="coord"&&$2=="local"{print "1"}' $MODELIN)"
 MODbase="$(basename $MODELIN .in)"
 
 for PATCHES in $PATCHFILES
@@ -186,6 +192,35 @@ do
    if [ $NFLAG ] ; then # resolution map from subfault rather than spread
    	TITLE="Resolution map for ($NSUBFLT : $COMP): $MODbase @@ @~k@~ = $KAPPA"
    	PATCHES_Rn=$(basename "$PATCHES" ${PATCHsuf})_patches_R_$NSUBFLT.out ; # defining specific output to read
+   elif [ $ISLOCAL ]  ; then
+        # creating Rj.out for model with local dimensions
+   	TITLE="Resolution Spread ($COMP): $MODbase @@ @~k@~ = $KAPPA"
+   	PATCHES_Rj=$(basename "$PATCHES" ${PATCHsuf})_patches_Rj.out ; # repeat of $PATCHES but with res spread param.
+   	# create table with r_j
+        awk 'NR=="1" {print $0, "(27)Psize[m] (28)Rjss[m] (29)Rjds[m] (30)Rjts[m]\n# Local coordinates"}
+           $1!~"#"{
+           pi=4*atan2(1,1) ; rad=2*pi/360
+
+	   # along strike differences
+           dx=($13-$4); 
+           dy=($14-$5);
+           len_strike=(dx*dx+dy*dy)**0.5 ; # length
+           rotr=atan2(dx,dy);
+           rot=rotr/rad ; # rotation in degrees
+	   # downdip
+           dx=($7-$4);
+           dy=($8-$5);
+	   dz=($9-$6);
+           len_ddip=(dx*dx+dy*dy+dz*dz)**0.5 ; # length
+           rotr=atan2(dx,dy);
+           rot=rotr/rad ; # rotation in degrees
+	   nominal_length=((len_strike+len_ddip)/2)
+	   Rjss=nominal_length/($24+0.000001)**0.5  ;
+	   Rjds=nominal_length/($25+0.000001)**0.5  ;
+	   Rjts=nominal_length/($26+0.000001)**0.5  ;
+           print $0, nominal_length, Rjss, Rjds, Rjts}' $PATCHES >$PATCHES_Rj
+   	echo "Created:   $PATCHES_Rj"
+
    else # res spread
    	TITLE="Resolution Spread ($COMP): $MODbase @@ @~k@~ = $KAPPA"
    	PATCHES_Rj=$(basename "$PATCHES" ${PATCHsuf})_patches_Rj.out ; # repeat of $PATCHES but with res spread param.
@@ -281,7 +316,6 @@ do
    #echo DXY=$DXY
 
    XSCALE=16
-   ISLOCAL="$(awk '$1=="coord"&&$2=="local"{print "1"}' $MODELIN)"
    if [ $ISLOCAL ] ; then
    	LFLAG=1   # is a local coord system
    	PROJ="-JX$XSCALE"
@@ -305,7 +339,7 @@ do
       	TMIN=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -El | awk '{printf "%.0g", $1*DEF}'  DEF=$DEFSCALE )
       	TMAX=$(awk '$1!~"#" {if (CP=="S"){print $28} else if (CP=="D"){print $29} else {print $30} }' CP=$SCOMP $PATCHES_Rj | gmt info -Eh | awk '{printf "%.0g", $1*DEF}'  DEF=$DEFSCALE )
       fi
-      DT=$(echo $TMIN $TMAX | awk '{printf "%.0e", ($2-$1)/10.}')
+      DT=$(echo $TMIN $TMAX | awk '{printf "%.0g", ($2-$1)/10.}')
       if [ $TMIN == $TMAX ] ; then
         if [ $NFLAG ] ; then
 	   TMAX=$(awk '$1!~"#" {if (CP=="S"){print $24} else if (CP=="D"){print $25} else {print $26} }' CP=$SCOMP $PATCHES_Rn | gmt info -Eh | awk '{printf "%.4g", $1*DEF}'  DEF=$DEFSCALE )
@@ -321,6 +355,11 @@ do
              DT=$(echo $TMIN $TMAX | awk '{print ($2-$1)/5.}')
            fi
       fi
+
+      # strip off any leading '+' symbol
+      TMIN=$(echo $TMIN | tr -d '\+')
+      TMAX=$(echo $TMAX | tr -d '\+')
+      DT=$(echo $DT | tr -d '\+')
    fi
 
    # create CPT file for slip model
@@ -331,9 +370,7 @@ do
    else
        gmt makecpt -C#ff2222,#ff6666,#ffaa44,#ffff00,#88ff00,#00ffff,#4499ff,#1144ff -T"$TMIN/$TMAX/3" -I -Qo $ZFLAG -N >$CPT
    fi
-   #echo $TMIN $TMAX $DT
-   #gmt makecpt -C#0088ff,#00ffff,#88ff88,#ff6600,#ffff00,#ffffaa,#ffffff -T"$TMIN/$TMAX/3"  -Qo -A20+a >$CPT
-   #gmt makecpt -Cjet -I -T"$TMIN/$TMAX/3" -N -Qo >$CPT
+   echo "CPT range used: $TMIN/$TMAX/3 "
 
    BGN="$RANGE $PROJ -K"
    MID="$RANGE $PROJ -O -K"

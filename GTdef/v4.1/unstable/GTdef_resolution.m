@@ -375,28 +375,36 @@ if ~isempty(prjfltAll)
 	                lon(:,4) lat(:,4) prjfltAll(:,14) lon(:,5) lat(:,5) prjfltAll(:,17) prjfltAll(:,18:22) ];
     end
     if strcmpi(coord,'local')
-        newprjfltAll = prjfltAll;
+        newprjfltAll = prjfltAll(:,1:22); %% only first 22 components
     end
     [ row,~ ] = size(newprjfltAll);
-    if length(newprjfltAll(ii,:)) == 24 ;
-      fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zctr (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m]   (24) ?   (25) ?  (26)Rss (27)Rds  (28)Rts\n');
-      for ii =1:row
-          name = fltAllName{ii};
-          flt  = newprjfltAll(ii,:);
-          Rd   = [Rdiag(ii),Rdiag(ii+rd3rd),Rdiag(ii+2*rd3rd)];
-          %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26   27  28
-          fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f  %6.4f %6.4f %6.4f\n',name,flt,Rd);
-      end
-    else
-      fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zctr (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)Rss (25)Rds  (26)Rts\n');
-      for ii =1:row
-          name = fltAllName{ii};
-          flt  = newprjfltAll(ii,:);
-          Rd   = [Rdiag(ii),Rdiag(ii+rd3rd),Rdiag(ii+2*rd3rd)];
-          %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26
-          fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f  %6.4f\n',name,flt,Rd);
-      end
+    fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zctr (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)Rss (25)Rds  (26)Rts\n');
+    for ii =1:row
+        name = fltAllName{ii};
+        flt  = newprjfltAll(ii,:);
+        Rd   = [Rdiag(ii),Rdiag(ii+rd3rd),Rdiag(ii+2*rd3rd)];
+        %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26
+        fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f  %6.4f\n',name,flt,Rd);
     end
+%    if length(newprjfltAll(ii,:)) == 24 ;
+%      fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zctr (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m]   (24) ?   (25) ?  (26)Rss (27)Rds  (28)Rts\n');
+%      for ii =1:row
+%          name = fltAllName{ii};
+%          flt  = newprjfltAll(ii,:);
+%          Rd   = [Rdiag(ii),Rdiag(ii+rd3rd),Rdiag(ii+2*rd3rd)];
+%          %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26   27  28
+%          fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f  %6.4f %6.4f %6.4f\n',name,flt,Rd);
+%      end
+%    else
+%      fprintf(fout,'#(1)name (2)dnum (3)snum (4)xtop1 (5)ytop1 (6)ztop1 (7)xbot1 (8)ybot1 (9)zbot1 (10)xbot2 (11)ybot2 (12)zbot2 (13)xtop2 (14)ytop2 (15)ztop2 (16)xctr (17)yctr (18)zctr (19)ss[m] (20)ds[m] (21)ts[m] (22)rake[deg] (23)rs[m] (24)Rss (25)Rds  (26)Rts\n');
+%      for ii =1:row
+%          name = fltAllName{ii};
+%          flt  = newprjfltAll(ii,:);
+%          Rd   = [Rdiag(ii),Rdiag(ii+rd3rd),Rdiag(ii+2*rd3rd)];
+%          %             1     2   3   4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26
+%          fprintf(fout,'%-10s %4d %4d %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %12.5f %11.5f %12.3e %10.5f %10.5f %10.5f %10.5f %10.5f %6.4f %6.4f  %6.4f\n',name,flt,Rd);
+%      end
+%    end
 end
 
 fclose(fout);
