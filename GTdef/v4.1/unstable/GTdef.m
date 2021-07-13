@@ -660,7 +660,7 @@ fprintf(1,'\n............. doing inversion .............\t');
         % output results
         GTdef_output(foutName,earth,modspace,bt,flt1,flt2,flt3,flt4,flt5,flt6,flt7,subflt,addon,pnt,los,bsl,prf,grd,nod);
         % output resolution matrix
-        if ~isempty(modspace.res)
+        if ~isempty(modspace.res) || ~isempty(modspace.Rdiags)
             GTdef_resolution(foutName,modspace,flt1,flt2,flt3,flt4,flt5,flt6,subflt,addon,pnt,los,bsl);
         end
         toc

@@ -96,6 +96,7 @@ modspace.x0   = []; modspace.xx   = [];
 modspace.sm   = []; modspace.sm_abs = []; % sm_abs for calculate absolute 1st derivative (strain)
 modspace.modinfo = [];
 modspace.res = [];
+modspace.Rdiags = [];
 modspace.mat = [];
 modspace.proj = [];
 modspace.lsqlin = [];
@@ -260,7 +261,8 @@ while(1)
         [method,remain] = strtok(remain);
         %% method 1 %%
         if strcmp(method,'1')
-          modspace.res='diags';
+          %modspace.res='diags';
+          modspace.Rdiags=1;
         %% method 2 %%
         elseif strcmp(method,'2')
            rr = strtok(remain);
