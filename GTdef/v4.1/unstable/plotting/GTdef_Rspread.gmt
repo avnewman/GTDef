@@ -58,6 +58,7 @@ Options:
        -D   (display?)
        	       If flag is included, program will bring up display, otherwise it will silently make .ps and .png files
 
+       -L   linear color countours [default logscale]
        -T   resolution_range
                Choose a range over which to plot deformation. Results are the value used and
 	       will include the amplifcation used with -S flag.  If not selected, the program
@@ -98,7 +99,7 @@ fi
 DEFSCALE=0.001  # make km
 SCOMP="D"
 PSCALE=0.2
-while getopts "M:K:S:N:T:R:P:DZ" OPT
+while getopts "M:K:S:N:T:R:P:DZL" OPT
 do
    case ${OPT} in
        M) MODELIN=$OPTARG
@@ -112,6 +113,8 @@ do
 	;;
        N) NSUBFLT=$OPTARG
 	  NFLAG=1; # flag for slip component
+	;;
+       L) LINFLAG=1 ; # flag for linear contours
 	;;
        T) TMIN=$(echo $OPTARG | awk -F"/" '{print $1}')
 	  TMAX=$(echo $OPTARG | awk -F"/" '{print $2}')
@@ -365,12 +368,17 @@ do
    # create CPT file for slip model
    CPT=RES.cpt    # created within
 
+   echo "CPT range used: $TMIN/$TMAX/3 "
+
    if [ $NFLAG ] ; then
        gmt makecpt -C#ff2222,#ff6666,#ffaa44,#ffff00,#88ff00,#00ffff,#4499ff,#1144ff -T"$TMIN/$TMAX/3" -I -Qo $ZFLAG >$CPT
    else
        gmt makecpt -C#ff2222,#ff6666,#ffaa44,#ffff00,#88ff00,#00ffff,#4499ff,#1144ff -T"$TMIN/$TMAX/3" -I -Qo $ZFLAG -N >$CPT
    fi
-   echo "CPT range used: $TMIN/$TMAX/3 "
+
+   if [ $LINFLAG ] ; then
+        gmt makecpt -C#ff2222,#ff6666,#ffaa44,#ffff00,#88ff00,#00ffff,#4499ff,#1144ff -T"$TMIN/$TMAX/5" -I  $ZFLAG >$CPT
+   fi
 
    BGN="$RANGE $PROJ -K"
    MID="$RANGE $PROJ -O -K"
