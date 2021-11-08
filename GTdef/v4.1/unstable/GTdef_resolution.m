@@ -411,41 +411,41 @@ fclose(fout);
 fprintf(1,'GTdef_resolution Model Resolution output %s\n',foutName);
 obs=reshape(pnt.obs,pnt.num,3);
 %   Data Resolution File   %%%%%
-%foutName = strcat(basename,'_data_R.out');
-%fout     = fopen(foutName,'w');
-%prow=0; lrow=0; brow=0;
-%
-%if ( ~ pnt.num == 0 )
-%    prow = pnt.num;
-%    fprintf(fout,'#(1)pnt (2)lon (3)lat (4)elev (5)obs_e[m] (6)obs_n[m] (7)obs_u[m] (8)err_e[m] (9)err_n[m] (10)err_u[m] (11)wgt (12)pred_e[m] (13)pred_n[m] (14)pred_u[m] (15)Res_e  (16)Res_n (17)Res_u \n');
-%    N3diag=reshape(Ndiag,pnt.num,3);
-%     for ii =1:prow
-%         nr=Ndiag(ii);
-%                %      1     2        3      4      5      6      7         8      9     10       11      12     13      14      15     16      17
-%        fprintf(fout,'pnt   %12.5f %11.5f %12.2f   %12.5f %12.5f %12.5f   %11.5f %11.5f %11.5f   %6.3f   %12.5f %12.5f %12.5f   %6.4f   %6.4f   %6.4f \n',pnt.loc(ii,:),obs(ii,:), pnt.err(ii,:), pnt.wgt(ii), pnt.out(ii,[4:6]), N3diag(ii,:));
-%    end
-%end
-%if ( ~ los.num == 0 )
-%     lrow = los.num;
-%     fprintf(fout,'#(1)los  (2)lon (3)lat (4)elev (5)obs[m] (6)err[m] (7)wgt (8)look_e (9)look_n  (10)look_u (11)pred[m] (12)Rdata\n');
-%      for ii =1:lrow
-%          nr=Ndiag(ii+prow);
-%                 %      1     2        3      4      5      6      7      8      9      10     11     12
-%         fprintf(fout,'los   %12.5f %11.5f %12.2f   %12.5f %11.5f %6.3f   %7.5f %7.5f %7.3f   %12.5f %6.4f \n',los.loc(ii,:),los.obs(ii), los.err(ii), los.wgt(ii), los.dir(ii,:),los.out(ii,4), nr);
-%     end
-% end
+foutName = strcat(basename,'_data_R.out');
+fout     = fopen(foutName,'w');
+prow=0; lrow=0; brow=0;
+
+if ( ~ pnt.num == 0 )
+    prow = pnt.num;
+   fprintf(fout,'#(1)pnt (2)lon (3)lat (4)elev (5)obs_e[m] (6)obs_n[m] (7)obs_u[m] (8)err_e[m] (9)err_n[m] (10)err_u[m] (11)wgt (12)pred_e[m] (13)pred_n[m] (14)pred_u[m] (15)Res_e  (16)Res_n (17)Res_u \n');
+   N3diag=reshape(Ndiag,pnt.num,3);
+    for ii =1:prow
+        nr=Ndiag(ii);
+               %      1     2        3      4      5      6      7         8      9     10       11      12     13      14      15     16      17
+       fprintf(fout,'pnt   %12.5f %11.5f %12.2f   %12.5f %12.5f %12.5f   %11.5f %11.5f %11.5f   %6.3f   %12.5f %12.5f %12.5f   %6.4f   %6.4f   %6.4f \n',pnt.loc(ii,:),obs(ii,:), pnt.err(ii,:), pnt.wgt(ii), pnt.out(ii,[4:6]), N3diag(ii,:));
+   end
+end
+if ( ~ los.num == 0 )
+     lrow = los.num;
+    fprintf(fout,'#(1)los  (2)lon (3)lat (4)elev (5)obs[m] (6)err[m] (7)wgt (8)look_e (9)look_n  (10)look_u (11)pred[m] (12)Rdata\n');
+     for ii =1:lrow
+         nr=Ndiag(ii+prow);
+                 %      1     2        3      4      5      6      7      8      9      10     11     12
+        fprintf(fout,'los   %12.5f %11.5f %12.2f   %12.5f %11.5f %6.3f   %7.5f %7.5f %7.3f   %12.5f %6.4f \n',los.loc(ii,:),los.obs(ii), los.err(ii), los.wgt(ii), los.dir(ii,:),los.out(ii,4), nr);
+    end
+end
 % % needs to be checked
-% if ( ~ bsl.num == 0 )
-%     brow = bsl.num;
-%     fprintf(fout,'#(1)bsl  (2)lon1 (3)lat1 (4)elev1   (5)lon2 (6)lat2 (7)elev2  (8)obs[m] (9)err[m] (10)wgt  (11)pred[m] (12)Rdata\n');
-%      for ii =1:brow
-%          nr=Ndiag(ii+prow+lrow);
-%                 %      1     2      3      4        5      6      7        8      9      10      11    12
-%         fprintf(fout,'bsl   %12.5f %11.5f %12.2f   %12.5f %11.5f %12.2f   %12.5f %11.5f %6.3f   %12.5f %6.4f \n',bsl.loc(ii,:),bsl.obs(ii), bsl.err(ii), bsl.wgt(ii),bsl.out(ii,4), nr);
-%     end
-% end
-%
-% fprintf(1,'GTdef_resolution Data Resolution output %s\n',foutName);
+ if ( ~ bsl.num == 0 )
+     brow = bsl.num;
+     fprintf(fout,'#(1)bsl  (2)lon1 (3)lat1 (4)elev1   (5)lon2 (6)lat2 (7)elev2  (8)obs[m] (9)err[m] (10)wgt  (11)pred[m] (12)Rdata\n');
+     for ii =1:brow
+         nr=Ndiag(ii+prow+lrow);
+                %      1     2      3      4        5      6      7        8      9      10      11    12
+         fprintf(fout,'bsl   %12.5f %11.5f %12.2f   %12.5f %11.5f %12.2f   %12.5f %11.5f %6.3f   %12.5f %6.4f \n',bsl.loc(ii,:),bsl.obs(ii), bsl.err(ii), bsl.wgt(ii),bsl.out(ii,4), nr);
+     end
+ end
+
+ fprintf(1,'GTdef_resolution Data Resolution output %s\n',foutName);
 
 % Create a series of Resolution Spread files, showing the model-dependency
 % (row parameters of the Resolution Matrix, for a given model. Currently,
