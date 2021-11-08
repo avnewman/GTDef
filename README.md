@@ -9,19 +9,30 @@ Program documentation and example runs are [here](https://avnewman.github.io/GTD
 
 ## Release Notes
 ## Latest stable version
-Version: 4.0.2 
+Version: 4.0.2
 Released: 05/05/2021  
 [![DOI](https://zenodo.org/badge/283332126.svg)](https://zenodo.org/badge/latestdoi/283332126)
 
-### Version 4.0 is the first public release. 
+### Version 4.0 is the first public release.
 * Future edits will use [semantic versioning](https://semver.org/) (major.minor.patch; e.g. 0.0.0).  
-* _Patches_ are minor bug fixes, as long as they don't change the expected functionality of existing codes(e.g. 4.0.**1**). 
+* _Patches_ are minor bug fixes, as long as they don't change the expected functionality of existing codes(e.g. 4.0.**1**).
 * _Minor_ modifications, including feature additions and more substantial fixes will go to sub-version (e.g. 4.**1**.0).
 * _Major_ feature change that creates different functionality for existing tools will get a full new version number (e.g. **5**.0.0).
 
 ## Version pointers
 `GTDef/GTdef/stable` will point to the latest stable release.
 `GTDef/GTdef/unstable` will point to the current development version.
+
+## Software/Packages required
+1. Modern version of Matlab
+1. The following toolboxes are required for base operation:
+	- Optimization Toolbox
+	- Parallel Computing (if you want faster computation using multicore processing)
+1. These additional toolboxes and software are needed for Quadtree/InSAR processing:
+	- Image Processing Toolbox
+	- Mapping Toolbox
+	- Signal Processing Toolbox
+	- ```grdwrite2.m``` from [kylebrill @ GitHub](https://github.com/kylebrill/velest-matlab-scripts/blob/master/grdwrite2.m)
 
 -----------
 ## GitHub Etiquette
@@ -31,4 +42,3 @@ Released: 05/05/2021
 * Use only standard (non-greek/non-accented characters for file names and variables)
 * Do not use spaces in filenames (CamelCaseIsPreferred).
 * *Always Pull then Push!*  This will substantially reduce conflict.
-
