@@ -452,10 +452,18 @@ do
    	gmt pscoast -Lx2/1+c157/-7+w${LBAR}+atl $COASTSCALE -W0.51,gray  $MID >>$OUTFILE
    fi
 
+OFFSETLINE=''
+
+if [ $OFLAG ] ; then
+  OFFSETLINE=$(echo "L 8 Helvetica L Downdip fault segments are offset for visibility [x/yoffset = $OXshift/$OYshift]")
+fi
+
+
    gmt pslegend -Dx8/-3/16 -F+p2p+g255/255/200+r10p+s -P  $MID << ...EOF >>$OUTFILE
 L 12 Helvetica-Bold C $TITLE
 D 1.5c 2p
 S 4c c 0.2 black 0.1  1c Station
+$OFFSETLINE
 D 0.5c 1p
 L 6 Helvetica-Oblique L  Created by ${USER} in ${PWD}
 L 6 Helvetica-Oblique L  Command: $(basename $0) $*
