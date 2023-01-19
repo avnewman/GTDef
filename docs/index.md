@@ -2,7 +2,7 @@
 
 _GTDef_ is a set of algorithms created in Matlab for modeling kinematically-described deformation from rectangular dislocations within a half-space, or layered medium.
 
-Created by the [Newman Research Group at Georgia Tech](http://geophysics.eas.gatech.edu/anewman).
+Created by the [Newman Research Group at Georgia Tech](https://avnewman.github.io).
 
 ## Current version
 [![DOI](https://zenodo.org/badge/283332126.svg)](https://zenodo.org/badge/latestdoi/283332126)
