@@ -19,9 +19,9 @@
 <li> <a href = "#THEORY"> Background Theory</a></li>
 <li> <a href = "#INPUT"> The Input File</a></li>
 <li> <a href = "#SPF"> Simple Planar Forward Model </a></li>
-<li> <a href = "#uslip"> Uniform Slip Modeling </a></li>
-<li> <a href = "#nslip"> Non-Uniform Slip Modeling</a></li>
-<li> <a href = "#cbt"> Checkerboard Testing </a></li>
+<li> <a href = "#uslip"> Inverting a Uniform Slip Model </a></li>
+<li> <a href = "#nslip"> Inverting for Non-Uniform Slip</a></li>
+<li> <a href = "#cbt"> Checkerboard Testing (forward and inverse of synthetics) </a></li>
 <li> <a href = "#RES"> Resolution Spread Evaluation</a></li>
 <li> <a href = "#LAYER"> Layered Models</a></li>
 <li> <a href = "#GFformat"> GTdef formats for Green's Functions</a></li>
@@ -386,7 +386,7 @@ grid  1kmx1km 0    0    -30e3    -30e3    30e3     30e3     31 31
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id= "uslip">
-<li> <H2> <a href = "#TOC"> Uniform Slip Modeling: </a> </H2></li>
+<li> <H2> <a href = "#TOC"> Inverting a Uniform Slip Model: </a> </H2></li>
 (from <c>'examples/Uniformslip/Solomon'</c>)
 <h3>Input:</h3>
 We will need to build the model, including gathering the appropriate data and then estabishing an appropriate a priori interface. In this example, we will use the very small tsunami earthquake described in <a href="http://geophysics.eas.gatech.edu/people/anewman/research/papers/Newman_etal_GJI_2011.pdf">Newman et al. (2011)</a>.
@@ -516,7 +516,7 @@ w l lw 4 lt 7 -8 t "fault" </pre></div>
 <hr size=2 color=darkgreen ><!---------------------------------------------------------------------------------------->
 
 <section id= "nslip">
-<li> <h2> <a href = "#TOC"> Non-uniform Slip Modeling: </a> </h2></li>
+<li> <h2> <a href = "#TOC"> Inverting for Non-uniform Slip: </a> </h2></li>
 (from <c>'examples/Non-uniformslip/Solomon'</c>)
 <br><br>
 
@@ -575,7 +575,8 @@ kappa 2 0  5000 11
 
 <section id= "cbt">
 <li> <h2> <a href = "#TOC"> Checkerboard Testing: </a> </h2></li>
-(from <c>'examples/Non-uniformslip/Nicoya/Checkboard'</c>)
+Here we will create synthetic input models that we will invert for using realistic noise to identify the types of features that we may
+be able to see given the model, data geometry and quality.  This is from <c>'examples/Non-uniformslip/Nicoya/Checkboard'</c>.
 <br>
 
   <H3>Develop a Synthetic Forward Model:</H3>
@@ -651,11 +652,13 @@ kappa 2 0  5000 11
     </ol>
 
 
-  <H3> Invert Synthetics: </H3>
+  <H3> Inverting Synthetics: </H3>
     <p> Here we will determine what the synthetic and noised data show on the fault.</p>
     <ol type="i">
-      <li> Edit new synthetic input file to either comment out or remove the sub-fault definitions.
-        You can do this manually, or run a script:
+      <li> <p>Edit new synthetic input file to either comment out or remove the sub-fault definitions, 
+        since the original prescribed specific slip values on sub-faults that we will instead try to find
+        when we run the new inversion here.</p>
+        <p>You can do this manually, or run a script:</p>
         <div class = 'code-wrapper'> <pre>
         <c># in shell (command line)
         # this scrubs file directing it into a new file that then replaces the original.</c>
