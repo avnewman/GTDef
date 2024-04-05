@@ -25,14 +25,17 @@ NM="\e[0m" #turns off underline
 Usage: %s -M${UL}'model_inv.out'${NM} [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}]
 
 Requires:
-       -M   Model_ininv.out
+       -M  Model_ininv.out
 	     Should be the output file that contains the fitting summary for range of
 	     generalization parameters (kappa). It is the inversion summary file.
 
 Options:
-       -R   Rectangular_bounds
-       	       Bounds for plot using XMIN/XMAX/YMIN/YMAX.  Alternatively will use 10
-	       percent greater than the model geometry on all sides.
+       -R  Rectangular_bounds
+       	Bounds for plot using XMIN/XMAX/YMIN/YMAX.  Alternatively will use 10
+	     percent greater than the model geometry on all sides.
+          
+       -E  Misfit model
+          Choose between (1)rms [default], (2)wrrs, (3)wrms, (4)chi2 (5)rchi2 
 
 Programs Required:
        GMT v5 or greater
@@ -55,7 +58,8 @@ if  [ ${#} -lt "1" ] ; then
   rm $USAGE
   exit 1 # exit with error after removing temp file
 fi
-while getopts "M:R:" OPT
+EFLAG=1
+while getopts "M:R:E:" OPT
 do
    case ${OPT} in
        M) SUMMARY=$OPTARG
@@ -77,6 +81,13 @@ do
   	  RFLAG=1; # flag for rectangular bounds.
         ;;
 
+       E) EFLAG=$(echo $OPTARG)
+       if [ $EFLAG -gt 5 ] || [ $EFLAG -lt 1 ] ; then
+          print "Warning: -E flag value not recognized, set to 1"
+          EFLAG=1
+       fi
+        ;;
+
        *) echo "ERROR: unknown modifier flag used (${OPT}), exiting."  # if a bad modifier is used
            rm $USAGE;   exit 1 ;; # exit with error after removing temp file
    esac
@@ -88,9 +99,8 @@ test "$MFLAG" || { echo "ERROR: Required -M flag missing, no input model selecte
 # check to see if the required files exist and are readable
 test -r "$SUMMARY" || { echo "ERROR: Cannot find $SUMMARY. Exiting." ;  exit 1 ; }
 
-
 # is there a range in results (does rms change?  If not, error out)
-if [ $(echo $(awk '$1!~"#"{print $7}' $SUMMARY | gmt gmtinfo -C ) | awk '$1>=$2{print "bad"}') ] ; then
+if [ $(echo $(awk '$1!~"#"{print $(6+E)}' E=$EFLAG $SUMMARY | gmt gmtinfo -C ) | awk '$1>=$2{print "bad"}') ] ; then
   echo "  No range of RMS values (there may have been a problem with your inversion)...Exiting"
   exit 1
 fi
@@ -109,8 +119,8 @@ if [ $RFLAG ] ; then
    RANGE="$(printf "%g %g\n%g %g\n" $XMIN $YMIN $XMAX $YMAX | gmt info -I"$DX/$DY" )"
 else
    DX="$(awk '$1!~"#"{print $13}' $SUMMARY | gmt info -I.001 -C | awk '{printf" %1.0g", ($2-$1)/10}')"
-   DY="$(awk '$1!~"#"{print $7}'  $SUMMARY | gmt info -I.001 -C | awk '{printf" %1.0g", ($2-$1)/20}')"
-   RANGE="$(awk '$1!~"#"{print $13,$7}' $SUMMARY | gmt info -I"$DX/$DY" )"
+   DY="$(awk '$1!~"#"{print $(6+E)}' E=$EFLAG  $SUMMARY | gmt info -I.001 -C | awk '{printf" %1.0g", ($2-$1)/20}')"
+   RANGE="$(awk '$1!~"#"{print $13,$(6+E)}' E=$EFLAG $SUMMARY | gmt info -I"$DX/$DY" )"
    if [ $(echo $RANGE | cut -c3- | awk -F"/" '$1>=$2{print "bad"}') ] ; then
      echo "ERROR with '-R' option"
      echo "   Auto-determined range of rms is zero (there may have a problem with your inversion)...Exiting"
@@ -132,15 +142,41 @@ fi
 
 # Curvature analysis
 
-MAXC=`basename $SUMMARY .out`.curv
-maxcurve.py $SUMMARY >$MAXC
-#echo $MAXC created
 #######################################
 gmt set MAP_FRAME_TYPE plain  MAP_FRAME_PEN black
 
 #######################################
-gmt psbasemap  -X2  -Y10.5 $BGN -P -B"$DX":"Roughness [cm/km^2]":/"${DY}":"RMS Misfit [m]":"WSn" >$OUTFILE
+case $EFLAG in
+     1)
+          YLABEL="RMS Misfit [m]"
+          YVAL="RMS"
+       ;;
+     2)
+          YLABEL="WRRS Misfit [m^2]"
+          YVAL="WRRS"
+       ;;
+     3)
+          YLABEL="WRMS Misfit [m]"
+          YVAL="WRMS"
+       ;;
+     4)
+          YLABEL="Chi^2 Misfit "
+          YVAL="Chi^2"
+       ;;
+     5)
+          YLABEL="rChi^2 Misfit"
+          YVAL="rChi^2"
+       ;;
+     *)
+          echo "Error: we shouldn't be here"
+       ;;
+esac
+gmt psbasemap  -X2  -Y10.5 $BGN -P -B"$DX":"Roughness [cm/km^2]":/"${DY}":"${YLABEL}":"WSn" >$OUTFILE
 
+MAXC=`basename $SUMMARY .out`.curv
+maxcurve.py $SUMMARY $YVAL  >$MAXC
+
+#echo $MAXC created
 #
 gmt set MAP_FRAME_TYPE plain  MAP_FRAME_PEN red
 
@@ -163,24 +199,24 @@ gmt set  MAP_FRAME_PEN black
 
 # plot station locations
 #line
-awk '$1!~"#" {print $13,$7}' $SUMMARY |  \
+awk '$1!~"#" {print $13,$(6+E)}' E=$EFLAG $SUMMARY |  \
 	gmt psxy  $MID   -W2 >>$OUTFILE
 #green points
-awk '$1!~"#" {print $13,$7}' $SUMMARY |  \
+awk '$1!~"#" {print $13,$(6+E)}' E=$EFLAG $SUMMARY |  \
 	gmt psxy  $MID  -Sc0.3 -G0/255/0 -W0.2 >>$OUTFILE
 
 #optimal
 awk 'NR==1 {print $4 ,$5}' $MAXC | \
       gmt psxy  $MID  -Sc0.35 -G0/255/0 -W1 >>$OUTFILE
 #text
-awk '$1!~"#" {printf "%e %e %5.1e \n", $13+DX/5,$7+DY/5, $2}' DX="$DX" DY="$DY" $SUMMARY | \
+awk '$1!~"#" {printf "%e %e %5.1e \n", $13+DX/5,$(6+E)+DY/5, $2}' E=$EFLAG DX="$DX" DY="$DY" $SUMMARY | \
 	gmt pstext -F+a0+jLB+f12p,Helvetica,black $MID  >>$OUTFILE
 
 #
 gmt pslegend -Dx11.5/15.8/12 -F+p2p+g255/255/200+r10p+s -P -O $RANGE2 $PROJ << ...EOF >>$OUTFILE
 L 14 Helvetica-Bold C $(basename $SUMMARY _inv.out)
 D 1.5c 2p
-S 1c c 0.3 0/255/0 0.2  2c RMS/Roughness @@ Kappa (printed value)
+S 1c c 0.3 0/255/0 0.2  2c ${YVAL}/Roughness @@ Kappa (printed value)
 S 1c c 0.2 red 0.2      2c Curvature (normalized by range)
 S 1c c 0.35 0/255/0 1   2c \"Optimal\" Kappa (from curvature)
 D 0.5c 2p

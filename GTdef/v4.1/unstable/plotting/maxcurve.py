@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# v1.5.1 redone to normalize by own parameter, not oposite.
+# v1.5.1 redone to normalize by own parameter, not opposite.
 # AVN 22 Jan 2021
 
 import pandas as pd
@@ -8,6 +8,7 @@ import numpy as np
 import sys
 
 fin=sys.argv[1]
+yval=sys.argv[2]
 
 #invout=pd.read_table('100kmchkbd_40kmstat_inv_inv.out',sep=r"\s+", header=1, names=['beta', 'kappa', 'data_num', 'slip_num', 'ndf', 'rss', 'rms', 'wrrs', 'wrms', 'chi2', 'rchi2', 'r1d', 'r2d', 'strain'])
 invout=pd.read_table(fin,sep=r"\s+", header=1, comment='#', names=['beta', 'kappa', 'data_num', 'slip_num', 'ndf', 'rss', 'rms', 'wrrs', 'wrms', 'chi2', 'rchi2', 'r1d', 'r2d', 'strain'])
@@ -21,7 +22,17 @@ invout=invout.drop_duplicates(subset=['rss'],keep='last') # removes duplicates i
 #print(invout['rss'])
 
 x=invout.r2d.values
-y=invout.rms.values
+if yval=="RMS":
+    y=invout.rms.values
+elif yval=="WRRS":
+    y=invout.wrrs.values
+elif yval=="WRMS":
+    y=invout.wrms.values
+elif yval=="Chi^2":
+    y=invout.chi2.values
+else:
+    y=invout.rchi2.values
+
 #old
 #ynorm=y*(max(x)-min(x))
 #xnorm=x*(max(y)-min(y))
