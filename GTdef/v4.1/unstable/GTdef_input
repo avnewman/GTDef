@@ -184,7 +184,7 @@ fault  4    gnrc-4    -120.2000 34.5000  -118.2000 38.0000 3e3 15e3  25.0   -90 
 # external geometry
 #fault type name         geometry_filename         colnames                                                    ss   ds   ts     ss0  ssX   ds0  dsX   ts0  tsX   Nd  Ns
 # for fault5, Nd or Ns could be NaN; slips are only used when the external file does not provide slips
-fault  5    2010banyak   20100406_static_out.txt   len=12000,wid=12000,clat,clon,depkm,slipcm,rake,str,dip     0    1     0     0     0    0    20    0    0     24  53
+fault  5    2010banyak   20100406_static_out.txt   len=12000,wid=12000,clat,clon,depkm,slipcm,rake,str,dip,dsm     0    1     0     0     0    0    20    0    0     24  53
      #subfault name      dnum snum   ss    ds   ts     ss0  ssX      ds0  dsX      ts0  tsX
      subfault  2010banyak   2    2     0     0    0      0     0        0    0        0    0
 

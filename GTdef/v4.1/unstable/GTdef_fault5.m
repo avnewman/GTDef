@@ -125,7 +125,7 @@ if subflt_num==1
     end
     % prjflt=[dnum snum xx yy z1 z2 len str dip ss ds ts ss0 ssX ds0 dsX ts0 tsX]
     prjflt = [ 1 1 newflt ];
-    [ ~,xyzflt ] = GTdef_prjflt1uni(prjflt);
+    [ ~,xyzflt ] = GTdef_prjflt1uni(prjflt);    
 
     [ xyzflt,Xgrn,Lgrn,Bgrn,Ngrn,sm,Aeq,beq,lb,ub,x0 ] = GTdef_fault1uni(earth,newflt,xyzflt,Xin,Lin,Bin,Nin);
     sm_abs = [];

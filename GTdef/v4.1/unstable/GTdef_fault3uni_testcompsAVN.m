@@ -92,13 +92,13 @@ Cin = xyzflt.xyzctr;
 
 % initialization
 [ flt_num ] = size(flt,1);		% fault num
-comp_num = 2;                            % component number = 2 (rake+tensile)  //TODO look into this, as there should be three. rake, rs, and ts.
+comp_num = 3;                       % component number = 2 (rake+tensile)  //TODO look into this, as there should be three. rake, rs, and ts.
 slip_num = flt_num*comp_num;		% slip num
 xx  = flt(:,1); yy  = flt(:,2); z1  = flt(:,3); z2   = flt(:,4); 
-len = flt(:,5); str = flt(:,6); dip = flt(:,7); rake = flt(:,8);
-x0  = [ flt(:,9); flt(:,10) ];	        % [rs;ts]
-lb  = [ flt(:,13); flt(:,15) ];	        % [rs0;ts0]
-ub  = [ flt(:,14); flt(:,16) ];	        % [rsX;tsX]
+len = flt(:,5); str = flt(:,6); dip = flt(:,7); %rake = flt(:,8);
+x0  = [ flt(:,8); flt(:,9); flt(:,10) ];	        % [rake; rs; ts] 
+lb  = [ flt(:,11); flt(:,13); flt(:,15) ];	        % [rake0; rs0; ts0]
+ub  = [ flt(:,12); flt(:,14); flt(:,16) ];	        % [rakeX; rsX; tsX]
 
 xunit = x0; xunit(xunit~=0) = 1;	% set unit slips for nonzero initial slips
 Aeq = zeros(slip_num,slip_num); beq = zeros(slip_num,1);
