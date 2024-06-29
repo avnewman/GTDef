@@ -63,7 +63,11 @@ function [] = GTdef(finName,wnum)
 % added optional .mat file output (see GTdef_input) anewman May 18 17:32:55 UTC 2016   %
 % corrected fault type 7 bugs lfeng Fri Jun 10 01:04:06 SGT 2016                       %
 % added project option for runs. AVN: Thu Jun 18 20:25:58 EDT 2020                     %
-% last modified Andrew Newman Thu Jun 18 20:25:58 EDT 2020                             %
+% last modified Andrew Newman Thu Jun 18 20:25:58 EDT 2020                             %  
+% added origin determination for fault types 5-7. For these, we must use
+% the data to determine the central position rather than them model as it's
+% read later in the code.
+% last modified Andrew Newman Sat Jun 29 05:39:49 AKDT 2024                            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% specify matlabpool for parallel computing %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,6 +116,14 @@ if strcmp(modspace.coord,'geo') || strcmp(modspace.coord,'geo_polyconic')
         end
         if flt4.num~=0
             lonlist = [ lonlist;flt4.flt(:,1) ]; latlist = [ latlist;flt4.flt(:,2) ];
+        end
+        if flt5.num~=0 || flt6.num~=0 || flt7.num~=0  % resort to using data or grid
+            if grd.grd~=0
+                lonlist = [lonlist;grd.grd(:,3);grd.grd(:,5)] ; latlist = [latlist;grd.grd(:,4);grd.grd(:,6)] ; 
+            end
+            if pnt.num~=0 
+                lonlist = [lonlist; pnt.loc(:,1)] ; latlist = [latlist;pnt.loc(:,2)] ; 
+            end
         end
         lon0 = 0.5*(min(lonlist)+max(lonlist));
         lat0 = 0.5*(min(latlist)+max(latlist));
