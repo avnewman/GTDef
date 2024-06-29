@@ -27,8 +27,9 @@ fi
 UL="\e[4m" # turns on underline
 NM="\e[0m" #turns off underline
  printf "
-Usage: %s -M${UL}'model.in'${NM} [-K${UL}'kappa_value'${NM}] [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}] [-D]
-	 [-S${UL}deformation_scale[/data_scale][/faultvector_scale]${NM}] [-T${UL}TMIN/TMAX/DT${NM}] [-H] [-V]
+Usage: %s -M${UL}'model.in'${NM} [-K${UL}'kappa_value'${NM}] [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}]
+	 [-S${UL}deformation_scale[/data_scale][/faultvector_scale]${NM}] [-T${UL}TMIN/TMAX/DT${NM}] 
+	 [-L${UL}LOC${NM}] [-D] [-H] [-V]
 
 Requires:
        -M   Model_input_file
@@ -73,7 +74,8 @@ Options:
 
        -H   plot horizontal only
        -V   plot vertical only
-
+       -L   Location for map scale
+       	       Follows GMT convention ([BR], BL, TR, TL, MC, etc)
 
 Programs Required:
        GMT v5 or greater
@@ -99,7 +101,7 @@ if  [ ${#} -lt "1" ] ; then
   exit 1 # exit with error after removing temp file
 fi
 DEFSCALE=1  # default that may be overriden with flag
-while getopts "M:K:S:T:R:DHV" OPT
+while getopts "M:K:S:T:R:L:DHV" OPT
 do
    case ${OPT} in
        M) MODELIN=$OPTARG
@@ -133,6 +135,9 @@ do
 	  fi
   	  RFLAG=1; # flag for rectangular bounds.
         ;;
+       L) LOC=$OPTARG # position map scale
+	  LOCFLAG=1; 
+	;;
        D) DFLAG=1; # bring up display
         ;;
        H) HFLAG=1; # Horiz only data
@@ -171,6 +176,11 @@ else
    	echo "Assuming fwd model: Using $PATCHFILES."
 fi
 
+if [ "$LOCFLAG" ]; then
+	echo "Using USER defined Scale: $LOC"
+else
+	LOC='BR'
+fi
 
 for PATCHES in $PATCHFILES
 do
@@ -213,7 +223,7 @@ do
    fi
 
    # scale DXY with xrange
-   DXY=$(echo $XMIN $XMAX | awk '{XR=($2-$1)}
+   DXY=$(echo $YMIN $YMAX | awk '{XR=($2-$1)}
    	{if (XR<1)
    		print "0.1";
    	else if (XR>=1 && XR<2)
@@ -379,7 +389,8 @@ do
    if [ ! $LFLAG ] ; then  # replot coast if not local scale
    	LBAR=$(echo $DXY | awk '{print $1*100}')
 	# now in bottom right and scaled by local center
-   	gmt pscoast -Ln0.9/0.1+c+w${LBAR}+atl $COASTSCALE -W0.51,gray  $MID >>$OUTFILE
+   	#gmt pscoast -Ln0.9/0.1+c+w${LBAR}+atl $COASTSCALE -W0.51,gray  $MID >>$OUTFILE
+   	gmt pscoast -Lj${LOC}+c+w${LBAR}+atl+o1/1 $COASTSCALE -W0.51,gray  $MID >>$OUTFILE
    	#gmt pscoast -Lx3/2+c157/-7+w${LBAR}+atl $COASTSCALE -W0.51,gray  $MID >>$OUTFILE
    fi
 
