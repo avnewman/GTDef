@@ -343,7 +343,7 @@ do
    if [ ! "$VFLAG" ]; then  
    if [ -s "$POINT2" ] || [ "$POINT3" ] ; then
 	   awk '$1!~"#"&&$1=="point" {if($2=="2") print $4,$5, $7*DEF, $8*DEF, $9*DEF, $10*DEF, " 0" ; if($2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $MODELIN | \
-   	gmt psvelo -N  $MID -W0p -A0.02/0.10/0.06 -Ggreen -Se1/0.65/0 -L >>$OUTFILE
+   	gmt psvelo -N  $MID -W0p,green -A0.02/0.10/0.06 -Ggreen -Se1/0.65/0 -L >>$OUTFILE
    fi
    fi
      # plot type 1 or 3. (Vertical data)
@@ -358,7 +358,7 @@ do
    if [ ! "$VFLAG" ]; then  
    if [ "$POINT2" ] || [ "$POINT3" ] ; then
       awk '$1!~"#"&&$1=="point" {if($2=="2") print $4,$5, $7*DEF, $8*DEF, $9*DEF, $10*DEF, " 0" ; if($2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $PMODEL | \
-   	gmt psvelo -N  $MID -W0p -A0.02/0.10/0.06 -Gmagenta -Se1/0.65/0 -L >>$OUTFILE
+   	gmt psvelo -N  $MID -W0p,magenta -A0.02/0.10/0.06 -Gmagenta -Se1/0.65/0 -L >>$OUTFILE
    fi
    fi
    # plot Vertical
