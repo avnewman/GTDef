@@ -28,7 +28,7 @@ UL="\e[4m" # turns on underline
 NM="\e[0m" #turns off underline
  printf "
 Usage: %s -M${UL}'model.in'${NM} [-K${UL}'kappa_value'${NM}] [-R${UL}XMIN/XMAX/YMIN/YMAX${NM}]
-	 [-S${UL}deformation_scale[/data_scale][/faultvector_scale]${NM}] [-T${UL}TMIN/TMAX/DT${NM}] 
+	 [-S${UL}deformation_scale[/data_scale][/faultvector_scale]${NM}] [-T${UL}TMIN/TMAX/DT[/Z]${NM}] 
 	 [-L${UL}LOC${NM}] [-D] [-H] [-V]
 
 Requires:
@@ -67,10 +67,11 @@ Options:
 	       used for Deformation_scale.
 	       Faultvector_scale is changed by value, otherwise same as Deformation_scale.
 
-       -T   Deformation_range
+       -T     Deformation_range
                Choose a range over which to plot deformation. Results are the value used and
 	       will include the amplifcation used with -S flag.  If not selected, the program
 	       will attempt to autoselect range based on data.
+	       Adding a /Z after the flag will make a continuous contour along the fault.
 
        -H   plot horizontal only
        -V   plot vertical only
@@ -113,6 +114,9 @@ do
        T) TMIN=$(echo $OPTARG | awk -F"/" '{print $1}')
 	  TMAX=$(echo $OPTARG | awk -F"/" '{print $2}')
 	  DT=$(echo $OPTARG | awk -F"/" '{print $3}')
+	  if [ $(echo $OPTARG | awk -F"/" '{print $4}') == "Z" ] ; then
+		  ZFLAG="-Z"
+	  fi
   	  TFLAG=1; # flag for Slip Range
          ;;
        S) DEFSCALE=$(echo $OPTARG | awk -F"/" '{print $1}')
@@ -299,7 +303,7 @@ do
 
    # create CPT file for slip model
    CPT=slip.cpt    # created within
-   gmt makecpt -Chot -T"$TMIN/$TMAX/$DT" -I -Z >$CPT
+   gmt makecpt -Chot -T"$TMIN/$TMAX/$DT" -I $ZFLAG >$CPT
    #echo "$TMIN/$TMAX/$DT"
 
    BGN="$RANGE $PROJ -K"
@@ -354,14 +358,22 @@ do
    if [ ! "$VFLAG" ]; then  
    if [ "$POINT2" ] || [ "$POINT3" ] ; then
       awk '$1!~"#"&&$1=="point" {if($2=="2") print $4,$5, $7*DEF, $8*DEF, $9*DEF, $10*DEF, " 0" ; if($2=="3") print $4,$5, $7*DEF, $8*DEF, $10*DEF, $11*DEF, " 0" }' DEF=$DATASCALE $PMODEL | \
-   	gmt psvelo -N  $MID -W0p -A0.02/0.10/0.06 -Gmagenta -Se1/0.0/0 -L >>$OUTFILE
+   	gmt psvelo -N  $MID -W0p -A0.02/0.10/0.06 -Gmagenta -Se1/0.65/0 -L >>$OUTFILE
    fi
    fi
    # plot Vertical
    if [ ! "$HFLAG" ]; then  
-   if [ "$POINT1" ] || [ "$POINT3" ] ; then
-      awk '$1!~"#"&&$1=="point" {if ($2=="1"){Uz=$7*DEF; eUz=$8*DEF} if($2=="3"){Uz=$9*DEF; eUz=$12*DEF} print $4,$5, 0, Uz, eUz/10, eUz, " 0" }' DEF=$DATASCALE $PMODEL | \
-     	gmt psvelo -N  $MID -W0p -A0.05/0/0 -Gmagenta -Se1/0.0/0 -L >>$OUTFILE
+	  # TODO separate POINT 1 from POINT 3 and 
+   if [ "$POINT1" ] ; then 
+      awk '$1!~"#"&&$1=="point" && $7>0 {Uz=$7*DEF; eUz=$8*DEF; print $4,$5, 0, Uz, eUz/10, eUz, " 0" }' DEF=$DATASCALE $PMODEL | \
+     	gmt psvelo -N  $MID -W0p,red -A0.05/0/0 -Gred -Se1/0.0/0 -L >>$OUTFILE
+      awk '$1!~"#"&&$1=="point" && $7<0 {Uz=0-$7*DEF; eUz=$8*DEF; print $4,$5, 0, Uz, eUz/10, eUz, " 0" }' DEF=$DATASCALE $PMODEL | \
+      	gmt psvelo -N  $MID -W0p,blue -A0.05/0/0 -Gblue -Se1/0.0/0 -L >>$OUTFILE
+   elif [ "$POINT3" ] ; then
+      awk '$1!~"#"&&$1=="point" && $9>0 {Uz=$9*DEF; eUz=$12*DEF; print $4,$5, 0, Uz, eUz/10, eUz, " 0" }' DEF=$DATASCALE $PMODEL | \
+     	gmt psvelo -N  $MID -W0p,red -A0.05/0/0 -Gred -Se1/0.0/0 -L >>$OUTFILE
+      awk '$1!~"#"&&$1=="point" && $9<0 {Uz=0-$9*DEF; eUz=$12*DEF; print $4,$5, 0, Uz, eUz/10, eUz, " 0" }' DEF=$DATASCALE $PMODEL | \
+      	gmt psvelo -N  $MID -W0p,blue -A0.05/0/0 -Gblue -Se1/0.0/0 -L >>$OUTFILE
    fi
    fi
    #redraw outlines of arrow from observed data so that it may be seen over model outputs. Almost a repeat from above
