@@ -114,7 +114,7 @@ if ~isempty(Ngrn)
     Nmod = Ngrn*xx;
     nod_mod = reshape(Nmod,[],3);
     nod_mod_err = nan(size(nod_mod));
-    nod_wgt = zeros(size(nod_mod,1),1);
+    nod_wgt = ones(size(nod_mod,1),1); % should be ones not zeros
     nod.out = [ nod.loc nod_mod nod_mod_err nod_wgt ]; 		% reuse nod.loc
 end
 

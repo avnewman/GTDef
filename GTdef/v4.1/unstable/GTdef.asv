@@ -271,7 +271,7 @@ tic
             nod.name = [ nod.name; gname ];
         end
     end
-    nod_zz = zeros(size(nod_lon));
+    nod_zz = nan(size(nod_lon));
     nod.loc = [ nod_lon nod_lat nod_zz ];
     switch modspace.coord
        case 'geo'
@@ -613,15 +613,15 @@ if modspace.lb==-Inf
     %%  add noise to model predictions
     %%  replacing add_noise.sh //TODO
     if ~isempty(modspace.noise)  
-        if isfield(modspace.noise, 'eUe')
+        if isfield(modspace.noise, 'eUe') 
              eUe=modspace.noise.eUe;
             if ~isempty(nod.out)
              nod.out(:,4)=normrnd(nod.out(:,4),eUe);
              nod.out(:,7)=eUe;
             end
             if ~isempty(pnt.obs)
-             pnt.out(:,4)=normrnd(pnt.out(:,4),eUe);
-             pnt.out(:,7)=eUe;
+             pnt.obs(:,1)=normrnd(pnt.obs(1,:),eUe);
+             pnt.obs_err(:,1)=eUe;
             end
         end
         if isfield(modspace.noise, 'eUn')
@@ -631,8 +631,8 @@ if modspace.lb==-Inf
              nod.out(:,8)=eUn;
             end
             if ~isempty(pnt.obs)
-             pnt.out(:,5)=normrnd(pnt.out(:,5),eUn);
-             pnt.out(:,8)=eUn;
+             pnt.obs(:,2)=normrnd(pnt.obs(2,:),eUn);
+             pnt.obs_err(:,2)=eUn;
             end
         end
         if isfield(modspace.noise, 'eUv')
@@ -642,8 +642,8 @@ if modspace.lb==-Inf
              nod.out(:,9)=eUv;
             end
             if ~isempty(pnt.obs)
-             pnt.out(:,6)=normrnd(pnt.out(:,6),eUv);
-             pnt.out(:,9)=eUv;
+             pnt.obs(3,:)=normrnd(pnt.obs(3,:),eUv);
+             pnt.obs_err(:,3)=eUv;
             end
         end
     end

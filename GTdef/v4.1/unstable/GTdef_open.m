@@ -100,6 +100,7 @@ modspace.Rdiags = [];
 modspace.mat = [];
 modspace.proj = [];
 modspace.lsqlin = [];
+modspace.noise = [];  %structure with .eUe .eUn .eUv
 %modspace.lsqlin_MaxIter = 2000; modspace.lsqlin_TolFun = 1e-30;  % prior hard-wired values
 modspace.lsqlin_MaxIter = 20; modspace.lsqlin_TolFun = 1e-20;  % new lower default values (can be overridden by lsqlin call in input)
 % earth structure defaults
@@ -307,6 +308,18 @@ while(1)
             error('GTdef_open ERROR: stressdrop should be either on or off!');
 	end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Adding Noise to Forward models %%%%%%%%%%%%%%%%%%
+    elseif strcmpi(flag,'addnoise')
+        [noiseline,remain] = strtok(remain);
+        if strcmpi(noiseline,'eUe') 
+            [ modspace.noise.eUe,remain ] = GTdef_read1double(remain);
+        elseif  strcmpi(noiseline,'eUn') 
+            [ modspace.noise.eUn,remain ] = GTdef_read1double(remain);
+        elseif  strcmpi(noiseline,'eUv') 
+            [ modspace.noise.eUv,remain ] = GTdef_read1double(remain);
+        else 
+            error('GTdef_open ERROR: addnoise did not recognize component: %s',noiseline)
+        end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Earth Structures %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%% earth structure %%%%%
     elseif strcmpi(flag,'earth')
@@ -315,12 +328,12 @@ while(1)
         %if strcmpi(earth.type,'homogeneous')||strcmpi(earth.type,'homo')
         if strncmpi(earth.type,'homo',4)  % only 1st 4 letters are needed.
             [ earth.rigidity,remain ] = GTdef_read1double(remain);
-	    [ earth.poisson,remain ]  = GTdef_read1double(remain);
-	    earth.type = 'homogeneous';
+	        [ earth.poisson,remain ]  = GTdef_read1double(remain);
+	        earth.type = 'homogeneous';
         %%%%% layered EDGRN/EDCMP %%%%%
         elseif strncmpi(earth.type,'lay',3);
             [ edgrn.nl,remain ]    = GTdef_read1double(remain);
-	    [ edgrn.obsz,remain ]  = GTdef_read1double(remain);
+	        [ edgrn.obsz,remain ]  = GTdef_read1double(remain);
             [ edgrn.nr,remain ]    = GTdef_read1double(remain);
             [ edgrn.minr,remain ]  = GTdef_read1double(remain);
             [ edgrn.maxr,remain ]  = GTdef_read1double(remain);
